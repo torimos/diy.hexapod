@@ -15,7 +15,7 @@ sw_fifo_typedef rx_fifo = { {0}, 0, 0, 0 }; // declare a receive software buffer
 sw_fifo_typedef tx_fifo = { {0}, 0, 0, 0 }; // declare a transmit software buffer
 #endif
 
-void uart_send_byte(uint8_t byte)
+void uartSendByte(uint8_t byte)
 {
 #if UART_TX_FIFO_ENABLED
 	if(tx_fifo.num_bytes == FIFO_BUFFER_SIZE)
@@ -49,7 +49,7 @@ void uart_send_byte(uint8_t byte)
 #endif
 }
 char _buffer[256];
-void uart_send_str(const char *pFormat, ...)
+void uartSendStr(const char *pFormat, ...)
 {
 	va_list ap;
 	signed int result;
@@ -70,7 +70,7 @@ void uart_send_str(const char *pFormat, ...)
 	}
 }
 
-uint8_t uart_get_byte(void)
+uint8_t uartGetByte(void)
 {
 	uint8_t byte = 0;
 	if (rx_fifo.num_bytes == FIFO_BUFFER_SIZE)
@@ -94,7 +94,7 @@ uint8_t uart_get_byte(void)
 	return byte;
 }
 
-void uart_init(uint32_t baudRate)
+void uartInit(uint32_t baudRate)
 {
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, ENABLE);

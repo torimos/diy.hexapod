@@ -17,9 +17,9 @@ volatile uint8_t uart_tx_fifo_not_empty_flag; // this flag is automatically set 
 #endif
 
 
-void uart_init(uint32_t baudRate);
-void uart_send_byte(uint8_t byte);
-void uart_send_str(const char *pFormat, ...);
-uint8_t uart_get_byte(void);
+void uartInit(uint32_t baudRate);
+void uartSendByte(uint8_t byte);
+void uartSendStr(const char *pFormat, ...);
+uint8_t uartGetByte(void);
 
 #endif

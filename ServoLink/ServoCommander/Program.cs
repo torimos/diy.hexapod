@@ -29,7 +29,7 @@ namespace ServoCommander
             //}
 
             var sc = new ServoController(20, new BinaryHelper());
-            if (!sc.Connect(new SerialPort("COM4", 115200))) return;
+            if (!sc.Connect(new SerialPort("COM4", 57600))) return;
             Console.WriteLine("Connected");
             //for (var i = 0; i < sc.Servos.Length; i++)
             //{
@@ -40,7 +40,8 @@ namespace ServoCommander
 
             sc.SetAll(0);
             sc.Sync();
-            int t = 500;
+            Console.WriteLine("Tick");
+            int t = 150;
             while (!Console.KeyAvailable)
             {
                 //sc.Servos[0] = sc.Servos[3] = sc.Servos[6] = 1700;//end
@@ -62,25 +63,42 @@ namespace ServoCommander
                 //Thread.Sleep(t);
 
 
+                //sc.Servos[0] = 1500;
+                //sc.Servos[1] = 1800;
+                //sc.Servos[2] = 1500;
+                //sc.Sync();
+                //Thread.Sleep(t);
+
+                //sc.Servos[0] = 1100;
+                //sc.Servos[1] = 1500;
+                //sc.Servos[2] = 1500;
+                //sc.Sync();
+                //Thread.Sleep(t);
+                //sc.Servos[0] = 2200;
+                //sc.Servos[1] = 1100;
+                //sc.Servos[2] = 1500;
+                //sc.Sync();
+                //Thread.Sleep(t);
+
+
+                Console.ReadLine();
+                sc.Servos[0] = 1200;
+                sc.Sync();
+                Console.WriteLine("Tick");
+
+                Console.ReadLine();
+                sc.Servos[0] = 1800;
+                sc.Sync();
+
+                Console.ReadLine();
                 sc.Servos[0] = 1500;
-                sc.Servos[1] = 1800;
-                sc.Servos[2] = 1500;
                 sc.Sync();
-                Thread.Sleep(t);
-
-                sc.Servos[0] = 1100;
-                sc.Servos[1] = 1500;
-                sc.Servos[2] = 1500;
-                sc.Sync();
-                Thread.Sleep(t);
-                sc.Servos[0] = 2200;
-                sc.Servos[1] = 1100;
-                sc.Servos[2] = 1500;
-                sc.Sync();
-                Thread.Sleep(t);
-
                 Console.WriteLine("Tick");
             }
+
+
+            sc.SetAll(0);
+            sc.Sync();
             sc.Disconnect();
         }
     }

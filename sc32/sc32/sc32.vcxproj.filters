@@ -124,11 +124,11 @@
     <ClCompile Include="Lib\uart.c">
       <Filter>Lib</Filter>
     </ClCompile>
-    <ClCompile Include="Lib\uart_printf.cpp">
-      <Filter>Lib</Filter>
-    </ClCompile>
     <ClCompile Include="App\main.c">
       <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="Lib\uart_printf.c">
+      <Filter>Lib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

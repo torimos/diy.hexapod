@@ -92,7 +92,7 @@
     <ClCompile Include="Lib\core.c" />
     <ClCompile Include="Lib\pwm.c" />
     <ClCompile Include="Lib\uart.c" />
-    <ClCompile Include="Lib\uart_printf.cpp" />
+    <ClCompile Include="Lib\uart_printf.c" />
     <ClCompile Include="system_stm32f10x.c" />
   </ItemGroup>
   <ItemGroup>

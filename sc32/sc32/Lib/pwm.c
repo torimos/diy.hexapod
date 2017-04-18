@@ -219,13 +219,13 @@ void TIM8_BRK_TIM12_IRQHandler(void)
 	}
 }
 
-void pwm_init(uint8_t index, uint16_t *data)
+void pwmInit(uint8_t index, uint16_t *data)
 {
 	pwm_data[index%6] = data;
 	TimerInit(timers[index%6], PWM_PERIOD, PWM_MIN);
 }
 
-void pwm_enable(uint8_t index, uint8_t enable)
+void pwmEnable(uint8_t index, uint8_t enable)
 {
 	TIM_Cmd(timers[index%6], enable ? ENABLE : DISABLE);
 }

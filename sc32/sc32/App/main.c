@@ -10,70 +10,71 @@
 #define PWME 4
 #define PWMF 5
 #define SERVO_COUNT 20
+#define TICK_DELAY 10
 
 #define ID_DATA_SZ 0xA
 #define ID_DATA    0xB
 
-u16 pd[SERVO_COUNT];
-u32 pds = 0;
+u16 servoData[SERVO_COUNT];
+u16 servoNewData[SERVO_COUNT];
+s16 servoNewDataSteps[SERVO_COUNT];
 u8* rxData;
+u32 rxDataSize = 0;
 vu16 rxID = 0, rxIndex = 0, rxBytesToRead = 0;
 
-extern void reset_pwm();
-extern void process_serial();
+extern void initServo();
+extern void processSerial();
 extern void dataWait(u16 id, u8* buffer, u16 bytesToRead);
-extern void dataReady(u16 id);
 
 int main()
 {
-	dataWait(ID_DATA_SZ, (u8*)&pds, 4);
-	uart_init(115200);
-	reset_pwm();
-	uart_send_str("\r\nsc32 V2.0\r\n");
+	initServo();
+	uartInit(57600);
+	uartSendStr("\r\nsc32 V2.0\r\n");
+	rxDataSize = 0;
+	dataWait(ID_DATA_SZ, (u8*)&rxDataSize, 4);
 	while (1)
 	{
-		process_serial();
-		_delay_ms(10);
-	}
-}
-
-void reset_pwm()
-{
-	int i;
-	for (i = 0;i < SERVO_COUNT;i++)
-	{
-		pd[i] = 0;
-	}
-
-	pwm_init(PWMB, &pd[0]);
-	pwm_init(PWMC, &pd[4]);
-	pwm_init(PWME, &pd[8]);
-	pwm_init(PWMA, &pd[12]);
-	pwm_init(PWMD, &pd[16]);
-}
-
-void process_serial()
-{
-	while (uart_rx_fifo_not_empty_flag)
-	{
-		u8 rx = uart_get_byte();
-		if (rxBytesToRead > 0)
+		for (int sid = 0; sid < SERVO_COUNT; ++sid)
 		{
-			rxData[rxIndex++] = rx;
-			if (rxIndex == rxBytesToRead)
+			if (servoNewDataSteps[sid] != 0)
 			{
-				dataReady(rxID);
+				if ((servoData[sid] + servoNewDataSteps[sid]) < servoNewData[sid])
+				{
+					servoData[sid] += servoNewDataSteps[sid];
+				}
+				else if ((servoData[sid] + servoNewDataSteps[sid]) > servoNewData[sid])
+				{
+					servoData[sid] += servoNewDataSteps[sid];
+				}
+				else
+				{
+					servoData[sid] = servoNewData[sid];
+					servoNewDataSteps[sid] = 0;
+				}
 			}
 		}
-		else
-		{
-		}
+		processSerial();
+		_delay_ms(TICK_DELAY);
 	}
-	if (uart_rx_fifo_ovf_flag)
+}
+
+void free_servo()
+{
+	for (int i = 0;i < SERVO_COUNT;i++)
 	{
-		//todo:
-		uart_rx_fifo_ovf_flag = 0;
+		servoData[i] = 0;
 	}
+}
+
+void initServo()
+{
+	free_servo();
+	pwmInit(PWMB, &servoData[0]);
+	pwmInit(PWMC, &servoData[4]);
+	pwmInit(PWME, &servoData[8]);
+	pwmInit(PWMA, &servoData[12]);
+	pwmInit(PWMD, &servoData[16]);
 }
 
 void dataWait(u16 id, u8* buffer, u16 bytesToRead)
@@ -88,11 +89,49 @@ void dataReady(u16 id)
 {
 	if (id == ID_DATA_SZ)
 	{
-		dataWait(ID_DATA, (u8*)pd, pds);
+		dataWait(ID_DATA, (u8*)servoNewData, rxDataSize);
 	}
 	else if (id == ID_DATA)
 	{
-		dataWait(ID_DATA_SZ, (u8*)&pds, 4);
-		uart_send_str("OK!\n\r");
+		rxDataSize = 0;
+		dataWait(ID_DATA_SZ, (u8*)&rxDataSize, 4);
+		uartSendStr("#\n\r");
+		
+		for (int sid = 0; sid < SERVO_COUNT; ++sid)
+		{
+			if (servoData[sid] == 0 || 
+				servoNewData[sid] == servoData[sid]) 
+			{
+				servoData[sid] = servoNewData[sid];
+				servoNewDataSteps[sid] = 0;
+			}
+			else
+			{
+				u16 delta = 1000 / TICK_DELAY;
+				s16 diff = servoNewData[sid] - servoData[sid];
+				servoNewDataSteps[sid] = diff/delta;
+			}
+		}
+	}
+}
+
+void processSerial()
+{
+	while (uart_rx_fifo_not_empty_flag)
+	{
+		u8 rx = uartGetByte();
+		if (rxBytesToRead > 0)
+		{
+			rxData[rxIndex++] = rx;
+			if (rxIndex == rxBytesToRead)
+			{
+				dataReady(rxID);
+			}
+		}
+	}
+	if (uart_rx_fifo_ovf_flag)
+	{
+		//todo:
+		uart_rx_fifo_ovf_flag = 0;
 	}
 }
