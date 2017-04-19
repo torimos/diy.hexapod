@@ -21,5 +21,8 @@ void uartInit(uint32_t baudRate);
 void uartSendByte(uint8_t byte);
 void uartSendStr(const char *pFormat, ...);
 uint8_t uartGetByte(void);
+void uartDataProcess();
+void uartDataWait(u16 id, u8* buffer, u16 bytesToRead);
+extern void uartDataReady(u16 id);
 
 #endif

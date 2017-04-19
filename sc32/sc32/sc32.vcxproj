@@ -90,7 +90,7 @@
     <ClCompile Include="C:\Users\Oleg\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F1xxxx\STM32F10x_StdPeriph_Driver\src\stm32f10x_usart.c" />
     <ClCompile Include="C:\Users\Oleg\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F1xxxx\STM32F10x_StdPeriph_Driver\src\stm32f10x_wwdg.c" />
     <ClCompile Include="Lib\core.c" />
-    <ClCompile Include="Lib\pwm.c" />
+    <ClCompile Include="Lib\timer.c" />
     <ClCompile Include="Lib\uart.c" />
     <ClCompile Include="Lib\uart_printf.c" />
     <ClCompile Include="system_stm32f10x.c" />
@@ -129,7 +129,7 @@
     <ClInclude Include="C:\Users\Oleg\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F1xxxx\STM32F10x_StdPeriph_Driver\inc\stm32f10x_usart.h" />
     <ClInclude Include="C:\Users\Oleg\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F1xxxx\STM32F10x_StdPeriph_Driver\inc\stm32f10x_wwdg.h" />
     <ClInclude Include="Lib\core.h" />
-    <ClInclude Include="Lib\pwm.h" />
+    <ClInclude Include="Lib\timer.h" />
     <ClInclude Include="Lib\uart.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

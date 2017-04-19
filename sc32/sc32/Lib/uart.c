@@ -15,6 +15,10 @@ sw_fifo_typedef rx_fifo = { {0}, 0, 0, 0 }; // declare a receive software buffer
 sw_fifo_typedef tx_fifo = { {0}, 0, 0, 0 }; // declare a transmit software buffer
 #endif
 
+u8* _rxData;
+u32 _rxDataSize = 0;
+vu16 _rxID = 0, _rxIndex = 0, _rxBytesToRead = 0;
+
 void uartSendByte(uint8_t byte)
 {
 #if UART_TX_FIFO_ENABLED
@@ -180,4 +184,35 @@ void UART4_IRQHandler(void)
 
 		uart_rx_fifo_not_empty_flag = 1;
 	}
+}
+
+void uartDataProcess()
+{
+	while (uart_rx_fifo_not_empty_flag)
+	{
+		u8 rx = uartGetByte();
+		if (_rxBytesToRead > 0)
+		{
+			_rxData[_rxIndex++] = rx;
+			if (_rxIndex == _rxBytesToRead)
+			{
+				uartDataReady(_rxID);
+			}
+		}
+	}
+	if (uart_rx_fifo_ovf_flag)
+	{
+		//todo:
+		uart_rx_fifo_ovf_flag = 0;
+	}
+}
+void uartDataWait(u16 id, u8* buffer, u16 bytesToRead)
+{
+	_rxID = id;
+	_rxIndex = 0;
+	_rxBytesToRead = bytesToRead;
+	_rxData = buffer;
+}
+void __attribute__((weak)) uartDataReady(u16 id)
+{
 }

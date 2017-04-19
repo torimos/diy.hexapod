@@ -118,9 +118,6 @@
     <ClCompile Include="Lib\core.c">
       <Filter>Lib</Filter>
     </ClCompile>
-    <ClCompile Include="Lib\pwm.c">
-      <Filter>Lib</Filter>
-    </ClCompile>
     <ClCompile Include="Lib\uart.c">
       <Filter>Lib</Filter>
     </ClCompile>
@@ -128,6 +125,9 @@
       <Filter>App</Filter>
     </ClCompile>
     <ClCompile Include="Lib\uart_printf.c">
+      <Filter>Lib</Filter>
+    </ClCompile>
+    <ClCompile Include="Lib\timer.c">
       <Filter>Lib</Filter>
     </ClCompile>
   </ItemGroup>
@@ -225,10 +225,10 @@
     <ClInclude Include="Lib\core.h">
       <Filter>Lib</Filter>
     </ClInclude>
-    <ClInclude Include="Lib\pwm.h">
+    <ClInclude Include="Lib\uart.h">
       <Filter>Lib</Filter>
     </ClInclude>
-    <ClInclude Include="Lib\uart.h">
+    <ClInclude Include="Lib\timer.h">
       <Filter>Lib</Filter>
     </ClInclude>
   </ItemGroup>
