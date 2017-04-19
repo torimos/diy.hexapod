@@ -13,9 +13,11 @@
 #define SERVO_PWM_PRESCALER 1000000
 #define SERVO_COUNT 20
 
+#define ID_SERVO_DATA_SZ 0xA
 #define ID_SERVO_DATA    0xB
 
-u16 serialData[SERVO_COUNT];
+u32 serialDataSize;
+u16 serialData[20];
 
 typedef struct
 {
@@ -59,31 +61,10 @@ int main()
 {
 	uartInit(57600);
 	uartSendStr("\r\nsc32 V2.0\r\n");
-	uartDataWait(ID_SERVO_DATA, (u8*)serialData, SERVO_COUNT * 2);
-	
+	uartDataWait(ID_SERVO_DATA_SZ, (u8*)&serialDataSize, 4);
+	servosInit();
 	while (1)
 	{
-		//for (int sid = 0; sid < SERVO_COUNT; ++sid)
-		//{
-			//if (servoNewDataSteps[sid] != 0)
-			//{
-				//if ((servoData[sid] + servoNewDataSteps[sid]) < servoNewData[sid])
-				//{
-					//servoData[sid] += servoNewDataSteps[sid];
-				//}
-				//else if ((servoData[sid] + servoNewDataSteps[sid]) > servoNewData[sid])
-				//{
-					//servoData[sid] += servoNewDataSteps[sid];
-				//}
-				//else
-				//{
-					//servoData[sid] = servoNewData[sid];
-					//servoNewDataSteps[sid] = 0;
-				//}
-			//}
-		//}
-		//
-		
 		uartDataProcess();
 		_delay_ms(10);
 	}
@@ -91,26 +72,26 @@ int main()
 
 void uartDataReady(u16 id)
 {
-	if (id == ID_SERVO_DATA)
+	if (id == ID_SERVO_DATA_SZ)
 	{
-		uartDataWait(ID_SERVO_DATA, (u8*)serialData, SERVO_COUNT * 2);
-		uartSendStr("#\n\r");
-		
+		if (serialDataSize == 40)
+		{
+			for (int sid = 0; sid < SERVO_COUNT; ++sid)	serialData[sid] = 0;
+			uartDataWait(ID_SERVO_DATA, (u8*)serialData, serialDataSize);
+		}
+		else
+		{
+			uartSendStr("!!!!!!!!!\n\r");
+		}
+	}
+	else if (id == ID_SERVO_DATA)
+	{
 		for (int sid = 0; sid < SERVO_COUNT; ++sid)
 		{
 			servos[sid].position = serialData[sid];
-			//if (servoData[sid] == 0 || 
-				//servoNewData[sid] == servoData[sid]) 
-			//{
-				//servoData[sid] = servoNewData[sid];
-				//servoNewDataSteps[sid] = 0;
-			//}
-			//else
-			//{
-				//u16 delta = 1000 / TICK_DELAY;
-				//s16 diff = servoNewData[sid] - servoData[sid];
-				//servoNewDataSteps[sid] = diff / delta;
-			//}
+			serialData[sid] = 0;
 		}
+		uartDataWait(ID_SERVO_DATA_SZ, (u8*)&serialDataSize, 4);
+		uartSendStr("#\n\r");
 	}
 }
