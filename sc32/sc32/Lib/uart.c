@@ -202,7 +202,7 @@ void uartDataProcess()
 	}
 	if (uart_rx_fifo_ovf_flag)
 	{
-		//todo:
+		uartError(UART_ERROR_FIFO_OVF);
 		uart_rx_fifo_ovf_flag = 0;
 	}
 }
@@ -214,5 +214,8 @@ void uartDataWait(u16 id, u8* buffer, u16 bytesToRead)
 	_rxData = buffer;
 }
 void __attribute__((weak)) uartDataReady(u16 id)
+{
+}
+void __attribute__((weak)) uartError(int code)
 {
 }

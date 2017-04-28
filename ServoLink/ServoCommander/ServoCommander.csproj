@@ -57,6 +57,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\crc32\CRC.csproj">
+      <Project>{4E14053F-86F6-4604-9591-84EA8DF9BE16}</Project>
+      <Name>CRC</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ServoLink\ServoLink.csproj">
       <Project>{43060e18-5d19-405a-acea-934f2c89acfc}</Project>
       <Name>ServoLink</Name>

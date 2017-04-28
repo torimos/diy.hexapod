@@ -2,6 +2,10 @@
 using System.IO;
 using System.Linq;
 using ServoLink.Contracts;
+using System.Security.Cryptography;
+using CRC;
+using System.Diagnostics;
+using System.Threading;
 
 namespace ServoLink
 {
@@ -9,19 +13,13 @@ namespace ServoLink
     {
         private readonly IBinaryHelper _binaryHelper;
         private IPort _port;
-        private readonly ushort[] _servos;
-
-        public ushort[] Servos
-        {
-            get { return _servos; }
-        }
-
+        private readonly uint[] _servos;
         public ServoController(ushort numberOfServos, IBinaryHelper binaryHelper)
         {
             if (binaryHelper == null) throw new ArgumentNullException("binaryHelper");
             _binaryHelper = binaryHelper;
 
-            _servos = new ushort[numberOfServos == 0 ? 1 : numberOfServos];
+            _servos = new uint[numberOfServos == 0 ? 1 : numberOfServos];
         }
 
         public bool Connect(IPort port)
@@ -46,25 +44,48 @@ namespace ServoLink
                 _port.Close();
             }
         }
-
-        public void Sync()
+        string _response;
+        public int Commit(int timeOut)
         {
-            if (_port == null || !_port.IsOpen) return;
-            var buffer = _binaryHelper.ConvertToByteArray((uint)_servos.Length*2, _servos);
-            _port.Write(buffer, 0, buffer.Length);
+            if (_port == null || !_port.IsOpen) return 0;
+            var crc = Crc.ComputeHash(CrcAlgorithms.Crc32Mpeg2, _servos);
+            var buffer = _binaryHelper.ConvertToByteArray(_servos, crc);
+
+            var sw = new Stopwatch();
+            sw.Start();
+            _response = "ER";
+            int retry = 0;
+            while (sw.ElapsedMilliseconds < timeOut)
+            {
+                if (_response == "OK") break;
+                if (_response == "ER")
+                {
+                    sw.Restart();
+                    _response = "";
+                    _port.Write(buffer, 0, buffer.Length);
+                    retry++;
+                    Thread.Sleep(40);
+                }
+            }
+            return retry;
         }
         
-        public void SetAll(ushort position)
+        public void MoveAll(ushort position, ushort moveTime = 0)
         {
             for (var i = 0; i < _servos.Length; i++)
             {
-                _servos[i] = position;
+                Move(i, position, moveTime);
             }
+        }
+
+        public void Move(int index, ushort position, ushort moveTime = 0)
+        {
+            _servos[index] = (uint)(moveTime << 16) | position;
         }
 
         private void OnDataReceived(object sender, PortDataReceivedEventArgs e)
         {
-            Console.WriteLine(new String(e.Data.Select(d => (char) d).ToArray()));
+            _response += new String(e.Data.Select(d => (char)d).ToArray());
         }
     }
 }

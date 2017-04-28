@@ -6,7 +6,8 @@ namespace ServoLink.Contracts
     {
         bool Connect(IPort port);
         void Disconnect();
-        void Sync();
-        void SetAll(ushort position);
+        int Commit();
+        void MoveAll(ushort position, ushort time);
+        void Move(int index, ushort position, ushort time);
     }
 }

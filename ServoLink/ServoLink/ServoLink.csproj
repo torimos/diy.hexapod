@@ -50,6 +50,12 @@
     <Compile Include="SerialPort.cs" />
     <Compile Include="ServoController.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\crc32\CRC.csproj">
+      <Project>{4E14053F-86F6-4604-9591-84EA8DF9BE16}</Project>
+      <Name>CRC</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

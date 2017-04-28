@@ -6,6 +6,10 @@ TIM_TypeDef *_timers[6] = {TIM1,TIM2,TIM3,TIM4,TIM8,TIM12};
 volatile uint8_t _timerMapping[6];
 volatile uint16_t _pwmData[6][4];
 
+#ifdef TIMER12_CLOCK
+uint32_t system_ticks = 0;
+#endif
+
 void TimerOutputInit(TIM_TypeDef* TIMx, uint8_t channel, uint16_t pulse)
 {
 	TIM_OCInitTypeDef timerOutput;
@@ -149,6 +153,13 @@ void TimerInit(TIM_TypeDef* TIMx, uint16_t period, uint32_t prescaler)
 	NVICInit(TIMx);
 }
 
+#ifdef TIMER12_CLOCK
+void clockInit(uint16_t period)
+{
+	TimerInit(TIM12, period, 1000000);
+}
+#endif
+
 void timerInit(uint8_t index, uint8_t id, uint16_t period, uint32_t prescaler)
 {
 	uint8_t idx = index % 6;
@@ -220,8 +231,13 @@ void TIM8_BRK_TIM12_IRQHandler(void)
 	if (TIM_GetITStatus(TIM12, TIM_IT_Update) != RESET)
 	{
 		TIM_ClearITPendingBit(TIM12, TIM_IT_Update);
-		timerHandler(5, _timerMapping[5], _pwmData[5]);
+		
+		#ifdef TIMER12_CLOCK
+		system_ticks++;
+		#else		timerHandler(5, _timerMapping[5], _pwmData[5]);
 		TIM_CCR2(TIM12, _pwmData[5][0], _pwmData[5][1]);
+		#endif
+		
 	}
 }
 

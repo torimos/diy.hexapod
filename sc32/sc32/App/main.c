@@ -1,29 +1,32 @@
 #include "core.h"
 #include "timer.h"
 #include "uart.h"
+#include "crc32.h"
 
-//D:T4[4..1]-A:T1[4..1]-E:T8[4..1]-F:T12[2..1]-C:T3[4..1]-B:T2[4..1]
+//D:T4[4..1]-A:T1[4..1]-E:T8[4..1]-C:T3[4..1]-B:T2[4..1]
 #define PWMA 0
 #define PWMB 1
 #define PWMC 2
 #define PWMD 3
 #define PWME 4
-#define PWMF 5
+
 #define SERVO_PWM_PERIOD 20000
+#define SERVO_PWM_PERIOD_MS (SERVO_PWM_PERIOD / 1000)
 #define SERVO_PWM_PRESCALER 1000000
 #define SERVO_COUNT 20
+#define SERIAL_DATA_FRAME_SIZE (SERVO_COUNT*4 + 4)
+#define SERIAL_DATA_FRAME_TIMEOUT 40
 
-#define ID_SERVO_DATA_SZ 0xA
-#define ID_SERVO_DATA    0xB
-
-u32 serialDataSize;
-u16 serialData[20];
+u32 serialData[SERIAL_DATA_FRAME_SIZE];
+u32 _frameOffset = 0;
+u32 _frameTicks = 0;
+u8* _frame = (u8*)serialData;
 
 typedef struct
 {
 	uint16_t position;
-	uint16_t positionNew;
 	int16_t positionDelta;
+	uint16_t positionNew;
 } servo_typedef;
 
 servo_typedef servos[SERVO_COUNT];
@@ -51,47 +54,89 @@ void servosInit()
 
 void timerHandler(uint8_t timer, uint8_t id, uint16_t *pwmData)
 {
-	pwmData[0] = servos[id * 4].position;
-	pwmData[1] = servos[id * 4 + 1].position;
-	pwmData[2] = servos[id * 4 + 2].position;
-	pwmData[3] = servos[id * 4 + 3].position;
+	for (int sid = 0; sid < 4; ++sid)
+	{
+		servo_typedef* servo = &servos[id * 4 + sid];
+		if (servo->positionDelta)
+		{
+			servo->position += servo->positionDelta;
+			if (servo->positionDelta > 0)
+			{
+				if (servo->position >= servo->positionNew) {
+					servo->position = servo->positionNew;
+					servo->positionDelta = 0;
+				}
+			}
+			else if (servo->positionDelta < 0)
+			{
+				if (servo->position <= servo->positionNew) {
+					servo->position = servo->positionNew;
+					servo->positionDelta = 0;
+				}
+			}
+		}
+		//pwmData[sid] = servo->position;
+	}
+}
+
+void processSerialData()
+{
+	for (int sid = 0; sid < SERVO_COUNT; ++sid)
+	{
+		uint16_t moveTime = (serialData[sid] >> 16) & 0xFFFF;
+		uint16_t positionNew = (serialData[sid]) & 0xFFFF;
+		serialData[sid] = 0;
+		int ticks = moveTime / SERVO_PWM_PERIOD_MS;
+		if (servos[sid].position != positionNew &&
+			servos[sid].position > 0 &&
+			positionNew > 0)
+		{
+			servos[sid].positionNew = positionNew;
+			servos[sid].positionDelta = (servos[sid].positionNew - servos[sid].position) / ticks;
+		}
+		else
+		{
+			servos[sid].position = positionNew;
+			servos[sid].positionNew = 0;
+			servos[sid].positionDelta = 0;
+		}
+	}
 }
 
 int main()
 {
-	uartInit(57600);
+	uartInit(115200);
 	uartSendStr("\r\nsc32 V2.0\r\n");
-	uartDataWait(ID_SERVO_DATA_SZ, (u8*)&serialDataSize, 4);
+	clockInit(1000);
 	servosInit();
 	while (1)
 	{
-		uartDataProcess();
-		_delay_ms(10);
-	}
-}
-
-void uartDataReady(u16 id)
-{
-	if (id == ID_SERVO_DATA_SZ)
-	{
-		if (serialDataSize == 40)
+		while (uart_rx_fifo_not_empty_flag)
 		{
-			for (int sid = 0; sid < SERVO_COUNT; ++sid)	serialData[sid] = 0;
-			uartDataWait(ID_SERVO_DATA, (u8*)serialData, serialDataSize);
+			if (_frameTicks == 0)
+			{
+				system_ticks = 0;
+				_frameTicks = SERIAL_DATA_FRAME_TIMEOUT;
+			}
+			_frame[_frameOffset++] = uartGetByte();
+			if (_frameOffset >= SERIAL_DATA_FRAME_SIZE)
+			{
+				u32 crcdiff = crc32(serialData, SERVO_COUNT) - serialData[SERVO_COUNT];
+				if (crcdiff == 0)
+				{
+					processSerialData();
+					uartSendStr("OK");
+				}
+				else
+				{
+					uartSendStr("ER");
+				}
+				_frameTicks = _frameOffset = 0;
+			}
 		}
-		else
+		if (_frameTicks && system_ticks >= _frameTicks)
 		{
-			uartSendStr("!!!!!!!!!\n\r");
+			_frameTicks = _frameOffset = 0;
 		}
-	}
-	else if (id == ID_SERVO_DATA)
-	{
-		for (int sid = 0; sid < SERVO_COUNT; ++sid)
-		{
-			servos[sid].position = serialData[sid];
-			serialData[sid] = 0;
-		}
-		uartDataWait(ID_SERVO_DATA_SZ, (u8*)&serialDataSize, 4);
-		uartSendStr("#\n\r");
 	}
 }
