@@ -15,7 +15,7 @@
 #define SERVO_PWM_PRESCALER 1000000
 #define SERVO_COUNT 20
 #define SERIAL_DATA_FRAME_SIZE (SERVO_COUNT*4 + 4)
-#define SERIAL_DATA_FRAME_TIMEOUT 40
+#define SERIAL_DATA_FRAME_TIMEOUT 50
 
 u32 serialData[SERIAL_DATA_FRAME_SIZE];
 u32 _frameOffset = 0;
@@ -75,7 +75,7 @@ void timerHandler(uint8_t timer, uint8_t id, uint16_t *pwmData)
 				}
 			}
 		}
-		//pwmData[sid] = servo->position;
+		pwmData[sid] = servo->position;
 	}
 }
 

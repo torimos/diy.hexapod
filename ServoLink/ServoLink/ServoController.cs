@@ -45,7 +45,7 @@ namespace ServoLink
             }
         }
         string _response;
-        public int Commit(int timeOut)
+        public int Commit(int timeOut = 100)
         {
             if (_port == null || !_port.IsOpen) return 0;
             var crc = Crc.ComputeHash(CrcAlgorithms.Crc32Mpeg2, _servos);
@@ -64,7 +64,7 @@ namespace ServoLink
                     _response = "";
                     _port.Write(buffer, 0, buffer.Length);
                     retry++;
-                    Thread.Sleep(40);
+                    Thread.Sleep(50);
                 }
             }
             return retry;
