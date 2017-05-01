@@ -47,26 +47,28 @@ namespace ServoLink
         string _response;
         public int Commit(int timeOut = 100)
         {
+            int retry = 0;
             if (_port == null || !_port.IsOpen) return 0;
             var crc = Crc.ComputeHash(CrcAlgorithms.Crc32Mpeg2, _servos);
-            var buffer = _binaryHelper.ConvertToByteArray(_servos, crc);
+            var buffer = _binaryHelper.ConvertToByteArray(_servos, (UInt32)crc);
 
-            var sw = new Stopwatch();
-            sw.Start();
-            _response = "ER";
-            int retry = 0;
-            while (sw.ElapsedMilliseconds < timeOut)
-            {
-                if (_response == "OK") break;
-                if (_response == "ER")
-                {
-                    sw.Restart();
-                    _response = "";
-                    _port.Write(buffer, 0, buffer.Length);
-                    retry++;
-                    Thread.Sleep(50);
-                }
-            }
+            //var sw = new Stopwatch();
+            //sw.Start();
+            //_response = "ER";
+            //while (sw.ElapsedMilliseconds < timeOut)
+            //{
+            //    if (_response == "OK") break;
+            //    if (_response == "ER")
+            //    {
+            //        sw.Restart();
+            //        _response = "";
+            //        _port.Write(buffer, 0, buffer.Length);
+            //        retry++;
+            //        Thread.Sleep(50);
+            //    }
+            //}
+            _port.Write(buffer, 0, buffer.Length);
+            //Thread.Sleep(50);
             return retry;
         }
         

@@ -133,6 +133,11 @@ void uartInit(uint32_t baudRate)
 	USART_Cmd(UART4, ENABLE);
 }
 
+void uartReset()
+{
+	rx_fifo.i_first = rx_fifo.i_last = rx_fifo.num_bytes = 0;
+}
+
 void UART4_IRQHandler(void)
 {
 #if UART_TX_FIFO_ENABLED

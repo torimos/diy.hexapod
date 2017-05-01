@@ -89,7 +89,8 @@ void processSerialData()
 		int ticks = moveTime / SERVO_PWM_PERIOD_MS;
 		if (servos[sid].position != positionNew &&
 			servos[sid].position > 0 &&
-			positionNew > 0)
+			positionNew > 0 &&
+			moveTime > 0)
 		{
 			servos[sid].positionNew = positionNew;
 			servos[sid].positionDelta = (servos[sid].positionNew - servos[sid].position) / ticks;
@@ -129,6 +130,7 @@ int main()
 				}
 				else
 				{
+					uartReset();
 					uartSendStr("ER");
 				}
 				_frameTicks = _frameOffset = 0;
