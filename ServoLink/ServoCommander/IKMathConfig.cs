@@ -15,6 +15,9 @@
         public const double TibiaLength = 141;
         public const uint LegsCount = 6;
 
+        public static short[] OffsetX = { -69, -138, -69, 69, 138, 69 }; //RR RM RF LF LM LR
+        public static short[] OffsetZ = { 119, 0, -119, 119, 0, -119 }; //RR RM RF LF LM LR
+
         public static bool[] CoxaAngleInv = { false, true, false, false, false, false }; //RR RM RF LF LM LR
         public static bool[] FemurAngleInv = { true, true, true, false, false, false }; //RR RM RF LF LM LR
         public static bool[] TibiaAngleInv = { true, true, true, false, false, false }; //RR RM RF LF LM LR LF LM LR
