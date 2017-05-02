@@ -2,23 +2,8 @@
 
 namespace ServoCommander
 {
-    public class IKMath
+    public partial class IKMath
     {
-        public enum IKSolutionResultType
-        {
-            Solution,
-            Warning,
-            Error
-        }
-
-        public struct IKLegResult
-        {
-            public double CoxaAngle;
-            public double FemurAngle;
-            public double TibiaAngle;
-            public IKSolutionResultType Solution;
-        }
-
         public struct FKBodyResult
         {
             public double X;

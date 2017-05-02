@@ -52,14 +52,14 @@ namespace ServoCommander
                 _controller.Commit();
             }
 
-            public void Update(IKMath.IKLegResult[] results, ushort moveTime)
+            public void Update(IKLegResult[] results, ushort moveTime)
             {
-                if (results[3].Solution != IKMath.IKSolutionResultType.Error) UpdateLegAngle(0, results[3].CoxaAngle, results[3].FemurAngle, results[3].TibiaAngle, moveTime);//LF
-                if (results[4].Solution != IKMath.IKSolutionResultType.Error) UpdateLegAngle(1, results[4].CoxaAngle, results[4].FemurAngle, results[4].TibiaAngle, moveTime);//LM
-                if (results[5].Solution != IKMath.IKSolutionResultType.Error) UpdateLegAngle(2, results[5].CoxaAngle, results[5].FemurAngle, results[5].TibiaAngle, moveTime);//LR
-                if (results[0].Solution != IKMath.IKSolutionResultType.Error) UpdateLegAngle(3, results[0].CoxaAngle, results[0].FemurAngle, results[0].TibiaAngle, moveTime);//RR
-                if (results[1].Solution != IKMath.IKSolutionResultType.Error) UpdateLegAngle(4, results[1].CoxaAngle, results[1].FemurAngle, results[1].TibiaAngle, moveTime);//RM
-                if (results[2].Solution != IKMath.IKSolutionResultType.Error) UpdateLegAngle(5, results[2].CoxaAngle, results[2].FemurAngle, results[2].TibiaAngle, moveTime);//RF
+                if (results[3].Solution != IKSolutionResultType.Error) UpdateLegAngle(0, results[3].CoxaAngle, results[3].FemurAngle, results[3].TibiaAngle, moveTime);//LF
+                if (results[4].Solution != IKSolutionResultType.Error) UpdateLegAngle(1, results[4].CoxaAngle, results[4].FemurAngle, results[4].TibiaAngle, moveTime);//LM
+                if (results[5].Solution != IKSolutionResultType.Error) UpdateLegAngle(2, results[5].CoxaAngle, results[5].FemurAngle, results[5].TibiaAngle, moveTime);//LR
+                if (results[0].Solution != IKSolutionResultType.Error) UpdateLegAngle(3, results[0].CoxaAngle, results[0].FemurAngle, results[0].TibiaAngle, moveTime);//RR
+                if (results[1].Solution != IKSolutionResultType.Error) UpdateLegAngle(4, results[1].CoxaAngle, results[1].FemurAngle, results[1].TibiaAngle, moveTime);//RM
+                if (results[2].Solution != IKSolutionResultType.Error) UpdateLegAngle(5, results[2].CoxaAngle, results[2].FemurAngle, results[2].TibiaAngle, moveTime);//RF
                 Commit();
             }
 

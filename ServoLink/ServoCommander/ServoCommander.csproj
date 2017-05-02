@@ -49,11 +49,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HexModel.cs" />
+    <Compile Include="IKLegResult.cs" />
     <Compile Include="IKMathConfig.cs" />
     <Compile Include="IKMath.cs" />
+    <Compile Include="IKSolutionResultType.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServoDriver.cs" />
+    <Compile Include="XYZ.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
