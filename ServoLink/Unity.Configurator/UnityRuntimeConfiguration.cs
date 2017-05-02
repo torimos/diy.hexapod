@@ -23,11 +23,11 @@ namespace Unity.Configurator
                 // due to fact that ServiceLocator doesn't has API to check that adapter is already registered we have to rely on null reference exception
                 adapterAlreadyExist = Microsoft.Practices.ServiceLocation.ServiceLocator.Current != null;
             }
-            catch (NullReferenceException ex)
+            catch (NullReferenceException)
             {
                 adapterAlreadyExist = false;
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
                 adapterAlreadyExist = false;
             }

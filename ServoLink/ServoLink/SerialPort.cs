@@ -33,7 +33,7 @@ namespace ServoLink
                     _io.DataReceived += OnDataReceived;
                     _io.Open();
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     return false;
                 }

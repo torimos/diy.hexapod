@@ -13,13 +13,16 @@
         public const double TibiaMin = -53;
         public const double TibiaMax = 90;
         public const double TibiaLength = 141;
+
         public const uint LegsCount = 6;
 
-        public static short[] OffsetX = { -69, -138, -69, 69, 138, 69 }; //RR RM RF LF LM LR
-        public static short[] OffsetZ = { 119, 0, -119, 119, 0, -119 }; //RR RM RF LF LM LR
+        public static short[] OffsetX = { -54, -108, -54, 54, 108, 54 }; //RR RM RF LF LM LR
+        public static short[] OffsetZ = { 92, 0, -92, 92, 0, -92 }; //RR RM RF LF LM LR
 
-        public static bool[] CoxaAngleInv = { false, true, false, false, false, false }; //RR RM RF LF LM LR
+        public static bool[] CoxaAngleInv = { true, true, true, false, false, false }; //RR RM RF LF LM LR
         public static bool[] FemurAngleInv = { true, true, true, false, false, false }; //RR RM RF LF LM LR
         public static bool[] TibiaAngleInv = { true, true, true, false, false, false }; //RR RM RF LF LM LR LF LM LR
+
+        public const double MaxBodyHeight = 90;
     }
 }

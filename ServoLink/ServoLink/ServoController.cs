@@ -37,9 +37,17 @@ namespace ServoLink
             return opened;
         }
 
+        public bool IsConnected
+        {
+            get
+            {
+                return (_port != null && _port.IsOpen);
+            }
+        }
+
         public void Disconnect()
         {
-            if (_port != null && _port.IsOpen)
+            if (IsConnected)
             {
                 _port.Close();
             }

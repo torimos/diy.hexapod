@@ -4,13 +4,6 @@ namespace ServoCommander
 {
     public partial class IKMath
     {
-        public struct FKBodyResult
-        {
-            public double X;
-            public double Y;
-            public double Z;
-        }
-
         private double CheckBoundsAndSign(double value, double min, double max, bool inverted)
         {
             if (value < min) value = min;
@@ -18,20 +11,20 @@ namespace ServoCommander
             return inverted ? -value : value;
         }
 
-        public IKLegResult LegIK(byte legNumber, double feetPosX, double feetPosY, double feetPosZ)
+        public IKLegResult LegIK(byte legNumber, double feetPosX, double feetPosZ, double feetPosY)
         {
             IKLegResult result = new IKLegResult();
             double IKSW;            //Length between Shoulder and Wrist
             double IKA1;            //Angle of the line S>W with respect to the ground in radians
             double IKA2;            //Angle of the line S>W with respect to the femur in radians
-            result.CoxaAngle = CheckBoundsAndSign((Math.Atan2(feetPosZ, feetPosX) * 180) / Math.PI, IKMathConfig.CoxaMin, IKMathConfig.CoxaMax, IKMathConfig.CoxaAngleInv[legNumber]);
+            result.Result.Coxa = CheckBoundsAndSign((Math.Atan2(feetPosZ, feetPosX) * 180) / Math.PI, IKMathConfig.CoxaMin, IKMathConfig.CoxaMax, IKMathConfig.CoxaAngleInv[legNumber]);
             double IKFeetPosXZFinal = Math.Sqrt(feetPosX * feetPosX + feetPosZ * feetPosZ) - IKMathConfig.CoxaLength;
             IKA1 = Math.Atan2(IKFeetPosXZFinal, feetPosY);
             IKSW = Math.Sqrt(feetPosY * feetPosY + IKFeetPosXZFinal * IKFeetPosXZFinal);
             IKA2 = Math.Acos(((IKMathConfig.FemurLength * IKMathConfig.FemurLength - IKMathConfig.TibiaLength * IKMathConfig.TibiaLength) + IKSW * IKSW) / (2 * IKMathConfig.FemurLength * IKSW));
-            result.FemurAngle = CheckBoundsAndSign(- (IKA1 + IKA2) * 180 / Math.PI + 90, IKMathConfig.FemurMin, IKMathConfig.FemurMax, IKMathConfig.FemurAngleInv[legNumber]);
+            result.Result.Femur = CheckBoundsAndSign(- (IKA1 + IKA2) * 180 / Math.PI + 90, IKMathConfig.FemurMin, IKMathConfig.FemurMax, IKMathConfig.FemurAngleInv[legNumber]);
             double AngleRad4 = Math.Acos(((IKMathConfig.FemurLength * IKMathConfig.FemurLength + IKMathConfig.TibiaLength * IKMathConfig.TibiaLength) - IKSW * IKSW) / (2 * IKMathConfig.FemurLength * IKMathConfig.TibiaLength));
-            result.TibiaAngle = CheckBoundsAndSign(-(90 - AngleRad4 * 180 / Math.PI), IKMathConfig.TibiaMin, IKMathConfig.TibiaMax, IKMathConfig.TibiaAngleInv[legNumber]);
+            result.Result.Tibia = CheckBoundsAndSign(-(90 - AngleRad4 * 180 / Math.PI), IKMathConfig.TibiaMin, IKMathConfig.TibiaMax, IKMathConfig.TibiaAngleInv[legNumber]);
 
             result.Solution = IKSolutionResultType.Error;
             if (IKSW < ((IKMathConfig.FemurLength + IKMathConfig.TibiaLength) - 30))
@@ -41,7 +34,7 @@ namespace ServoCommander
             return result;
         }
 
-        public FKBodyResult BodyFK(byte legNumber, double PosX, double PosZ, double PosY, double RotationY, double BodyRotX, double BodyRotY, double BodyRotZ, double TotalXBal, double TotalYBal, double TotalZBal)
+        public XYZ BodyFK(byte legNumber, double PosX, double PosZ, double PosY, double RotationY, double BodyRotX, double BodyRotZ, double BodyRotY, double TotalXBal, double TotalZBal, double TotalYBal)
         {
             double SinA;          //Sin buffer for BodyRotX calculations
             double CosA;          //Cos buffer for BodyRotX calculations
@@ -82,7 +75,7 @@ namespace ServoCommander
             double BodyFKPosZ = (CPR_Z - (CPR_X * CosG * SinA + CPR_X * CosA * SinB * SinG + CPR_Z * CosA * CosG - CPR_Z * SinA * SinB * SinG - CPR_Y * CosB * SinG));
             double BodyFKPosY = (CPR_Y - (CPR_X * SinA * SinG - CPR_X * CosA * CosG * SinB + CPR_Z * CosA * SinG + CPR_Z * CosG * SinA * SinB + CPR_Y * CosB * CosG));
 
-            return new FKBodyResult { X = BodyFKPosX, Y = BodyFKPosY, Z = BodyFKPosZ };//6 -2 4 
+            return new XYZ(BodyFKPosX, BodyFKPosY, BodyFKPosZ);
         }
 
     }
