@@ -32,7 +32,7 @@ namespace ServoCommander
             _controller.Commit();
         }
 
-        private void UpdateLegPos(byte legNumber, ushort coxaPos, ushort femurPos, ushort tibiaPos, ushort moveTime)
+        public void UpdateLegPos(byte legNumber, ushort coxaPos, ushort femurPos, ushort tibiaPos, ushort moveTime)
         {
             _controller.Move(legNumber * 3, (ushort)(tibiaPos + TibiaOffset[legNumber]), moveTime);
             _controller.Move(legNumber * 3 + 1, (ushort)(femurPos + FemurOffset[legNumber]), moveTime);
@@ -46,7 +46,7 @@ namespace ServoCommander
             ushort tibiaPos = (ushort)(1500 + (tibiaAngle * 10));
             UpdateLegPos(legNumber, coxaPos, femurPos, tibiaPos, moveTime);
         }
-        private void Commit()
+        public void Commit()
         {
             if (!_controller.IsConnected) return;
             _controller.Commit();

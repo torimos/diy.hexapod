@@ -17,7 +17,7 @@ namespace ServoCommander
             double IKSW;            //Length between Shoulder and Wrist
             double IKA1;            //Angle of the line S>W with respect to the ground in radians
             double IKA2;            //Angle of the line S>W with respect to the femur in radians
-            result.Result.Coxa = CheckBoundsAndSign((Math.Atan2(feetPosZ, feetPosX) * 180) / Math.PI, IKMathConfig.CoxaMin, IKMathConfig.CoxaMax, IKMathConfig.CoxaAngleInv[legNumber]);
+            result.Result.Coxa = CheckBoundsAndSign(((Math.Atan2(feetPosZ, feetPosX) * 180) / Math.PI) + IKMathConfig.CoxaDefaultAngle[legNumber], IKMathConfig.CoxaMin, IKMathConfig.CoxaMax, IKMathConfig.CoxaAngleInv[legNumber]);
             double IKFeetPosXZFinal = Math.Sqrt(feetPosX * feetPosX + feetPosZ * feetPosZ) - IKMathConfig.CoxaLength;
             IKA1 = Math.Atan2(IKFeetPosXZFinal, feetPosY);
             IKSW = Math.Sqrt(feetPosY * feetPosY + IKFeetPosXZFinal * IKFeetPosXZFinal);

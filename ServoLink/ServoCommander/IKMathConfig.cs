@@ -17,12 +17,15 @@
         public const uint LegsCount = 6;
 
         public static short[] OffsetX = { -54, -108, -54, 54, 108, 54 }; //RR RM RF LF LM LR
-        public static short[] OffsetZ = { 92, 0, -92, 92, 0, -92 }; //RR RM RF LF LM LR
+        public static short[] OffsetZ = { 93, 0, -93, 93, 0, -93 }; //RR RM RF LF LM LR
+
+        public static double[] CoxaDefaultAngle = { -59.7, 0, 59.7, -59.7, 0, 59.7 }; //RR RM RF LF LM LR
 
         public static bool[] CoxaAngleInv = { true, true, true, false, false, false }; //RR RM RF LF LM LR
         public static bool[] FemurAngleInv = { true, true, true, false, false, false }; //RR RM RF LF LM LR
         public static bool[] TibiaAngleInv = { true, true, true, false, false, false }; //RR RM RF LF LM LR LF LM LR
 
         public const double MaxBodyHeight = 90;
+        public const double BodyStandUpOffset = 45;
     }
 }

@@ -4,6 +4,15 @@ namespace ServoCommander
 {
     public class HexModel
     {
+        public enum ControlModeType
+        {
+            Walk = 0,
+            Translate,
+            Rotate,
+            SingleLeg,
+            GPPlayer
+        }
+
         public byte LegsCount;
         public CoxaFemurTibia[] LegsAngle;
         public XYZ[] LegsPos;
@@ -14,8 +23,8 @@ namespace ServoCommander
         public XYZ TotalBal;
         public XYZ BodyPos; // Body position
         public XYZ BodyRot; // X -Pitch, Y-Rotation, Z-Roll
-        public int BodyYShift;
-        public int BodyYOffset;
+        public double BodyYShift;
+        public double BodyYOffset;
         public XYZ[] GatePos;
         public double[] GateRotY;
         public XYZ TravelLength;
@@ -23,8 +32,12 @@ namespace ServoCommander
         public ushort LegInitIndex;
         public ushort SelectedLeg;
 
+        public ControlModeType ControlMode;
+
         public bool PowerOn;
         public bool PrevPowerOn;
+        internal bool AdjustLegsPosition;
+        internal int InputTimeDelay;
 
         public HexModel(byte legsCount)
         {
@@ -39,6 +52,8 @@ namespace ServoCommander
             GatePos = new XYZ[legsCount];
             GateRotY = new double[legsCount];
             TravelLength = new XYZ();
+
+            ControlMode = ControlModeType.Translate;
         }
 
         public override string ToString()
@@ -58,8 +73,12 @@ namespace ServoCommander
             sb.AppendLine($"TotalBal: {TotalBal} ");
             sb.AppendLine($"BodyPos: {BodyPos} ");
             sb.AppendLine($"BodyRot: {BodyRot} ");
+            sb.AppendLine($"BodyYOffset: {BodyYOffset,5}");
+            sb.AppendLine($"BodyYShift: {BodyYShift,5}");
             sb.AppendLine($"SelectedLeg: {SelectedLeg,3}");
-            sb.AppendLine($"MoveTime: {MoveTime}");
+            sb.AppendLine($"MoveTime: {MoveTime, 4}");
+            sb.AppendLine($"ControlMode: {ControlMode,10}");
+            sb.AppendLine($"InputTimeDelay: {InputTimeDelay,5}");
             sb.AppendLine($"PowerOn: {PowerOn,5}");
             return sb.ToString();
         }
