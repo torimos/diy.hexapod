@@ -33,7 +33,7 @@ namespace ServoCommander
                 {
                     AdjustLegPositionsToBodyHeight(model);
                 }
-                //SingleLegControl(model);
+                SingleLegControl(model);
 
                 GateSequence(model);
 
@@ -474,6 +474,8 @@ namespace ServoCommander
 
         private static void SingleLegControl(HexModel model)
         {
+            if (model.ControlMode != HexModel.ControlModeType.SingleLeg) return;
+
             bool AllDown = (model.LegsPos[0].y == HexConfig.DefaultLegsPosY[0]) &&
                 (model.LegsPos[1].y == HexConfig.DefaultLegsPosY[1]) &&
                 (model.LegsPos[2].y == HexConfig.DefaultLegsPosY[2]) &&
