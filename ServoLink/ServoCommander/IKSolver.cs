@@ -2,7 +2,7 @@
 
 namespace ServoCommander
 {
-    public partial class IKMath
+    public partial class IKSolver
     {
         private double CheckBoundsAndSign(double value, double min, double max, bool inverted)
         {
@@ -17,19 +17,19 @@ namespace ServoCommander
             double IKSW;            //Length between Shoulder and Wrist
             double IKA1;            //Angle of the line S>W with respect to the ground in radians
             double IKA2;            //Angle of the line S>W with respect to the femur in radians
-            result.Result.Coxa = CheckBoundsAndSign(((Math.Atan2(feetPosZ, feetPosX) * 180) / Math.PI) + IKMathConfig.CoxaDefaultAngle[legNumber], IKMathConfig.CoxaMin, IKMathConfig.CoxaMax, IKMathConfig.CoxaAngleInv[legNumber]);
-            double IKFeetPosXZFinal = Math.Sqrt(feetPosX * feetPosX + feetPosZ * feetPosZ) - IKMathConfig.CoxaLength;
+            result.Result.Coxa = CheckBoundsAndSign(((Math.Atan2(feetPosZ, feetPosX) * 180) / Math.PI) + HexConfig.CoxaDefaultAngle[legNumber], HexConfig.CoxaMin, HexConfig.CoxaMax, HexConfig.CoxaAngleInv[legNumber]);
+            double IKFeetPosXZFinal = Math.Sqrt(feetPosX * feetPosX + feetPosZ * feetPosZ) - HexConfig.CoxaLength;
             IKA1 = Math.Atan2(IKFeetPosXZFinal, feetPosY);
             IKSW = Math.Sqrt(feetPosY * feetPosY + IKFeetPosXZFinal * IKFeetPosXZFinal);
-            IKA2 = Math.Acos(((IKMathConfig.FemurLength * IKMathConfig.FemurLength - IKMathConfig.TibiaLength * IKMathConfig.TibiaLength) + IKSW * IKSW) / (2 * IKMathConfig.FemurLength * IKSW));
-            result.Result.Femur = CheckBoundsAndSign(- (IKA1 + IKA2) * 180 / Math.PI + 90, IKMathConfig.FemurMin, IKMathConfig.FemurMax, IKMathConfig.FemurAngleInv[legNumber]);
-            double AngleRad4 = Math.Acos(((IKMathConfig.FemurLength * IKMathConfig.FemurLength + IKMathConfig.TibiaLength * IKMathConfig.TibiaLength) - IKSW * IKSW) / (2 * IKMathConfig.FemurLength * IKMathConfig.TibiaLength));
-            result.Result.Tibia = CheckBoundsAndSign(-(90 - AngleRad4 * 180 / Math.PI), IKMathConfig.TibiaMin, IKMathConfig.TibiaMax, IKMathConfig.TibiaAngleInv[legNumber]);
+            IKA2 = Math.Acos(((HexConfig.FemurLength * HexConfig.FemurLength - HexConfig.TibiaLength * HexConfig.TibiaLength) + IKSW * IKSW) / (2 * HexConfig.FemurLength * IKSW));
+            result.Result.Femur = CheckBoundsAndSign(- (IKA1 + IKA2) * 180 / Math.PI + 90, HexConfig.FemurMin, HexConfig.FemurMax, HexConfig.FemurAngleInv[legNumber]);
+            double AngleRad4 = Math.Acos(((HexConfig.FemurLength * HexConfig.FemurLength + HexConfig.TibiaLength * HexConfig.TibiaLength) - IKSW * IKSW) / (2 * HexConfig.FemurLength * HexConfig.TibiaLength));
+            result.Result.Tibia = CheckBoundsAndSign(-(90 - AngleRad4 * 180 / Math.PI), HexConfig.TibiaMin, HexConfig.TibiaMax, HexConfig.TibiaAngleInv[legNumber]);
 
             result.Solution = IKSolutionResultType.Error;
-            if (IKSW < ((IKMathConfig.FemurLength + IKMathConfig.TibiaLength) - 30))
+            if (IKSW < ((HexConfig.FemurLength + HexConfig.TibiaLength) - 30))
                 result.Solution = IKSolutionResultType.Solution;
-            else if (IKSW < (IKMathConfig.FemurLength + IKMathConfig.TibiaLength))
+            else if (IKSW < (HexConfig.FemurLength + HexConfig.TibiaLength))
                 result.Solution = IKSolutionResultType.Warning;
             return result;
         }
@@ -48,9 +48,9 @@ namespace ServoCommander
             double c1DEC = 10;
 
             //Calculating totals from center of the body to the feet 
-            CPR_X = IKMathConfig.OffsetX[legNumber] + PosX;
+            CPR_X = HexConfig.OffsetX[legNumber] + PosX;
             CPR_Y = PosY; //Define centerpoint for rotation along the Y-axis
-            CPR_Z = IKMathConfig.OffsetZ[legNumber] + PosZ;
+            CPR_Z = HexConfig.OffsetZ[legNumber] + PosZ;
 
             //Successive global rotation matrix: 
             //Math shorts for rotation: Alfa [A] = Xrotate, Beta [B] = Zrotate, Gamma [G] = Yrotate 

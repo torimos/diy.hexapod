@@ -54,8 +54,8 @@
   <ItemGroup>
     <Compile Include="HexModel.cs" />
     <Compile Include="IKLegResult.cs" />
-    <Compile Include="IKMathConfig.cs" />
-    <Compile Include="IKMath.cs" />
+    <Compile Include="HexConfig.cs" />
+    <Compile Include="IKSolver.cs" />
     <Compile Include="IKSolutionResultType.cs" />
     <Compile Include="InputDriver.cs" />
     <Compile Include="Program.cs" />

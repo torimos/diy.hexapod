@@ -21,7 +21,6 @@ namespace ServoCommander
             if (!_controller.Connect(new SerialPort("COM3", 115200))) return false;
             _controller.MoveAll(0);
             _controller.Commit();
-            Console.WriteLine("Connected");
             return true;
         }
 
@@ -60,7 +59,6 @@ namespace ServoCommander
             UpdateLegAngle(5, results[0].Coxa, results[0].Femur, results[0].Tibia, moveTime);//RR
             UpdateLegAngle(4, results[1].Coxa, results[1].Femur, results[1].Tibia, moveTime);//RM
             UpdateLegAngle(3, results[2].Coxa, results[2].Femur, results[2].Tibia, moveTime);//RF
-            Commit();
         }
 
         public void Dispose()

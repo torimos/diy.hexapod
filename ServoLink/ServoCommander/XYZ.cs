@@ -1,5 +1,24 @@
 ﻿namespace ServoCommander
 {
+
+    public struct XY
+    {
+        public double x;
+        public double y;
+        public XY(double x, double y)
+        {
+            this.x = x; this.y = y;
+        }
+        public string ToString(string fmt)
+        {
+            return $"{x.ToString(fmt),6}{y.ToString(fmt),6}";
+        }
+        public override string ToString()
+        {
+            return ToString("N1");
+        }
+    }
+
     public struct XYZ
     {
         public double x;
@@ -9,10 +28,14 @@
         {
             this.x = x; this.y = y; this.z = z;
         }
+        public string ToString(string fmt)
+        {
+            return $"{x.ToString(fmt),6}{y.ToString(fmt),6}{z.ToString(fmt),6}";
+        }
 
         public override string ToString()
         {
-            return $"{x,4}:{y,4}:{z,4}";
+            return ToString("N1");
         }
     }
 
@@ -28,7 +51,7 @@
 
         public string ToString(string fmt)
         {
-            return $"{Coxa.ToString(fmt),6}:{Femur.ToString(fmt),6}:{Tibia.ToString(fmt),6}";
+            return $"{Coxa.ToString(fmt),6}{Femur.ToString(fmt),6}{Tibia.ToString(fmt),6}";
         }
 
         public override string ToString()
