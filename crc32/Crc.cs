@@ -96,8 +96,14 @@ namespace CRC
 
         private void CreateTable()
         {
+            //StringBuilder sb = new StringBuilder();
             for (int i = 0; i < _table.Length; i++)
+            {
                 _table[i] = CreateTableEntry(i);
+                //if (i % 6 == 0) sb.Append("\n\t");
+               // sb.Append($"0x{_table[i]:x}, ");
+            }
+            //File.WriteAllText("D:\\out.cpp", sb.ToString());
         }
 
         private ulong CreateTableEntry(int index)

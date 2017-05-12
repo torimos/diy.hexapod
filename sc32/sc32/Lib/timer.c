@@ -234,7 +234,8 @@ void TIM8_BRK_TIM12_IRQHandler(void)
 		
 		#ifdef TIMER12_CLOCK
 		system_ticks++;
-		#else		timerHandler(5, _timerMapping[5], _pwmData[5]);
+		#else
+		timerHandler(5, _timerMapping[5], _pwmData[5]);
 		TIM_CCR2(TIM12, _pwmData[5][0], _pwmData[5][1]);
 		#endif
 		

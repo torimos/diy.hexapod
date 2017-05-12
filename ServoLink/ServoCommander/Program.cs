@@ -63,8 +63,7 @@ namespace ServoCommander
                     {
                         if (((Math.Abs(model.GaitPos[LegIndex].x) > HexConfig.GPlimit) || 
                             (Math.Abs(model.GaitPos[LegIndex].z) > HexConfig.GPlimit) || 
-                            (Math.Abs(model.GaitPos[LegIndex].y) > HexConfig.GPlimit)) &&
-                            model.ExtraCycle == 0)
+                            (Math.Abs(model.GaitPos[LegIndex].y) > HexConfig.GPlimit)))
                         {
                             //For making sure that we are using timed move until all legs are down
                             model.ExtraCycle = model.gaitCur.NrLiftedPos + 1;

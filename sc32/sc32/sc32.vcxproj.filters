@@ -2,38 +2,38 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source files">
-      <UniqueIdentifier>{7ea57f1a-8158-4eb4-978f-038c9fb147e8}</UniqueIdentifier>
+      <UniqueIdentifier>{598487b4-cb1f-4ec9-98c9-b09029a630fe}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
     <Filter Include="Header files">
-      <UniqueIdentifier>{7ed20146-42e2-4567-8762-319cc283728f}</UniqueIdentifier>
+      <UniqueIdentifier>{bceade7a-7576-4ef3-a542-09f4dc88c49d}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
     <Filter Include="Resource files">
-      <UniqueIdentifier>{430f9098-326a-4402-b7e1-956ee054ed1c}</UniqueIdentifier>
+      <UniqueIdentifier>{2048189a-d36d-4287-aaa6-c8ad21b58583}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
-    <Filter Include="Make files">
-      <UniqueIdentifier>{c28c81cd-4398-420b-a42c-93d41dbde451}</UniqueIdentifier>
-      <Extensions>*.mak</Extensions>
+    <Filter Include="VisualGDB settings">
+      <UniqueIdentifier>{bc52836b-77de-4ec5-8dbc-d2ec6881e422}</UniqueIdentifier>
+      <Extensions>*.vgdbsettings</Extensions>
     </Filter>
     <Filter Include="Source files\Device-specific files">
-      <UniqueIdentifier>{07741476-cb3d-4a5f-820f-7bf6bc2f6774}</UniqueIdentifier>
+      <UniqueIdentifier>{c2b81d9e-6bae-45a1-9b5e-8a42799aa913}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header files\Device-specific files">
-      <UniqueIdentifier>{5674a71a-9904-46b6-bef4-6497170300e4}</UniqueIdentifier>
+      <UniqueIdentifier>{00e0ea28-221f-4507-a12b-c32d8417fd9c}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source files\Device-specific files\StdPeriph">
-      <UniqueIdentifier>{92b21f32-a4ec-45ec-a220-5af111335c9e}</UniqueIdentifier>
+      <UniqueIdentifier>{aaf770b8-47e8-4a64-8c9c-cf831918a98a}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header files\Device-specific files\StdPeriph">
-      <UniqueIdentifier>{c934009b-3520-44fb-b802-c0f019a7462f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Lib">
-      <UniqueIdentifier>{fbd919b5-0729-4e90-95bf-3a96d9d07850}</UniqueIdentifier>
+      <UniqueIdentifier>{b0af363d-8eaa-4faf-8a0c-7681d581b6a2}</UniqueIdentifier>
     </Filter>
     <Filter Include="App">
-      <UniqueIdentifier>{dfc40c6c-53ba-46f7-8105-8c68b7c0bbd8}</UniqueIdentifier>
+      <UniqueIdentifier>{fa56146f-48ef-40a2-ae7c-10c1205e079b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib">
+      <UniqueIdentifier>{d096aa20-edff-43a5-a754-f35e13152f87}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -115,34 +115,33 @@
     <ClCompile Include="C:\Users\Oleg\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F1xxxx\CMSIS_StdPeriph\CM3\CoreSupport\core_cm3.c">
       <Filter>Source files\Device-specific files\StdPeriph</Filter>
     </ClCompile>
-    <ClCompile Include="Lib\core.c">
-      <Filter>Lib</Filter>
-    </ClCompile>
-    <ClCompile Include="Lib\uart.c">
-      <Filter>Lib</Filter>
-    </ClCompile>
     <ClCompile Include="App\main.c">
       <Filter>App</Filter>
     </ClCompile>
-    <ClCompile Include="Lib\uart_printf.c">
-      <Filter>Lib</Filter>
-    </ClCompile>
-    <ClCompile Include="Lib\timer.c">
+    <ClCompile Include="Lib\core.c">
       <Filter>Lib</Filter>
     </ClCompile>
     <ClCompile Include="Lib\crc32.c">
       <Filter>Lib</Filter>
     </ClCompile>
+    <ClCompile Include="Lib\timer.c">
+      <Filter>Lib</Filter>
+    </ClCompile>
+    <ClCompile Include="Lib\uart.c">
+      <Filter>Lib</Filter>
+    </ClCompile>
+    <ClCompile Include="Lib\uart_printf.c">
+      <Filter>Lib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Makefile" />
-    <None Include="debug.mak">
-      <Filter>Make files</Filter>
+    <None Include="sc32-Debug.vgdbsettings">
+      <Filter>VisualGDB settings</Filter>
     </None>
-    <None Include="release.mak">
-      <Filter>Make files</Filter>
+    <None Include="sc32-Release.vgdbsettings">
+      <Filter>VisualGDB settings</Filter>
     </None>
-    <None Include="stm32.mak">
+    <None Include="stm32.props">
       <Filter>Source files\Device-specific files</Filter>
     </None>
   </ItemGroup>
@@ -228,14 +227,19 @@
     <ClInclude Include="Lib\core.h">
       <Filter>Lib</Filter>
     </ClInclude>
-    <ClInclude Include="Lib\uart.h">
+    <ClInclude Include="Lib\crc32.h">
       <Filter>Lib</Filter>
     </ClInclude>
     <ClInclude Include="Lib\timer.h">
       <Filter>Lib</Filter>
     </ClInclude>
-    <ClInclude Include="Lib\crc32.h">
+    <ClInclude Include="Lib\uart.h">
       <Filter>Lib</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="stm32.xml">
+      <Filter>VisualGDB settings</Filter>
+    </Xml>
   </ItemGroup>
 </Project>

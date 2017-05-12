@@ -39,7 +39,6 @@ namespace ServoCommander
             GPPlayer
         }
 
-        public byte LegsCount;
         public CoxaFemurTibia[] LegsAngle;
         public XYZ[] LegsPos;
 
