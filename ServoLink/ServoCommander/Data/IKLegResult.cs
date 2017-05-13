@@ -1,4 +1,6 @@
-﻿namespace ServoCommander
+﻿using ServoCommander.Data;
+
+namespace ServoCommander.IK
 {
     public struct IKLegResult
     {

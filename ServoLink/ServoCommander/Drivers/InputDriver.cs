@@ -4,8 +4,9 @@ using SlimDX.XInput;
 using SlimDX.DirectInput;
 using System.Linq;
 using System.Diagnostics;
+using ServoCommander.Data;
 
-namespace ServoCommander
+namespace ServoCommander.Drivers
 {
 
     public class InputDriver

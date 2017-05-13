@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text;
 
-namespace ServoCommander
+namespace ServoCommander.Data
 {
     public enum GaitType
     {

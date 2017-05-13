@@ -1,7 +1,8 @@
-﻿using ServoLink;
+﻿using ServoCommander.Data;
+using ServoLink;
 using System;
 
-namespace ServoCommander
+namespace ServoCommander.Drivers
 {
     public class ServoDriver: IDisposable
     {

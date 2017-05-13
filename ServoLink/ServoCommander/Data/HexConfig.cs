@@ -1,4 +1,4 @@
-﻿namespace ServoCommander
+﻿namespace ServoCommander.Data
 {
     public class HexConfig
     {

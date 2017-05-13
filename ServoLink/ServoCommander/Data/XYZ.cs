@@ -1,6 +1,5 @@
-﻿namespace ServoCommander
+﻿namespace ServoCommander.Data
 {
-
     public struct XY
     {
         public double x;

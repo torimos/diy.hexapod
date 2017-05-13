@@ -1,4 +1,4 @@
-﻿namespace ServoCommander
+﻿namespace ServoCommander.IK
 {
     public enum IKSolutionResultType
     {

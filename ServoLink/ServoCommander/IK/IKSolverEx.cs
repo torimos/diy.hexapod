@@ -1,6 +1,7 @@
-﻿using System;
+﻿using ServoCommander.Data;
+using System;
 
-namespace ServoCommander
+namespace ServoCommander.IK
 {
     public class IKSolverEx : IIKSolver
     {

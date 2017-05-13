@@ -1,4 +1,4 @@
-﻿namespace ServoCommander
+﻿namespace ServoCommander.IK
 {
     public class IKMath
     {
