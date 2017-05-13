@@ -203,11 +203,11 @@ namespace ServoCommander
 
                         //Walking
                         if (model.WalkMethod)  //(Walk Methode) 
-                            model.TravelLength.z = thumbRight.y; //Right Stick Up/Down  
+                            model.TravelLength.z = -thumbRight.y; //Right Stick Up/Down  
                         else
                         {
                             model.TravelLength.x = -thumbLeft.x;
-                            model.TravelLength.z = thumbLeft.y;
+                            model.TravelLength.z = -thumbLeft.y;
                         }
 
                         if (!model.DoubleTravelOn)
@@ -249,9 +249,9 @@ namespace ServoCommander
                     }
 
                     model.SingleLegHold = State.IsButtonPressed(GamepadButtonFlags.RightShoulder);
-                    model.SingleLegPos.x = thumbLeft.x / 2; //Left Stick Right/Left
-                    model.SingleLegPos.y = thumbRight.y / 5; //Right Stick Up/Down
-                    model.SingleLegPos.z = thumbLeft.y / 2; //Left Stick Up/Down
+                    model.SingleLegPos.x = thumbLeft.x; //Left Stick Right/Left
+                    model.SingleLegPos.y = -thumbRight.y / 2; //Right Stick Up/Down
+                    model.SingleLegPos.z = thumbLeft.y; //Left Stick Up/Down
                 }
 
                 model.InputTimeDelay = 128 - (int)Math.Max(Math.Max(Math.Abs(thumbLeft.x), Math.Abs(thumbLeft.y)), Math.Abs(thumbRight.x));

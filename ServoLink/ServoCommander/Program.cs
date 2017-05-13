@@ -228,7 +228,7 @@ namespace ServoCommander
                     model.LegsPos[leg].x - model.BodyPos.x + bodyFKPos.x - (model.GaitPos[leg].x - model.TotalTrans.x),
                     model.LegsPos[leg].z + model.BodyPos.z - bodyFKPos.z + (model.GaitPos[leg].z - model.TotalTrans.z),
                     model.LegsPos[leg].y + model.BodyPos.y - bodyFKPos.y + (model.GaitPos[leg].y - model.TotalTrans.y));
-                //if (legIK.Solution != IKSolutionResultType.Error)
+                if (legIK.Solution != IKSolutionResultType.Error)
                 {
                     model.LegsAngle[leg] = legIK.Result;
                 }
@@ -246,7 +246,7 @@ namespace ServoCommander
                     model.LegsPos[leg].x + model.BodyPos.x - bodyFKPos.x + (model.GaitPos[leg].x - model.TotalTrans.x),
                     model.LegsPos[leg].z + model.BodyPos.z - bodyFKPos.z + (model.GaitPos[leg].z - model.TotalTrans.z),
                     model.LegsPos[leg].y + model.BodyPos.y - bodyFKPos.y + (model.GaitPos[leg].y - model.TotalTrans.y));
-                ///if (legIK.Solution != IKSolutionResultType.Error)
+                if (legIK.Solution != IKSolutionResultType.Error)
                 {
                     model.LegsAngle[leg] = legIK.Result;
                 }
