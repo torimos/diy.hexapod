@@ -52,10 +52,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IIKSolver.cs" />
+    <Compile Include="IKSolverEx.cs" />
     <Compile Include="GamepadExtension.cs" />
     <Compile Include="HexModel.cs" />
     <Compile Include="IKLegResult.cs" />
     <Compile Include="HexConfig.cs" />
+    <Compile Include="IKMath.cs" />
     <Compile Include="IKSolver.cs" />
     <Compile Include="IKSolutionResultType.cs" />
     <Compile Include="InputDriver.cs" />

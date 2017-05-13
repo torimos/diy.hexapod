@@ -3,6 +3,7 @@ using Unity.Configurator;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace ServoCommander
 {
@@ -14,7 +15,7 @@ namespace ServoCommander
             var model = new HexModel(HexConfig.LegsCount);
             Setup(model);
 
-            var me = new IKSolver();
+            IIKSolver me = new IKSolverEx();
             var sd = new ServoDriver();
             var id = new InputDriver();
             sd.Init();
@@ -22,11 +23,27 @@ namespace ServoCommander
 
             var sw = new Stopwatch();
             Console.SetWindowSize(80, 70);
-            while (true)
+
+            Task.Run(() =>
+            {
+                while (!id.Terminate)
+                {
+                    id.ProcessInput(model);
+                }
+            });
+
+            Task.Run(() =>
+            {
+                while (!id.Terminate)
+                {
+                    DebugOutput(model, id.State);
+                }
+            });
+
+            while (!id.Terminate)
             {
                 sw.Restart();
                 model.AdjustLegsPosition = false;
-                if (!id.ProcessInput(model)) break;
 
                 if (model.AdjustLegsPosition)
                 {
@@ -62,7 +79,7 @@ namespace ServoCommander
                     {
                         if (((Math.Abs(model.GaitPos[LegIndex].x) > HexConfig.GPlimit) || 
                             (Math.Abs(model.GaitPos[LegIndex].z) > HexConfig.GPlimit) || 
-                            (Math.Abs(model.GaitPos[LegIndex].y) > HexConfig.GPlimit)))
+                            (Math.Abs(model.GaitRotY[LegIndex]) > HexConfig.GPlimit)))
                         {
                             //For making sure that we are using timed move until all legs are down
                             model.ExtraCycle = model.gaitCur.NrLiftedPos + 1;
@@ -77,7 +94,6 @@ namespace ServoCommander
                         sw.Restart();
                         do
                         {
-                            DebugOutput(model);
                         }
                         while (sw.ElapsedMilliseconds < timeToWait);
                     }
@@ -98,8 +114,6 @@ namespace ServoCommander
                         sd.Reset();
                     }
                 }
-
-                DebugOutput(model);
 
                 model.PrevControlMode = model.ControlMode;
                 model.PrevMoveTime = model.MoveTime;
@@ -179,7 +193,7 @@ namespace ServoCommander
                 HalfLiftHeight = 1,
                 GaitLegNr = new byte[] { 1, 4, 1, 4, 1, 4 }
             });
-            model.GaitType = GaitType.Ripple12;
+            model.GaitType = GaitType.Tripod6;
             model.BalanceMode = false;
             model.LegLiftHeight = HexConfig.LegLiftHeight;
             model.ForceGaitStepCnt = 0;    // added to try to adjust starting positions depending on height...
@@ -193,12 +207,11 @@ namespace ServoCommander
             }
 
             model.PrevSelectedLeg = model.SelectedLeg = 0xFF; // No Leg selected
-            model.Speed = 100;
+            model.Speed = 150;
             model.PowerOn = false;
             model.DebugOutput = true;
         }
-
-        private static void SolveIKLegs(HexModel model, IKSolver ik)
+        private static void SolveIKLegs(HexModel model, IIKSolver ik)
         {
             XYZ bodyFKPos;
             IKLegResult legIK;
@@ -215,7 +228,7 @@ namespace ServoCommander
                     model.LegsPos[leg].x - model.BodyPos.x + bodyFKPos.x - (model.GaitPos[leg].x - model.TotalTrans.x),
                     model.LegsPos[leg].z + model.BodyPos.z - bodyFKPos.z + (model.GaitPos[leg].z - model.TotalTrans.z),
                     model.LegsPos[leg].y + model.BodyPos.y - bodyFKPos.y + (model.GaitPos[leg].y - model.TotalTrans.y));
-                if (legIK.Solution != IKSolutionResultType.Error)
+                //if (legIK.Solution != IKSolutionResultType.Error)
                 {
                     model.LegsAngle[leg] = legIK.Result;
                 }
@@ -233,27 +246,33 @@ namespace ServoCommander
                     model.LegsPos[leg].x + model.BodyPos.x - bodyFKPos.x + (model.GaitPos[leg].x - model.TotalTrans.x),
                     model.LegsPos[leg].z + model.BodyPos.z - bodyFKPos.z + (model.GaitPos[leg].z - model.TotalTrans.z),
                     model.LegsPos[leg].y + model.BodyPos.y - bodyFKPos.y + (model.GaitPos[leg].y - model.TotalTrans.y));
-                if (legIK.Solution != IKSolutionResultType.Error)
+                ///if (legIK.Solution != IKSolutionResultType.Error)
                 {
                     model.LegsAngle[leg] = legIK.Result;
                 }
             }
         }
-
-        private static void DebugOutput(HexModel model)
+        private static void DebugOutput(HexModel model, GamepadEx gamepadEx)
         {
             if (model.DebugOutput)
             {
-                if (model.PrevControlMode != model.ControlMode)
-                {
-                    Console.Clear();
-                }
+                Console.Clear();
                 Console.SetCursorPosition(0, 0);
                 Console.WriteLine(model);
+
+                if (GamepadEx.Emulated)
+                {
+                    Console.WriteLine("GAME PAD - EMULATION");
+                }
+                
+                Console.WriteLine($"ThumbOffset: {gamepadEx?.ThumbOffset,8}");
+                Console.WriteLine($"Buttons: {gamepadEx?.Buttons,10}");
+                Console.WriteLine($"Left: {gamepadEx?.LeftThumbX,6}{gamepadEx?.LeftThumbY,6}");
+                Console.WriteLine($"Right: {gamepadEx?.RightThumbX,6}{gamepadEx?.RightThumbY,6}");
+                Console.WriteLine($"Triggers: {gamepadEx?.LeftTrigger,6}{gamepadEx?.RightTrigger,6}");
+                Thread.Sleep(100);
             }
         }
-
-
         private static void GateSequence(HexModel model)
         {
             //Check if the Gait is in motion - If not if we are going to start a motion try to align our Gaitstep to start with a good foot
@@ -286,7 +305,6 @@ namespace ServoCommander
             if (model.ForceGaitStepCnt > 0)
                 model.ForceGaitStepCnt--;
         }
-
         private static void Gait(HexModel model, int GaitCurrentLegNr)
         {
             // Try to reduce the number of time we look at GaitLegnr and Gaitstep
@@ -357,7 +375,6 @@ namespace ServoCommander
                 model.GaitRotY[GaitCurrentLegNr] = model.GaitRotY[GaitCurrentLegNr] - (model.TravelLength.y / model.gaitCur.TLDivFactor);
             }
         }
-
         private static void BalCalcOneLeg(HexModel model, double posX, double posZ, double posY, int BalLegNr)
         {
             //Calculating totals from center of the body to the feet
@@ -373,7 +390,6 @@ namespace ServoCommander
             model.TotalBal.z += ((Math.Atan2(CPR_Y, CPR_X) * 180) / Math.PI) - 90; //Rotate balance circle 90 deg
             model.TotalBal.x += ((Math.Atan2(CPR_Y, CPR_Z) * 180) / Math.PI) - 90; //Rotate balance circle 90 deg
         }
-
         private static void Balance(HexModel model)
         {
             const int BalanceDivFactor = HexConfig.LegsCount;
@@ -421,7 +437,6 @@ namespace ServoCommander
                 model.TotalBal.z = model.TotalBal.z / BalanceDivFactor;
             }
         }
-
         private static void AdjustLegPositionsToBodyHeight(HexModel model)
         {
             const double MIN_XZ_LEG_ADJUST = HexConfig.CoxaLength;
@@ -469,7 +484,6 @@ namespace ServoCommander
                 model.ForceGaitStepCnt = model.gaitCur.StepsInGait;
             }
         }
-
         private static void SingleLegControl(HexModel model)
         {
             if (model.ControlMode != HexModel.ControlModeType.SingleLeg) return;

@@ -30,9 +30,9 @@
 
         public const double MaxBodyHeight = 100;
         public const double BodyStandUpOffset = 45;
-        public const double LegLiftHeight = 50; //todo: ?????? divide on 10?
+        public const double LegLiftHeight = 55;
         public const double LegLiftDoubleHeight = 80;
-        public const double GPlimit = 2; ///???? multiply 10 ??
-        public const double TravelDeadZone = 4; //??????????
+        public const double GPlimit = 2;
+        public const double TravelDeadZone = 4;
     }
 }

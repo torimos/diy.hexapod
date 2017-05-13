@@ -2,12 +2,14 @@
 using System.Threading;
 using SlimDX.XInput;
 using SlimDX.DirectInput;
+using System.Linq;
+using System.Diagnostics;
 
 namespace ServoCommander
 {
     public class GamepadEx
     {
-        public bool Emulated { get; set; }
+        public static bool Emulated { get; set; }
         public bool Terminate { get; internal set; }
 
         public short RightThumbY { get; set; }
@@ -17,6 +19,18 @@ namespace ServoCommander
         public byte RightTrigger { get; set; }
         public byte LeftTrigger { get; set; }
         public GamepadButtonFlags Buttons { get; set; }
+        public static int ThumbOffsetValue { get; internal set; }
+        public int ThumbOffset
+        {
+            get
+            {
+                return ThumbOffsetValue;
+            }
+            set
+            {
+                ThumbOffsetValue = value;
+            }
+        }
 
         public XY GetLeftThumbPos(int scale)
         {
@@ -77,41 +91,55 @@ namespace ServoCommander
 
     public static class GamepadExtension
     {
-        static int ThumbOffset = 0;
-
-        public static GamepadEx GetGamepadState(this State state, Keyboard keyboard)
+        public static GamepadEx GetGamepadState(this State state, Keyboard keyboard, Stopwatch stopwatch)
         {
             var gamepad = new GamepadEx
             {
-                Emulated = state.PacketNumber == 0
+                Buttons = state.Gamepad.Buttons,
+                LeftThumbX = state.Gamepad.LeftThumbX,
+                LeftThumbY = state.Gamepad.LeftThumbY,
+                RightThumbX = state.Gamepad.RightThumbX,
+                RightThumbY = state.Gamepad.RightThumbY,
+                LeftTrigger = state.Gamepad.LeftTrigger,
+                RightTrigger = state.Gamepad.RightTrigger,
             };
-            ProcessKeyboard(keyboard, gamepad);
+            ProcessKeyboard(keyboard, gamepad, stopwatch);
             
             return gamepad;
         }
-        private static void ProcessKeyboard(Keyboard keyboard, GamepadEx gamepad)
+        private static void ProcessKeyboard(Keyboard keyboard, GamepadEx gamepad, Stopwatch stopwatch)
         {
             var state = keyboard.GetCurrentState();
             gamepad.Terminate = state.IsPressed(Key.Escape);
-            if (!Console.KeyAvailable)
+            if (state.IsPressed(Key.F12))
             {
-                ThumbOffset = 0;
+                GamepadEx.Emulated = !GamepadEx.Emulated;
+                Thread.Sleep(200);
             }
-            if (gamepad.Emulated)
+           
+            if (GamepadEx.Emulated)
             {
+                var keysCount = state.PressedKeys.Count();
+                if (keysCount == 0 || ((state.IsPressed(Key.LeftControl) || state.IsPressed(Key.LeftAlt)) && keysCount == 1))
+                {
+                    stopwatch.Restart();
+                }
+                gamepad.ThumbOffset = stopwatch.ElapsedMilliseconds > 0 ? short.MaxValue * 95 / 100 : 0;// (short)(stopwatch.ElapsedMilliseconds*5);
+                if (gamepad.ThumbOffset > short.MaxValue) gamepad.ThumbOffset = short.MaxValue;
+
                 if (state.IsPressed(Key.LeftControl))
                 {
-                    gamepad.LeftThumbY = (short)(state.IsPressed(Key.UpArrow) ? ThumbOffset : 0);
-                    gamepad.LeftThumbY += (short)(state.IsPressed(Key.DownArrow) ? -ThumbOffset : 0);
-                    gamepad.LeftThumbX = (short)(state.IsPressed(Key.LeftArrow) ? -ThumbOffset : 0);
-                    gamepad.LeftThumbX += (short)(state.IsPressed(Key.RightArrow) ? ThumbOffset : 0);
+                    gamepad.LeftThumbY = (short)(state.IsPressed(Key.UpArrow) ? gamepad.ThumbOffset : 0);
+                    gamepad.LeftThumbY += (short)(state.IsPressed(Key.DownArrow) ? -gamepad.ThumbOffset : 0);
+                    gamepad.LeftThumbX = (short)(state.IsPressed(Key.LeftArrow) ? -gamepad.ThumbOffset : 0);
+                    gamepad.LeftThumbX += (short)(state.IsPressed(Key.RightArrow) ? gamepad.ThumbOffset : 0);
                 }
                 else if (state.IsPressed(Key.LeftAlt))
                 {
-                    gamepad.RightThumbY = (short)(state.IsPressed(Key.UpArrow) ? ThumbOffset : 0);
-                    gamepad.RightThumbY += (short)(state.IsPressed(Key.DownArrow) ? -ThumbOffset : 0);
-                    gamepad.RightThumbX = (short)(state.IsPressed(Key.LeftArrow) ? -ThumbOffset : 0);
-                    gamepad.RightThumbX += (short)(state.IsPressed(Key.RightArrow) ? ThumbOffset : 0);
+                    gamepad.RightThumbY = (short)(state.IsPressed(Key.UpArrow) ? gamepad.ThumbOffset : 0);
+                    gamepad.RightThumbY += (short)(state.IsPressed(Key.DownArrow) ? -gamepad.ThumbOffset : 0);
+                    gamepad.RightThumbX = (short)(state.IsPressed(Key.LeftArrow) ? -gamepad.ThumbOffset : 0);
+                    gamepad.RightThumbX += (short)(state.IsPressed(Key.RightArrow) ? gamepad.ThumbOffset : 0);
                 }
                 else
                 {
@@ -123,18 +151,17 @@ namespace ServoCommander
                 gamepad.Buttons |= state.IsPressed(Key.Return) ? GamepadButtonFlags.Start : 0;
                 gamepad.Buttons |= state.IsPressed(Key.Tab) ? GamepadButtonFlags.Back : 0;
 
-                gamepad.Buttons |= state.IsPressed(Key.F1) ? GamepadButtonFlags.A : 0;
-                gamepad.Buttons |= state.IsPressed(Key.F2) ? GamepadButtonFlags.B : 0;
-                gamepad.Buttons |= state.IsPressed(Key.F3) ? GamepadButtonFlags.X : 0;
-                gamepad.Buttons |= state.IsPressed(Key.F4) ? GamepadButtonFlags.Y : 0;
+                gamepad.Buttons |= state.IsPressed(Key.F1) ? GamepadButtonFlags.X : 0;
+                gamepad.Buttons |= state.IsPressed(Key.F2) ? GamepadButtonFlags.Y : 0;
+                gamepad.Buttons |= state.IsPressed(Key.F3) ? GamepadButtonFlags.A : 0;
+                gamepad.Buttons |= state.IsPressed(Key.F4) ? GamepadButtonFlags.B : 0;
                 gamepad.Buttons |= state.IsPressed(Key.F5) ? GamepadButtonFlags.LeftShoulder : 0;
                 gamepad.Buttons |= state.IsPressed(Key.F6) ? GamepadButtonFlags.LeftThumb : 0;
                 gamepad.Buttons |= state.IsPressed(Key.F7) ? GamepadButtonFlags.RightShoulder : 0;
                 gamepad.Buttons |= state.IsPressed(Key.F8) ? GamepadButtonFlags.RightThumb : 0;
+
+                
             }
-            Console.WriteLine(ThumbOffset);
-            ThumbOffset++;
-            if (ThumbOffset > short.MaxValue) ThumbOffset = short.MaxValue;
         }
     }
 }

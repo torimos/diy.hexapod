@@ -121,23 +121,19 @@ namespace ServoCommander
             sb.AppendLine();
             sb.AppendLine($"Body:\n\r     X,    Y,    Z,   RotX, RotY, RotZ,  YOffs,  YShift\n\r{BodyPos} {BodyRot} {BodyYOffset,5} {BodyYShift,5}");
 
-            if (ControlMode == ControlModeType.Walk)
-            {
-                sb.AppendLine();
-                sb.AppendLine($"TravelLength:\n\r     X,    Y,    Z\n\r{TravelLength}");
-                i = 0;
-                sb.AppendLine($"Gate [{GaitType,5}]:\n\r#,   X,     Y,     Z,     RotY");
-                foreach (var v in GaitPos) { sb.AppendLine($"{i} {v} {GaitRotY[i].ToString("N1"),6} "); i++; };
-                sb.AppendLine($"TravelRequest:{TravelRequest,5} Walking:{Walking,5} GaitStep:{GaitStep,2} ForceGaitStepCnt:{ForceGaitStepCnt,2} ExtraCycle:{ExtraCycle,2}");
-                sb.AppendLine($"WalkMethod:{WalkMethod,5} DoubleHeightOn:{DoubleHeightOn,5} DoubleTravelOn:{DoubleTravelOn,5}");
-            }
+            sb.AppendLine();
+            sb.AppendLine($"TravelLength:\n\r     X,    Y,    Z\n\r{TravelLength}");
+            i = 0;
+            sb.AppendLine($"Gate [{GaitType,5}]:\n\r#,   X,     Y,     Z,     RotY");
+            foreach (var v in GaitPos) { sb.AppendLine($"{i} {v} {GaitRotY[i].ToString("N1"),6} "); i++; };
+            sb.AppendLine($"TravelRequest:{TravelRequest,5} Walking:{Walking,5} GaitStep:{GaitStep,2} ForceGaitStepCnt:{ForceGaitStepCnt,2} ExtraCycle:{ExtraCycle,2}");
+            sb.AppendLine($"WalkMethod:{WalkMethod,5} DoubleHeightOn:{DoubleHeightOn,5} DoubleTravelOn:{DoubleTravelOn,5}");
 
             sb.AppendLine();
-            if (BalanceMode)
-            {
-                sb.AppendLine($"TotalTrans: {TotalTrans} ");
-                sb.AppendLine($"TotalBal: {TotalBal} ");
-            }
+            sb.AppendLine($"BalanceMode: {BalanceMode,5} ");
+            sb.AppendLine($"TotalTrans: {TotalTrans} ");
+            sb.AppendLine($"TotalBal: {TotalBal} ");
+
             sb.AppendLine();
             sb.AppendLine($"AdjustLegsPosition: {AdjustLegsPosition,5}");
             sb.AppendLine($"Speed: {Speed, 5}");
