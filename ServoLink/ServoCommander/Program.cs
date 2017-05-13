@@ -17,7 +17,7 @@ namespace ServoCommander
             var me = new IKSolver();
             var sd = new ServoDriver();
             var id = new InputDriver();
-            if (!sd.Init()) Console.WriteLine("Connection error!");
+            sd.Init();
             sd.Reset();
 
             var sw = new Stopwatch();
@@ -26,8 +26,7 @@ namespace ServoCommander
             {
                 sw.Restart();
                 model.AdjustLegsPosition = false;
-                var input = id.ProcessInput(model);
-                if (input == null) break;
+                if (!id.ProcessInput(model)) break;
 
                 if (model.AdjustLegsPosition)
                 {

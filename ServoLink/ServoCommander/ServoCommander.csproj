@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GamepadExtension.cs" />
     <Compile Include="HexModel.cs" />
     <Compile Include="IKLegResult.cs" />
     <Compile Include="HexConfig.cs" />

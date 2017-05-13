@@ -1,77 +1,25 @@
 ﻿using System;
 using System.Threading;
-using System.Linq;
 using SlimDX.XInput;
+using SlimDX.DirectInput;
+using System.Linq;
 
 namespace ServoCommander
 {
-    public static class GamepadExtension
-    {
-        public static XY GetLeftThumbPos(this Gamepad state, int scale)
-        {
-            int deadZone = 10;
-            int offset = scale / 127;//258
-            int scaleAxis = 32768 / (scale + offset);
-            int x = (state.LeftThumbX / scaleAxis) - offset;
-            int y = (state.LeftThumbY / scaleAxis) + offset;
-            int absX = Math.Abs(x);
-            int absY = Math.Abs(y);
-            x = Math.Sign(x) * Math.Min(absX > deadZone ? absX : 0, scale);
-            y = Math.Sign(y) * Math.Min(absY > deadZone ? absY : 0, scale);
-            return new XY(x, y);
-        }
-
-        public static XY GetRightThumbPos(this Gamepad state, int scale)
-        {
-            int deadZone = 10;
-            int offset = 4 * scale / 127;// 1032;
-            int scaleAxis = 32768 / (scale + offset);
-            int x = (state.RightThumbX / scaleAxis) - offset;
-            int y = (state.RightThumbY / scaleAxis) + offset;
-            int absX = Math.Abs(x);
-            int absY = Math.Abs(y);
-            x = Math.Sign(x) * Math.Min(absX > deadZone ? absX : 0, scale);
-            y = Math.Sign(y) * Math.Min(absY > deadZone ? absY : 0, scale);
-            return new XY(x, y);
-        }
-        
-        public static int GetLeftTriggerPos(this Gamepad state, int scale)
-        {
-            int scaleAxis = 256 / (scale);
-            int pos = (state.LeftTrigger / scaleAxis);
-            return Math.Sign(pos) * Math.Min(Math.Abs(pos), scale);
-        }
-
-        public static int GetRightTriggerPos(this Gamepad state, int scale)
-        {
-            int scaleAxis = 256 / (scale);
-            int pos = (state.RightTrigger / scaleAxis);
-            return Math.Sign(pos) * Math.Min(Math.Abs(pos), scale);
-        }
-
-        public static bool IsButtonPressed(this Gamepad state, GamepadButtonFlags flag, int delayMilliseconds = 0)
-        {
-            bool f = state.Buttons.HasFlag(flag);
-            if (delayMilliseconds > 0) Thread.Sleep(delayMilliseconds);
-            return f;
-        }
-        public static bool IsButtonPressedOnly(this Gamepad state, GamepadButtonFlags flag, int delayMilliseconds = 0)
-        {
-            bool f = state.Buttons == flag;
-            if (delayMilliseconds > 0) Thread.Sleep(delayMilliseconds);
-            return f;
-        }
-    }
 
     public class InputDriver
     {
-        private Controller Controller;
-        private Gamepad State { get; set; }
-        private Gamepad PrevState { get; set; }
+        private Controller _controller;
+        private Keyboard _keyboard;
+        private GamepadEx State { get; set; }
+        private GamepadEx PrevState { get; set; }
 
         public InputDriver()
         {
-            Controller = new SlimDX.XInput.Controller(UserIndex.One);
+            _keyboard = new Keyboard(new DirectInput());
+            _keyboard.Acquire();
+
+            _controller = new SlimDX.XInput.Controller(UserIndex.One);
         }
 
         private bool HasPressed(GamepadButtonFlags button)
@@ -83,9 +31,9 @@ namespace ServoCommander
             return State.IsButtonPressedOnly(button) && !PrevState.IsButtonPressed(button);
         }
 
-        public bool? ProcessInput(HexModel model)
+        public bool ProcessInput(HexModel model)
         {
-            State = Controller.GetState().Gamepad;
+            State = _controller.GetState().GetGamepadState(_keyboard);
             if (PrevState == null) PrevState = State;
 
             XY thumbLeft = State.GetLeftThumbPos(127);
@@ -93,32 +41,20 @@ namespace ServoCommander
             int triggerLeft = State.GetLeftTriggerPos(127);
             int triggerRight = State.GetRightTriggerPos(127);
 
-            bool isKeyPressed = Console.KeyAvailable;
-            if (isKeyPressed)
+            if (State.Emulated)
             {
-                var key = Console.ReadKey(true).Key;
-                switch (key)
-                {
-                    case ConsoleKey.Escape: return null;
-                    case ConsoleKey.F1:
-                        {
-                            if (model.SelectedLeg == 0xFF) model.SelectedLeg = 0;
-                            else
-                            {
-                                model.SelectedLeg++;
-                                if (model.SelectedLeg == HexConfig.LegsCount)
-                                {
-                                    model.SelectedLeg = 0xFF;
-                                }
-                            }
-                        }
-                        break;
-                }
+                Console.WriteLine("GAME PAD - EMULATION");
             }
+            Console.WriteLine($"Buttons: {State.Buttons}");
             Console.WriteLine($"Left: {thumbLeft.x,6}{thumbLeft.y,6}");
             Console.WriteLine($"Right: {thumbRight.x,6}{thumbRight.y,6}");
             Console.WriteLine($"Triggers: {triggerLeft,6}{triggerRight,6}");
-            Console.WriteLine($"Buttons: {State.Buttons}");
+
+            if (State.Terminate)
+            {
+                return false;
+            }
+
             if (HasPressed(GamepadButtonFlags.Start))
             {
                 if (model.PowerOn)
@@ -324,14 +260,14 @@ namespace ServoCommander
                 model.InputTimeDelay = 128 - (int)Math.Max(Math.Max(Math.Abs(thumbLeft.x), Math.Abs(thumbLeft.y)), Math.Abs(thumbRight.x));
             }
 
-            if (State.Buttons != GamepadButtonFlags.None)
+            if (_keyboard.GetCurrentState().PressedKeys.Any())
             {
                 Console.Clear();
             }
 
             model.BodyPos.y = Math.Min(Math.Max(model.BodyYOffset + model.BodyYShift, 0), HexConfig.MaxBodyHeight);
             PrevState = State;
-            return isKeyPressed;
+            return true;
         }
 
         void TurnOff(HexModel model)
@@ -352,7 +288,7 @@ namespace ServoCommander
 
         public void Release()
         {
-            Controller = null;
+            _controller = null;
         }
     }
 }
