@@ -35,45 +35,31 @@ namespace ServoCommander.Drivers
 
         public XY GetLeftThumbPos(int scale)
         {
-            //todo: Gamepad.GamepadLeftThumbDeadZone
-            int deadZone = 10;
-            int offset = scale / 127;//258
-            int scaleAxis = 32768 / (scale + offset);
-            int x = (LeftThumbX / scaleAxis) - offset;
-            int y = (LeftThumbY / scaleAxis) + offset;
-            int absX = Math.Abs(x);
-            int absY = Math.Abs(y);
-            x = Math.Sign(x) * Math.Min(absX > deadZone ? absX : 0, scale);
-            y = Math.Sign(y) * Math.Min(absY > deadZone ? absY : 0, scale);
-            return new XY(x, y);
+            return GetScaledPos(short.MaxValue, scale, LeftThumbX, LeftThumbY, Gamepad.GamepadLeftThumbDeadZone);
         }
 
         public XY GetRightThumbPos(int scale)
         {
-            int deadZone = 10;
-            int offset = 4 * scale / 127;// 1032;
-            int scaleAxis = 32768 / (scale + offset);
-            int x = (RightThumbX / scaleAxis) - offset;
-            int y = (RightThumbY / scaleAxis) + offset;
-            int absX = Math.Abs(x);
-            int absY = Math.Abs(y);
-            x = Math.Sign(x) * Math.Min(absX > deadZone ? absX : 0, scale);
-            y = Math.Sign(y) * Math.Min(absY > deadZone ? absY : 0, scale);
-            return new XY(x, y);
+            return GetScaledPos(short.MaxValue, scale, RightThumbX, RightThumbY, Gamepad.GamepadRightThumbDeadZone);
         }
 
         public int GetLeftTriggerPos(int scale)
         {
-            int scaleAxis = 256 / (scale);
-            int pos = (LeftTrigger / scaleAxis);
-            return Math.Sign(pos) * Math.Min(Math.Abs(pos), scale);
+            return (int)GetScaledPos(byte.MaxValue, scale, LeftTrigger, 0, 0).x;
         }
-
         public int GetRightTriggerPos(int scale)
         {
-            int scaleAxis = 256 / (scale);
-            int pos = (RightTrigger / scaleAxis);
-            return Math.Sign(pos) * Math.Min(Math.Abs(pos), scale);
+            return (int)GetScaledPos(byte.MaxValue, scale, RightTrigger, 0, 0).x;
+        }
+
+        private XY GetScaledPos(int maxValue, int scale, int xpos, int ypos, int deadZone)
+        {
+            int scaleAxis = maxValue / scale;
+            int absTx = Math.Abs(xpos);
+            int absTy = Math.Abs(ypos);
+            int x = Math.Sign(xpos) * Math.Min((absTx > deadZone ? absTx : 0) / scaleAxis, scale);
+            int y = Math.Sign(ypos) * Math.Min((absTy > deadZone ? absTy : 0) / scaleAxis, scale);
+            return new XY(x, y);
         }
 
         public bool IsButtonPressed(GamepadButtonFlags flag, int delayMilliseconds = 0)

@@ -3,16 +3,16 @@
     public class HexConfig
     {
         public const int LegsCount = 6;
-        public const double CoxaMin = -65;
-        public const double CoxaMax = 65;
+        public const double CoxaMin = -65;//-95
+        public const double CoxaMax = 65;//75
         public const double CoxaLength = 29;
 
         public const double FemurMin = -105;
-        public const double FemurMax = 75;
+        public const double FemurMax = 45;
         public const double FemurLength = 57;
 
-        public const double TibiaMin = -53;
-        public const double TibiaMax = 90;
+        public const double TibiaMin = -40;
+        public const double TibiaMax = 80;
         public const double TibiaLength = 141;
 
         public static short[] OffsetX = { -54, -108, -54, 54, 108, 54 }; //RR RM RF LF LM LR
@@ -29,10 +29,13 @@
         public static bool[] TibiaAngleInv = { true, true, true, false, false, false }; //RR RM RF LF LM LR LF LM LR
 
         public const double MaxBodyHeight = 100;
-        public const double BodyStandUpOffset = 45;
-        public const double LegLiftHeight = 55;
+        public const double BodyStandUpOffset = 35;
+        public const double LegLiftHeight = 50;
         public const double LegLiftDoubleHeight = 80;
         public const double GPlimit = 2;
         public const double TravelDeadZone = 4;
+
+        public const ushort WalkingDelay = 50;
+        public const ushort BalancingDelay = 100;
     }
 }

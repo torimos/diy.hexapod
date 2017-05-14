@@ -117,6 +117,8 @@ namespace ServoCommander.Data
             i = 0;
             sb.AppendLine("LegsPos:\n\r#,   X,   Y,   Z");
             foreach (var v in LegsPos) sb.AppendLine($"{i} {v} " + (i++ == SelectedLeg ? "<<<<<" : "          "));
+            sb.AppendLine();
+            sb.AppendLine($"SingleLegPos (Hold: {SingleLegHold,5}):\n\r     X,    Y,    Z\n\r{SingleLegPos}");
 
             sb.AppendLine();
             sb.AppendLine($"Body:\n\r     X,    Y,    Z,   RotX, RotY, RotZ,  YOffs,  YShift\n\r{BodyPos} {BodyRot} {BodyYOffset,5} {BodyYShift,5}");

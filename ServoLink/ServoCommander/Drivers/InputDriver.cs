@@ -12,7 +12,7 @@ namespace ServoCommander.Drivers
     public class InputDriver
     {
         private Controller _controller;
-        private Keyboard _keyboard;
+        public Keyboard Keyboard;
         public GamepadEx State { get; set; }
         public GamepadEx PrevState { get; set; }
         public bool Terminate { get; set; }
@@ -20,8 +20,8 @@ namespace ServoCommander.Drivers
         private Stopwatch _stopWatch = new Stopwatch();
         public InputDriver()
         {
-            _keyboard = new Keyboard(new DirectInput());
-            _keyboard.Acquire();
+            Keyboard = new Keyboard(new DirectInput());
+            Keyboard.Acquire();
 
             _controller = new SlimDX.XInput.Controller(UserIndex.One);
             GamepadEx.Emulated = true;
@@ -39,7 +39,7 @@ namespace ServoCommander.Drivers
 
         public void ProcessInput(HexModel model)
         {
-            State = _controller.GetState().GetGamepadState(_keyboard, _stopWatch);
+            State = _controller.GetState().GetGamepadState(Keyboard, _stopWatch);
             if (PrevState == null) PrevState = State;
 
             XY thumbLeft = State.GetLeftThumbPos(127);
@@ -213,8 +213,8 @@ namespace ServoCommander.Drivers
 
                         if (!model.DoubleTravelOn)
                         {  //(Double travel length)
-                            model.TravelLength.x = model.TravelLength.x / 2;
-                            model.TravelLength.z = model.TravelLength.z / 2;
+                            model.TravelLength.x = model.TravelLength.x / 1.75;
+                            model.TravelLength.z = model.TravelLength.z / 1.75;
                         }
 
                         model.TravelLength.y = -thumbRight.x / 4; //Right Stick Left/Right 
@@ -227,7 +227,7 @@ namespace ServoCommander.Drivers
                 else if (model.ControlMode == HexModel.ControlModeType.Translate)
                 {
                     model.BodyPos.x = thumbLeft.x / 2;
-                    model.BodyPos.z = -thumbLeft.y / 3;
+                    model.BodyPos.z = thumbLeft.y / 3;
                     model.BodyRot.y = thumbRight.x * 2;
                     model.BodyYShift = -thumbRight.y / 2;
                 }
@@ -235,8 +235,8 @@ namespace ServoCommander.Drivers
                 {
                     model.BodyRot.x = thumbLeft.x;
                     model.BodyRot.y = thumbRight.x * 2;
-                    model.BodyRot.z = thumbLeft.y;
-                    model.BodyYShift = -thumbRight.y / 2;
+                    model.BodyRot.z = -thumbLeft.y;
+                    model.BodyYShift = thumbRight.y / 2;
                 }
                 else if (model.ControlMode == HexModel.ControlModeType.SingleLeg)
                 {
@@ -251,7 +251,7 @@ namespace ServoCommander.Drivers
 
                     model.SingleLegHold = State.IsButtonPressed(GamepadButtonFlags.RightShoulder);
                     model.SingleLegPos.x = thumbLeft.x; //Left Stick Right/Left
-                    model.SingleLegPos.y = -thumbRight.y / 2; //Right Stick Up/Down
+                    model.SingleLegPos.y = -thumbRight.y; //Right Stick Up/Down
                     model.SingleLegPos.z = thumbLeft.y; //Left Stick Up/Down
                 }
 

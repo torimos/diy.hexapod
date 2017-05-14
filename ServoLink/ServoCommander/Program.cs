@@ -24,6 +24,9 @@ namespace ServoCommander
             sd.Init();
             sd.Reset();
 
+            //Calibrate(sd, id);
+            //return;
+
             var sw = new Stopwatch();
             Console.SetWindowSize(80, 70);
 
@@ -71,17 +74,17 @@ namespace ServoCommander
 
                         //Add aditional delay when Balance mode is on
                         if (model.BalanceMode)
-                            model.MoveTime = (ushort)(model.MoveTime + 100);
+                            model.MoveTime = (ushort)(model.MoveTime + HexConfig.BalancingDelay);
                     }
                     else //Movement speed excl. Walking
-                        model.MoveTime = (ushort)(200 + model.Speed);
+                        model.MoveTime = (ushort)(HexConfig.WalkingDelay + model.Speed);
 
                     sd.Update(model.LegsAngle, model.MoveTime);
 
                     for (var LegIndex = 0; LegIndex < HexConfig.LegsCount; LegIndex++)
                     {
-                        if (((Math.Abs(model.GaitPos[LegIndex].x) > HexConfig.GPlimit) || 
-                            (Math.Abs(model.GaitPos[LegIndex].z) > HexConfig.GPlimit) || 
+                        if (((Math.Abs(model.GaitPos[LegIndex].x) > HexConfig.GPlimit) ||
+                            (Math.Abs(model.GaitPos[LegIndex].z) > HexConfig.GPlimit) ||
                             (Math.Abs(model.GaitRotY[LegIndex]) > HexConfig.GPlimit)))
                         {
                             //For making sure that we are using timed move until all legs are down
@@ -100,7 +103,7 @@ namespace ServoCommander
                         }
                         while (sw.ElapsedMilliseconds < timeToWait);
                     }
-                    
+
                     sd.Commit();
                 }
                 else
@@ -126,6 +129,64 @@ namespace ServoCommander
             sd.Dispose();
             id.Release();
         }
+
+        private static void Calibrate(ServoDriver sd, InputDriver id)
+        {
+            bool firstRun = true;
+            int selLegIndex = 0;
+            int selLegJoint = 0;
+            int defAngleCoxa = 0;
+            int defAngleFemur = -900;
+            int defTibiaAngle = 0;
+            int[][] legAngles = {
+                new [] { defAngleCoxa, defAngleFemur, defTibiaAngle }, new[] { defAngleCoxa, defAngleFemur, defTibiaAngle }, new[] { defAngleCoxa, defAngleFemur, defTibiaAngle },
+                new [] { defAngleCoxa, defAngleFemur, defTibiaAngle }, new[] { defAngleCoxa, defAngleFemur, defTibiaAngle }, new[] { defAngleCoxa, defAngleFemur, defTibiaAngle }
+            };
+
+            while (!id.Terminate)
+            {
+                var ks = id.Keyboard.GetCurrentState();
+                var step = (ks.IsPressed(SlimDX.DirectInput.Key.LeftControl)) ? 10 : ((ks.IsPressed(SlimDX.DirectInput.Key.LeftShift)) ? 50 : 1);
+                if (ks.IsPressed(SlimDX.DirectInput.Key.Escape)) break;
+                else if (ks.IsPressed(SlimDX.DirectInput.Key.DownArrow))
+                {
+                    selLegIndex = (selLegIndex + 1) % 6;
+                    sd.Controller.MoveAll(0);
+                }
+                else if (ks.IsPressed(SlimDX.DirectInput.Key.UpArrow))
+                {
+                    selLegIndex--; if (selLegIndex < 0) selLegIndex = 5;
+                    sd.Controller.MoveAll(0);
+                }
+                else if (ks.IsPressed(SlimDX.DirectInput.Key.RightArrow)) selLegJoint = (selLegJoint + 1) % 3;
+                else if (ks.IsPressed(SlimDX.DirectInput.Key.LeftArrow)) { selLegJoint--; if (selLegJoint < 0) selLegJoint = 2; }
+                else if (ks.IsPressed(SlimDX.DirectInput.Key.A)) legAngles[selLegIndex][selLegJoint] += step;
+                else if (ks.IsPressed(SlimDX.DirectInput.Key.Z)) legAngles[selLegIndex][selLegJoint] -= step;
+                else if (ks.IsPressed(SlimDX.DirectInput.Key.S)) { if (selLegJoint == 0) ServoDriver.CoxaOffset[selLegIndex] += step; else if (selLegJoint == 1) ServoDriver.FemurOffset[selLegIndex] += step; else if (selLegJoint == 2) ServoDriver.TibiaOffset[selLegIndex] += step; }
+                else if (ks.IsPressed(SlimDX.DirectInput.Key.X)) { if (selLegJoint == 0) ServoDriver.CoxaOffset[selLegIndex] -= step; else if (selLegJoint == 1) ServoDriver.FemurOffset[selLegIndex] -= step; else if (selLegJoint == 2) ServoDriver.TibiaOffset[selLegIndex] -= step; }
+
+                if (ks.PressedKeys.Count > 0 || firstRun)
+                {
+                    firstRun = false;
+                    sd.Controller.Move(selLegIndex * 3 + 2, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][0] : legAngles[selLegIndex][0]) + ServoDriver.CoxaOffset[selLegIndex]), 0);
+                    sd.Controller.Move(selLegIndex * 3 + 1, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][1] : legAngles[selLegIndex][1]) + ServoDriver.FemurOffset[selLegIndex]), 0);
+                    sd.Controller.Move(selLegIndex * 3 + 0, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][2] : legAngles[selLegIndex][2]) + ServoDriver.TibiaOffset[selLegIndex]), 0);
+                    sd.Commit();
+
+                    var isCoxa = selLegJoint == 0 ? "<" : " ";
+                    var isFemur = selLegJoint == 1 ? "<" : " ";
+                    var isTibia = selLegJoint == 2 ? "<" : " ";
+                    Console.SetCursorPosition(0, 0);
+                    for (var i = 0; i < 6; i++)
+                    {
+                        var selLeg = i == selLegIndex ? "<" : " ";
+                        Console.WriteLine($"{i}{selLeg}: {legAngles[i][0],5} {ServoDriver.CoxaOffset[i],5}{isCoxa}   {legAngles[i][1],5} {ServoDriver.FemurOffset[i],5}{isFemur}   {legAngles[i][2],5} {ServoDriver.TibiaOffset[i],5}{isTibia}");
+                    }
+                    Thread.Sleep(100);
+                }
+            }
+        }
+
         private static void Setup(HexModel model)
         {
             //Gait
@@ -268,11 +329,11 @@ namespace ServoCommander
                     Console.WriteLine("GAME PAD - EMULATION");
                 }
                 
-                Console.WriteLine($"ThumbOffset: {gamepadEx?.ThumbOffset,8}");
                 Console.WriteLine($"Buttons: {gamepadEx?.Buttons,10}");
-                Console.WriteLine($"Left: {gamepadEx?.LeftThumbX,6}{gamepadEx?.LeftThumbY,6}");
-                Console.WriteLine($"Right: {gamepadEx?.RightThumbX,6}{gamepadEx?.RightThumbY,6}");
-                Console.WriteLine($"Triggers: {gamepadEx?.LeftTrigger,6}{gamepadEx?.RightTrigger,6}");
+                Console.WriteLine($"Left: {gamepadEx?.GetLeftThumbPos(127)}");
+                Console.WriteLine($"Right: {gamepadEx?.GetRightThumbPos(127)}");
+                Console.WriteLine($"LeftTrigger: {gamepadEx?.GetLeftTriggerPos(127)}");
+                Console.WriteLine($"RightTrigger: {gamepadEx?.GetRightTriggerPos(127)}");
                 Thread.Sleep(100);
             }
         }
@@ -505,7 +566,7 @@ namespace ServoCommander
                     if (AllDown)
                     {
                         //Lift leg a bit when it got selected
-                        model.LegsPos[model.SelectedLeg].y = HexConfig.DefaultLegsPosY[model.SelectedLeg] - 20;
+                        model.LegsPos[model.SelectedLeg].y = HexConfig.DefaultLegsPosY[model.SelectedLeg] - 70;
                         //Store current status
                         model.PrevSelectedLeg = model.SelectedLeg;
                     }

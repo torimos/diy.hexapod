@@ -12,9 +12,10 @@ namespace ServoLink
         private readonly byte[] _dataBuffer = new byte[READ_BUFFER_SIZE];
         public event PortDataReceivedEventHandler DataReceived;
         
-        public SerialPort(string portName, int baudRate)
+        public SerialPort(string portName, int baudRate, int writeTimeout)
         {
             _io = new System.IO.Ports.SerialPort(portName, baudRate);
+            _io.WriteTimeout = writeTimeout;
         }
 
         public bool IsOpen

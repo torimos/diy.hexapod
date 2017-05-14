@@ -6,12 +6,14 @@ namespace ServoCommander.Drivers
 {
     public class ServoDriver: IDisposable
     {
-        public static short[] CoxaOffset =  {   15, -50,   0, -15, -50,   0 };  //LF LM LR RR RM RF
-        public static short[] FemurOffset = {   70,-100, -55,   0,  45, -40 }; //LF LM LR RR RM RF 
-        public static short[] TibiaOffset = {    0,  65, -30,  40,   0,   0 }; //LF LM LR RR RM RF
+        public static int[] CoxaOffset = { 20, -40, 0, -20, -40, -20 }; //LF LM LR RR RM RF
+        public static int[] FemurOffset = { 30, 20, 50, -170, -120, -20 };//{   70,-100, -55,   0,  45, -40 }; //LF LM LR RR RM RF 
+        public static int[] TibiaOffset = { 20, 60, -50, 30, 20, 20 };//{    0,  65, -30,  40,   0,   0 }; //LF LM LR RR RM RF
         public static byte[] LegsMap = { 3, 4, 5, 2, 1, 0 };
 
         private ServoController _controller;
+
+        public ServoController Controller { get { return _controller; } }
 
         public ServoDriver()
         {
@@ -20,7 +22,7 @@ namespace ServoCommander.Drivers
 
         public bool Init()
         {
-            if (!_controller.Connect(new SerialPort("COM3", 115200))) return false;
+            if (!_controller.Connect(new SerialPort("COM3", 115200, 200))) return false;
             _controller.MoveAll(0);
             _controller.Commit();
             return true;
@@ -33,20 +35,6 @@ namespace ServoCommander.Drivers
             _controller.Commit();
         }
 
-        public void UpdateLegPos(byte legNumber, ushort coxaPos, ushort femurPos, ushort tibiaPos, ushort moveTime)
-        {
-            _controller.Move(legNumber * 3, (ushort)(tibiaPos + TibiaOffset[legNumber]), moveTime);
-            _controller.Move(legNumber * 3 + 1, (ushort)(femurPos + FemurOffset[legNumber]), moveTime);
-            _controller.Move(legNumber * 3 + 2, (ushort)(coxaPos + CoxaOffset[legNumber]), moveTime);
-        }
-
-        private void UpdateLegAngle(byte legIndex, double coxaAngle, double femurAngle, double tibiaAngle, ushort moveTime)
-        {
-            ushort coxaPos = (ushort)(1500 + (coxaAngle * 10));
-            ushort femurPos = (ushort)(1500 + (femurAngle * 10));
-            ushort tibiaPos = (ushort)(1500 + (tibiaAngle * 10));
-            UpdateLegPos(legIndex, coxaPos, femurPos, tibiaPos, moveTime);
-        }
         public void Commit()
         {
             if (!_controller.IsConnected) return;
@@ -57,7 +45,12 @@ namespace ServoCommander.Drivers
         {
             for (byte i=0;i<LegsMap.Length;i++)
             {
-                UpdateLegAngle(LegsMap[i], results[i].Coxa, results[i].Femur, results[i].Tibia, moveTime);
+                ushort coxaPos = (ushort)(1500 + (results[i].Coxa * 10) + CoxaOffset[LegsMap[i]]);
+                ushort femurPos = (ushort)(1500 + (results[i].Femur * 10) + FemurOffset[LegsMap[i]]);
+                ushort tibiaPos = (ushort)(1500 + (results[i].Tibia * 10) + TibiaOffset[LegsMap[i]]);
+                _controller.Move(LegsMap[i] * 3, tibiaPos, moveTime);
+                _controller.Move(LegsMap[i] * 3 + 1, femurPos, moveTime);
+                _controller.Move(LegsMap[i] * 3 + 2, coxaPos, moveTime);
             }
         }
 
