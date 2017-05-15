@@ -39,13 +39,15 @@ namespace ServoCommander.Drivers
 
         public void ProcessInput(HexModel model)
         {
+            var adjustLegsPosition = false;
+
             State = _controller.GetState().GetGamepadState(Keyboard, _stopWatch);
             if (PrevState == null) PrevState = State;
 
             XY thumbLeft = State.GetLeftThumbPos(127);
             XY thumbRight = State.GetRightThumbPos(127);
-            int triggerLeft = State.GetLeftTriggerPos(127);
-            int triggerRight = State.GetRightTriggerPos(127);
+            XY thumbLeftPresize = State.GetLeftThumbPos(10000);
+            XY thumbRightPresize = State.GetRightThumbPos(10000);
 
             if (State.Terminate)
             {
@@ -62,7 +64,7 @@ namespace ServoCommander.Drivers
                 else
                 {
                     model.PowerOn = true;
-                    model.AdjustLegsPosition = true;
+                    adjustLegsPosition = true;
                 }
                 Thread.Sleep(200);
             }
@@ -142,14 +144,14 @@ namespace ServoCommander.Drivers
                     else
                         model.BodyYOffset = HexConfig.BodyStandUpOffset;
 
-                    model.AdjustLegsPosition = true;
+                    adjustLegsPosition = true;
                 }
                 else if(State.IsButtonPressed(GamepadButtonFlags.DPadUp, 50))
                 {
                     model.BodyYOffset += 5;
                     if (model.BodyYOffset > HexConfig.MaxBodyHeight)
                         model.BodyYOffset = HexConfig.MaxBodyHeight;
-                    model.AdjustLegsPosition = true;
+                    adjustLegsPosition = true;
                 }
                 else if (State.IsButtonPressed(GamepadButtonFlags.DPadDown, 50))
                 {
@@ -157,7 +159,7 @@ namespace ServoCommander.Drivers
                         model.BodyYOffset -= 10;
                     else
                         model.BodyYOffset = 0;
-                    model.AdjustLegsPosition = true;
+                    adjustLegsPosition = true;
                 }
                 else if (State.IsButtonPressed(GamepadButtonFlags.DPadRight, 50))
                 {
@@ -250,16 +252,66 @@ namespace ServoCommander.Drivers
                     }
 
                     model.SingleLegHold = State.IsButtonPressed(GamepadButtonFlags.RightShoulder);
-                    model.SingleLegPos.x = thumbLeft.x; //Left Stick Right/Left
-                    model.SingleLegPos.y = -thumbRight.y; //Right Stick Up/Down
-                    model.SingleLegPos.z = thumbLeft.y; //Left Stick Up/Down
+                    model.SingleLegPos.x = thumbLeftPresize.x / 100; //Left Stick Right/Left
+                    model.SingleLegPos.y = -thumbRightPresize.y / 100; //Right Stick Up/Down
+                    model.SingleLegPos.z = thumbLeftPresize.y / 100; //Left Stick Up/Down
                 }
-
-                model.InputTimeDelay = 128 - (int)Math.Max(Math.Max(Math.Abs(thumbLeft.x), Math.Abs(thumbLeft.y)), Math.Abs(thumbRight.x));
+                model.InputTimeDelay = 128 - (int)Math.Max(Math.Max(Math.Abs(thumbLeft.x), Math.Abs(thumbLeft.y)), Math.Max(Math.Abs(thumbRight.x), Math.Abs(thumbRight.y)));
             }
 
             model.BodyPos.y = Math.Min(Math.Max(model.BodyYOffset + model.BodyYShift, 0), HexConfig.MaxBodyHeight);
+            if (adjustLegsPosition)
+            {
+                AdjustLegPositionsToBodyHeight(model);
+            }
             PrevState = State;
+        }
+        private void AdjustLegPositionsToBodyHeight(HexModel model)
+        {
+            const double MIN_XZ_LEG_ADJUST = HexConfig.CoxaLength;
+            const double MAX_XZ_LEG_ADJUST = HexConfig.CoxaLength + HexConfig.TibiaLength + HexConfig.FemurLength / 4;
+            double[] hexIntXZ = { 111, 88, 86 };
+            double[] hexMaxBodyY = { 20, 50, HexConfig.MaxBodyHeight };
+
+            // Lets see which of our units we should use...
+            // Note: We will also limit our body height here...
+            model.BodyPos.y = Math.Min(model.BodyPos.y, HexConfig.MaxBodyHeight);
+            double XZLength = hexIntXZ[2];
+            int i;
+            for (i = 0; i < 2; i++)
+            {    // Don't need to look at last entry as we already init to assume this one...
+                if (model.BodyPos.y <= hexMaxBodyY[i])
+                {
+                    XZLength = hexIntXZ[i];
+                    break;
+                }
+            }
+            if (i != model.LegInitIndex)
+            {
+                model.LegInitIndex = i;  // remember the current index...
+
+                //now lets see what happens when we change the leg positions...
+                if (XZLength > MAX_XZ_LEG_ADJUST)
+                    XZLength = MAX_XZ_LEG_ADJUST;
+                if (XZLength < MIN_XZ_LEG_ADJUST)
+                    XZLength = MIN_XZ_LEG_ADJUST;
+
+
+                // see if same length as when we came in
+                if (XZLength == model.LegsXZLength)
+                    return;
+
+                model.LegsXZLength = XZLength;
+
+                for (var legIndex = 0; legIndex < HexConfig.LegsCount; legIndex++)
+                {
+                    model.LegsPos[legIndex].x = Math.Cos(Math.PI * HexConfig.CoxaDefaultAngle[legIndex] / 180) * XZLength;  //Set start positions for each leg
+                    model.LegsPos[legIndex].z = -Math.Sin(Math.PI * HexConfig.CoxaDefaultAngle[legIndex] / 180) * XZLength;
+                }
+
+                // Make sure we cycle through one gait to have the legs all move into their new locations...
+                model.ForceGaitStepCnt = model.gaitCur.StepsInGait;
+            }
         }
 
         void TurnOff(HexModel model)

@@ -18,7 +18,7 @@ namespace ServoCommander
             var model = new HexModel(HexConfig.LegsCount);
             Setup(model);
 
-            IIKSolver me = new IKSolverEx();
+            IIKSolver me = new IKSolver();
             var sd = new ServoDriver();
             var id = new InputDriver();
             sd.Init();
@@ -34,14 +34,6 @@ namespace ServoCommander
             {
                 while (!id.Terminate)
                 {
-                    id.ProcessInput(model);
-                }
-            });
-
-            Task.Run(() =>
-            {
-                while (!id.Terminate)
-                {
                     DebugOutput(model, id.State);
                 }
             });
@@ -49,12 +41,11 @@ namespace ServoCommander
             while (!id.Terminate)
             {
                 sw.Restart();
-                model.AdjustLegsPosition = false;
 
-                if (model.AdjustLegsPosition)
-                {
-                    AdjustLegPositionsToBodyHeight(model);
-                }
+                id.ProcessInput(model);
+
+                //todo: GPPlayer
+
                 SingleLegControl(model);
 
                 GateSequence(model);
@@ -66,18 +57,26 @@ namespace ServoCommander
                 if (model.PowerOn)
                 {
                     //Calculate Servo Move time
-                    if ((Math.Abs(model.TravelLength.x) > HexConfig.TravelDeadZone)
-                      || (Math.Abs(model.TravelLength.z) > HexConfig.TravelDeadZone)
-                      || (Math.Abs(model.TravelLength.y * 2) > HexConfig.TravelDeadZone))
+                    if (model.ControlMode == HexModel.ControlModeType.SingleLeg)
                     {
-                        model.MoveTime = (ushort)(model.gaitCur.NomGaitSpeed + (model.InputTimeDelay * 2) + model.Speed);
-
-                        //Add aditional delay when Balance mode is on
-                        if (model.BalanceMode)
-                            model.MoveTime = (ushort)(model.MoveTime + HexConfig.BalancingDelay);
+                        model.MoveTime = HexConfig.SingleLegControlDelay;
                     }
-                    else //Movement speed excl. Walking
-                        model.MoveTime = (ushort)(HexConfig.WalkingDelay + model.Speed);
+                    else
+                    {
+                        if ((Math.Abs(model.TravelLength.x) > HexConfig.TravelDeadZone)
+                          || (Math.Abs(model.TravelLength.z) > HexConfig.TravelDeadZone)
+                          || (Math.Abs(model.TravelLength.y * 2) > HexConfig.TravelDeadZone))
+                        {
+                            model.MoveTime = (ushort)(model.gaitCur.NomGaitSpeed + (model.InputTimeDelay * 2) + model.Speed);
+
+                            //Add aditional delay when Balance mode is on
+                            if (model.BalanceMode)
+                                model.MoveTime = (ushort)(model.MoveTime + HexConfig.BalancingDelay);
+                        }
+                        else //Movement speed excl. Walking
+                            model.MoveTime = (ushort)(HexConfig.WalkingDelay + model.Speed);
+                    }
+
 
                     sd.Update(model.LegsAngle, model.MoveTime);
 
@@ -103,7 +102,6 @@ namespace ServoCommander
                         }
                         while (sw.ElapsedMilliseconds < timeToWait);
                     }
-
                     sd.Commit();
                 }
                 else
@@ -186,7 +184,6 @@ namespace ServoCommander
                 }
             }
         }
-
         private static void Setup(HexModel model)
         {
             //Gait
@@ -501,53 +498,6 @@ namespace ServoCommander
                 model.TotalBal.z = model.TotalBal.z / BalanceDivFactor;
             }
         }
-        private static void AdjustLegPositionsToBodyHeight(HexModel model)
-        {
-            const double MIN_XZ_LEG_ADJUST = HexConfig.CoxaLength;
-            const double MAX_XZ_LEG_ADJUST = HexConfig.CoxaLength + HexConfig.TibiaLength + HexConfig.FemurLength / 4;
-            double[] hexIntXZ = { 111, 88, 86 };
-            double[] hexMaxBodyY = { 20, 50, HexConfig.MaxBodyHeight };
-
-            // Lets see which of our units we should use...
-            // Note: We will also limit our body height here...
-            model.BodyPos.y = Math.Min(model.BodyPos.y, HexConfig.MaxBodyHeight);
-            double XZLength = hexIntXZ[2];
-            int i;
-            for (i = 0; i < 2; i++)
-            {    // Don't need to look at last entry as we already init to assume this one...
-                if (model.BodyPos.y <= hexMaxBodyY[i])
-                {
-                    XZLength = hexIntXZ[i];
-                    break;
-                }
-            }
-            if (i != model.LegInitIndex)
-            {
-                model.LegInitIndex = i;  // remember the current index...
-                
-                //now lets see what happens when we change the leg positions...
-                if (XZLength > MAX_XZ_LEG_ADJUST)
-                    XZLength = MAX_XZ_LEG_ADJUST;
-                if (XZLength < MIN_XZ_LEG_ADJUST)
-                    XZLength = MIN_XZ_LEG_ADJUST;
-
-
-                // see if same length as when we came in
-                if (XZLength == model.LegsXZLength)
-                    return;
-
-                model.LegsXZLength = XZLength;
-
-                for (var legIndex = 0; legIndex < HexConfig.LegsCount; legIndex++)
-                {
-                    model.LegsPos[legIndex].x = Math.Cos(Math.PI * HexConfig.CoxaDefaultAngle[legIndex] / 180) * XZLength;  //Set start positions for each leg
-                    model.LegsPos[legIndex].z = -Math.Sin(Math.PI * HexConfig.CoxaDefaultAngle[legIndex] / 180) * XZLength;
-                }
-
-                // Make sure we cycle through one gait to have the legs all move into their new locations...
-                model.ForceGaitStepCnt = model.gaitCur.StepsInGait;
-            }
-        }
         private static void SingleLegControl(HexModel model)
         {
             if (model.ControlMode != HexModel.ControlModeType.SingleLeg) return;
@@ -566,7 +516,7 @@ namespace ServoCommander
                     if (AllDown)
                     {
                         //Lift leg a bit when it got selected
-                        model.LegsPos[model.SelectedLeg].y = HexConfig.DefaultLegsPosY[model.SelectedLeg] - 70;
+                        model.LegsPos[model.SelectedLeg].y = HexConfig.DefaultLegsPosY[model.SelectedLeg] - 30;
                         //Store current status
                         model.PrevSelectedLeg = model.SelectedLeg;
                     }

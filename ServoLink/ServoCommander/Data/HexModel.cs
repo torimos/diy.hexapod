@@ -65,7 +65,6 @@ namespace ServoCommander.Data
         public ushort PrevMoveTime;
         public bool PowerOn;
         public bool PrevPowerOn;
-        public bool AdjustLegsPosition;
         public int InputTimeDelay;
 
         public Dictionary<GaitType, PhoenixGait> Gaits;
@@ -137,7 +136,6 @@ namespace ServoCommander.Data
             sb.AppendLine($"TotalBal: {TotalBal} ");
 
             sb.AppendLine();
-            sb.AppendLine($"AdjustLegsPosition: {AdjustLegsPosition,5}");
             sb.AppendLine($"Speed: {Speed, 5}");
             sb.AppendLine($"MoveTime: {MoveTime,5}");
             sb.AppendLine($"InputTimeDelay: {InputTimeDelay,5}");

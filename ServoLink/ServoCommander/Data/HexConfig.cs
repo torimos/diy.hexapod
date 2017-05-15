@@ -35,7 +35,8 @@
         public const double GPlimit = 2;
         public const double TravelDeadZone = 4;
 
-        public const ushort WalkingDelay = 50;
+        public const ushort WalkingDelay =  200;
         public const ushort BalancingDelay = 100;
+        public const ushort SingleLegControlDelay = 25;
     }
 }
