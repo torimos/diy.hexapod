@@ -1,60 +1,126 @@
 ﻿using System;
-using System.Threading;
-using SlimDX.XInput;
-using SlimDX.DirectInput;
-using System.Linq;
-using System.Diagnostics;
 using ServoCommander.Data;
+using ServoLink.Contracts;
+using ServoLink;
+using System.Threading;
 
 namespace ServoCommander.Drivers
 {
-
-    public class InputDriver
+    public class SerialInputDriver : IInputDriver
     {
-        private Controller _controller;
-        public Keyboard Keyboard;
-        public GamepadEx State { get; set; }
-        public GamepadEx PrevState { get; set; }
-        public bool Terminate { get; set; }
-
-        private Stopwatch _stopWatch = new Stopwatch();
-        public InputDriver()
+        [Flags]
+        enum GamepadButtonFlags
         {
-            Keyboard = new Keyboard(new DirectInput());
-            Keyboard.Acquire();
-
-            _controller = new SlimDX.XInput.Controller(UserIndex.One);
-            GamepadEx.Emulated = true;
-            _stopWatch.Start();
+            None = 0,
+            DPadUp = 1,
+            DPadRight = 2,
+            DPadDown = 4,
+            DPadLeft = 8,
+            B1 = 0x10,
+            B2 = 0x20,
+            B3 = 0x40,
+            B4 = 0x80,
+            B5 = 0x100,
+            B6 = 0x200,
+            B7 = 0x400,
+            B8 = 0x800,
+            B9 = 0x1000,
+            B10 = 0x2000,
+            LeftThumb = 0x4000,
+            RightThumb = 0x8000,
+            Vibration = 0x40000,
+            Mode = 0x80000
         }
+
+        struct GamePadState
+        {
+            public UInt64 RawState { get; set; }
+            public int LeftThumbX { get; set; }
+            public int LeftThumbY { get; set; }
+            public int RightThumbX { get; set; }
+            public int RightThumbY { get; set; }
+            public GamepadButtonFlags Buttons { get; set; }
+
+            private static GamepadButtonFlags[] DPad = {
+                GamepadButtonFlags.DPadUp,
+                GamepadButtonFlags.DPadUp | GamepadButtonFlags.DPadRight,
+                GamepadButtonFlags.DPadRight,
+                GamepadButtonFlags.DPadRight | GamepadButtonFlags.DPadDown,
+                GamepadButtonFlags.DPadDown,
+                GamepadButtonFlags.DPadDown | GamepadButtonFlags.DPadLeft,
+                GamepadButtonFlags.DPadLeft,
+                GamepadButtonFlags.DPadLeft | GamepadButtonFlags.DPadUp,
+                GamepadButtonFlags.None };
+
+            public static GamePadState Parse(UInt64 rawState)
+            {
+                var state = new GamePadState();
+                state.RawState = rawState;
+                state.LeftThumbX = (short)(rawState & 0xFF);
+                state.LeftThumbY = (short)((rawState >> 8) & 0xFF);
+                state.RightThumbX = (short)((rawState >> 16) & 0xFF);
+                state.RightThumbY = (short)((rawState >> 24) & 0xFF);
+                UInt32 rawButtons = (UInt32)(rawState >> 32);
+                state.Buttons = DPad[rawButtons & 0xF] | (GamepadButtonFlags)(rawButtons & 0x00FFFFF0);
+                return state;
+            }
+
+            public bool IsButtonPressed(GamepadButtonFlags flag, int delayMilliseconds = 0)
+            {
+                bool f = Buttons.HasFlag(flag);
+                if (delayMilliseconds > 0) Thread.Sleep(delayMilliseconds);
+                return f;
+            }
+            public bool IsButtonPressedOnly(GamepadButtonFlags flag, int delayMilliseconds = 0)
+            {
+                bool f = Buttons == flag;
+                if (delayMilliseconds > 0) Thread.Sleep(delayMilliseconds);
+                return f;
+            }
+        }
+
+        private IPort _port;
+
+        private UInt64 _rawState = 0xFC00000880808080;
+
+        public SerialInputDriver()
+        {
+            _port = new SerialPort("COM6", 115200, 200) { ReadChunkSize = 8 };
+            bool opened = !_port.IsOpen ? _port.Open() : _port.IsOpen;
+            if (opened)
+            {
+                _port.DataReceived += Serial_DataReceived;
+            }
+        }
+        private GamePadState? State { get; set; }
+        private GamePadState? PrevState { get; set; }
+
+        public bool Terminate { get; set; }
 
         private bool HasPressed(GamepadButtonFlags button)
         {
-            return State.IsButtonPressed(button) && !PrevState.IsButtonPressed(button);
+            return State?.Buttons.HasFlag(button) == true && PrevState?.Buttons.HasFlag(button) == false;
         }
         private bool HasPressedOnly(GamepadButtonFlags button)
         {
-            return State.IsButtonPressedOnly(button) && !PrevState.IsButtonPressed(button);
+            return State?.Buttons == button && PrevState?.Buttons != button;
         }
 
         public void ProcessInput(HexModel model)
         {
             var adjustLegsPosition = false;
 
-            State = _controller.GetState().GetGamepadState(Keyboard, _stopWatch);
+            if (Console.KeyAvailable)
+            {
+                Terminate = Console.ReadKey(false).Key == ConsoleKey.Escape;
+            }
+            State = GetCurrentState();
             if (PrevState == null) PrevState = State;
 
-            XY thumbLeft = State.GetLeftThumbPos(127);
-            XY thumbRight = State.GetRightThumbPos(127);
-            XY thumbLeftPresize = State.GetLeftThumbPos(10000);
-            XY thumbRightPresize = State.GetRightThumbPos(10000);
+            XY thumbLeft = new XY { x = State.HasValue ? State.Value.LeftThumbX - 128 : 0, y = - (State.HasValue ? State.Value.LeftThumbY - 128 : 0) };
+            XY thumbRight = new XY { x = State.HasValue ? State.Value.RightThumbX - 128 : 0, y = - (State.HasValue ? State.Value.RightThumbY - 128 : 0) };
 
-            if (State.Terminate)
-            {
-                Terminate = true;
-            }
-
-            if (HasPressed(GamepadButtonFlags.Start))
+            if (HasPressed(GamepadButtonFlags.B10))
             {
                 if (model.PowerOn)
                 {
@@ -70,7 +136,7 @@ namespace ServoCommander.Drivers
             }
             else if (model.PowerOn)
             {
-                if (HasPressed(GamepadButtonFlags.LeftShoulder))
+                if (HasPressed(GamepadButtonFlags.B5))
                 {
                     if (model.ControlMode != HexModel.ControlModeType.Translate)
                     {
@@ -86,7 +152,7 @@ namespace ServoCommander.Drivers
                     }
                     Thread.Sleep(200);
                 }
-                else if (HasPressed(GamepadButtonFlags.RightShoulder))
+                else if (HasPressed(GamepadButtonFlags.B6))
                 {
                     if (model.ControlMode != HexModel.ControlModeType.Rotate)
                     {
@@ -102,7 +168,7 @@ namespace ServoCommander.Drivers
                     }
                     Thread.Sleep(200);
                 }
-                else if (HasPressed(GamepadButtonFlags.B)) // Circle
+                else if (HasPressed(GamepadButtonFlags.B3)) // Circle
                 {
                     if ((Math.Abs(model.TravelLength.x) < HexConfig.TravelDeadZone)
                       || (Math.Abs(model.TravelLength.z) < HexConfig.TravelDeadZone)
@@ -123,7 +189,7 @@ namespace ServoCommander.Drivers
                         }
                     }
                 }
-                else if (HasPressed(GamepadButtonFlags.A)) // Cross
+                else if (HasPressed(GamepadButtonFlags.B2)) // Cross
                 {
                     if (model.ControlMode != HexModel.ControlModeType.GPPlayer)
                     {
@@ -133,11 +199,11 @@ namespace ServoCommander.Drivers
                     else
                         model.ControlMode = HexModel.ControlModeType.Walk;
                 }
-                else if (HasPressed(GamepadButtonFlags.X)) // Square
+                else if (HasPressed(GamepadButtonFlags.B1)) // Square
                 {
                     model.BalanceMode = !model.BalanceMode;
                 }
-                else if (HasPressed(GamepadButtonFlags.Y)) // Triangle
+                else if (HasPressed(GamepadButtonFlags.B4)) // Triangle
                 {
                     if (model.BodyYOffset > 0)
                         model.BodyYOffset = 0;
@@ -146,14 +212,14 @@ namespace ServoCommander.Drivers
 
                     adjustLegsPosition = true;
                 }
-                else if(State.IsButtonPressed(GamepadButtonFlags.DPadUp, 50))
+                else if (State?.IsButtonPressed(GamepadButtonFlags.DPadUp, 50) == true)
                 {
                     model.BodyYOffset += 5;
                     if (model.BodyYOffset > HexConfig.MaxBodyHeight)
                         model.BodyYOffset = HexConfig.MaxBodyHeight;
                     adjustLegsPosition = true;
                 }
-                else if (State.IsButtonPressed(GamepadButtonFlags.DPadDown, 50))
+                else if (State?.IsButtonPressed(GamepadButtonFlags.DPadDown, 50) == true)
                 {
                     if (model.BodyYOffset > 5)
                         model.BodyYOffset -= 10;
@@ -161,11 +227,11 @@ namespace ServoCommander.Drivers
                         model.BodyYOffset = 0;
                     adjustLegsPosition = true;
                 }
-                else if (State.IsButtonPressed(GamepadButtonFlags.DPadRight, 50))
+                else if (State?.IsButtonPressed(GamepadButtonFlags.DPadRight, 50) == true)
                 {
                     if (model.Speed >= 50) model.Speed -= 50;
                 }
-                else if (State.IsButtonPressed(GamepadButtonFlags.DPadLeft, 50))
+                else if (State?.IsButtonPressed(GamepadButtonFlags.DPadLeft, 50) == true)
                 {
                     if (model.Speed < 2000) model.Speed += 50;
                 }
@@ -175,7 +241,7 @@ namespace ServoCommander.Drivers
                 {
                     if (model.BodyPos.y > 0)
                     {
-                        if (HasPressed(GamepadButtonFlags.Back) &&
+                        if (HasPressed(GamepadButtonFlags.B9) &&
                             Math.Abs(model.TravelLength.x) < HexConfig.TravelDeadZone //No movement
                             && Math.Abs(model.TravelLength.z) < HexConfig.TravelDeadZone
                             && Math.Abs(model.TravelLength.y * 2) < HexConfig.TravelDeadZone) //Select
@@ -242,7 +308,7 @@ namespace ServoCommander.Drivers
                 }
                 else if (model.ControlMode == HexModel.ControlModeType.SingleLeg)
                 {
-                    if (HasPressed(GamepadButtonFlags.Back)) //Select
+                    if (HasPressed(GamepadButtonFlags.B9)) //Select
                     {
                         model.SelectedLeg++;
                         if (model.SelectedLeg >= HexConfig.LegsCount)
@@ -251,10 +317,10 @@ namespace ServoCommander.Drivers
                         }
                     }
 
-                    model.SingleLegHold = State.IsButtonPressed(GamepadButtonFlags.RightShoulder);
-                    model.SingleLegPos.x = thumbLeftPresize.x / 100; //Left Stick Right/Left
-                    model.SingleLegPos.y = -thumbRightPresize.y / 100; //Right Stick Up/Down
-                    model.SingleLegPos.z = thumbLeftPresize.y / 100; //Left Stick Up/Down
+                    model.SingleLegHold = State?.IsButtonPressed(GamepadButtonFlags.B6) == true;
+                    model.SingleLegPos.x = thumbLeft.x; //Left Stick Right/Left
+                    model.SingleLegPos.y = -thumbRight.y; //Right Stick Up/Down
+                    model.SingleLegPos.z = thumbLeft.y; //Left Stick Up/Down
                 }
                 model.InputTimeDelay = 128 - (int)Math.Max(Math.Max(Math.Abs(thumbLeft.x), Math.Abs(thumbLeft.y)), Math.Max(Math.Abs(thumbRight.x), Math.Abs(thumbRight.y)));
             }
@@ -266,6 +332,45 @@ namespace ServoCommander.Drivers
             }
             PrevState = State;
         }
+
+        public void DebugOutput()
+        {
+            var state = GetCurrentState();
+            //Console.WriteLine($"RAW: {state.RawState:X}");
+            Console.WriteLine($"Buttons: {state.Buttons,10}");
+            Console.WriteLine($"Left: {state.LeftThumbX,3} {state.LeftThumbY,3}");
+            Console.WriteLine($"Right: {state.RightThumbX,3} {state.RightThumbY,3}");
+        }
+
+        public void Release()
+        {
+            _port.Close();
+        }
+
+        private GamePadState GetCurrentState()
+        {
+            var state = new GamePadState();
+            state.RawState = _rawState;
+            try
+            {
+                if ((_rawState & ((ulong)0xFC << 56)) > 0)
+                {
+                    state = GamePadState.Parse(_rawState);
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw;
+            }
+            return state;
+        }
+
+        private void Serial_DataReceived(object sender, PortDataReceivedEventArgs e)
+        {
+            _rawState = BitConverter.ToUInt64(e.Data, 0);
+        }
+
         private void AdjustLegPositionsToBodyHeight(HexModel model)
         {
             const double MIN_XZ_LEG_ADJUST = HexConfig.CoxaLength;
@@ -330,9 +435,5 @@ namespace ServoCommander.Drivers
             model.SelectedLeg = 255;
         }
 
-        public void Release()
-        {
-            _controller = null;
-        }
     }
 }

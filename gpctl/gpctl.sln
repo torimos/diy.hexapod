@@ -1,0 +1,21 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.6
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gpctl", "gpctl\gpctl.vcxproj", "{F6FF61AB-C29A-4D64-B447-15A35DCC877F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|VisualGDB = Debug|VisualGDB
+		Release|VisualGDB = Release|VisualGDB
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F6FF61AB-C29A-4D64-B447-15A35DCC877F}.Debug|VisualGDB.ActiveCfg = Debug|VisualGDB
+		{F6FF61AB-C29A-4D64-B447-15A35DCC877F}.Debug|VisualGDB.Build.0 = Debug|VisualGDB
+		{F6FF61AB-C29A-4D64-B447-15A35DCC877F}.Release|VisualGDB.ActiveCfg = Release|VisualGDB
+		{F6FF61AB-C29A-4D64-B447-15A35DCC877F}.Release|VisualGDB.Build.0 = Release|VisualGDB
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

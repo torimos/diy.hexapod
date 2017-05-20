@@ -52,16 +52,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Drivers\IInputDriver.cs" />
+    <Compile Include="Drivers\SerialInputDriver.cs" />
     <Compile Include="IK\IIKSolver.cs" />
     <Compile Include="IK\IKSolverEx.cs" />
-    <Compile Include="Drivers\GamepadExtension.cs" />
     <Compile Include="Data\HexModel.cs" />
     <Compile Include="Data\IKLegResult.cs" />
     <Compile Include="Data\HexConfig.cs" />
     <Compile Include="IK\IKMath.cs" />
     <Compile Include="IK\IKSolver.cs" />
     <Compile Include="IK\IKSolutionResultType.cs" />
-    <Compile Include="Drivers\InputDriver.cs" />
+    <Compile Include="Drivers\DS6InputDriver.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Drivers\ServoDriver.cs" />

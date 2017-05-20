@@ -18,9 +18,9 @@ namespace ServoCommander
             var model = new HexModel(HexConfig.LegsCount);
             Setup(model);
 
-            IIKSolver me = new IKSolver();
+            IIKSolver me = new IKSolverEx();
             var sd = new ServoDriver();
-            var id = new InputDriver();
+            IInputDriver id = new SerialInputDriver(); //new DS6InputDriver();
             sd.Init();
             sd.Reset();
 
@@ -34,15 +34,21 @@ namespace ServoCommander
             {
                 while (!id.Terminate)
                 {
-                    DebugOutput(model, id.State);
+                    DebugOutput(model, id);
                 }
             });
-
+            Task.Run(() =>
+            {
+                while (!id.Terminate)
+                {
+                    id.ProcessInput(model);
+                }
+            });
             while (!id.Terminate)
             {
                 sw.Restart();
 
-                id.ProcessInput(model);
+               // id.ProcessInput(model);
 
                 //todo: GPPlayer
 
@@ -128,7 +134,7 @@ namespace ServoCommander
             id.Release();
         }
 
-        private static void Calibrate(ServoDriver sd, InputDriver id)
+        private static void Calibrate(ServoDriver sd, DS6InputDriver id)
         {
             bool firstRun = true;
             int selLegIndex = 0;
@@ -313,24 +319,15 @@ namespace ServoCommander
                 }
             }
         }
-        private static void DebugOutput(HexModel model, GamepadEx gamepadEx)
+        private static void DebugOutput(HexModel model, IInputDriver inputDriver)
         {
             if (model.DebugOutput)
             {
                 Console.Clear();
                 Console.SetCursorPosition(0, 0);
                 Console.WriteLine(model);
+                inputDriver.DebugOutput();
 
-                if (GamepadEx.Emulated)
-                {
-                    Console.WriteLine("GAME PAD - EMULATION");
-                }
-                
-                Console.WriteLine($"Buttons: {gamepadEx?.Buttons,10}");
-                Console.WriteLine($"Left: {gamepadEx?.GetLeftThumbPos(127)}");
-                Console.WriteLine($"Right: {gamepadEx?.GetRightThumbPos(127)}");
-                Console.WriteLine($"LeftTrigger: {gamepadEx?.GetLeftTriggerPos(127)}");
-                Console.WriteLine($"RightTrigger: {gamepadEx?.GetRightTriggerPos(127)}");
                 Thread.Sleep(100);
             }
         }
