@@ -34,34 +34,22 @@ namespace ServoCommander.Drivers
 
         struct GamePadState
         {
-            public UInt64 RawState { get; set; }
             public int LeftThumbX { get; set; }
             public int LeftThumbY { get; set; }
             public int RightThumbX { get; set; }
             public int RightThumbY { get; set; }
             public GamepadButtonFlags Buttons { get; set; }
 
-            private static GamepadButtonFlags[] DPad = {
-                GamepadButtonFlags.DPadUp,
-                GamepadButtonFlags.DPadUp | GamepadButtonFlags.DPadRight,
-                GamepadButtonFlags.DPadRight,
-                GamepadButtonFlags.DPadRight | GamepadButtonFlags.DPadDown,
-                GamepadButtonFlags.DPadDown,
-                GamepadButtonFlags.DPadDown | GamepadButtonFlags.DPadLeft,
-                GamepadButtonFlags.DPadLeft,
-                GamepadButtonFlags.DPadLeft | GamepadButtonFlags.DPadUp,
-                GamepadButtonFlags.None };
-
             public static GamePadState Parse(UInt64 rawState)
             {
                 var state = new GamePadState();
-                state.RawState = rawState;
-                state.LeftThumbX = (short)(rawState & 0xFF);
-                state.LeftThumbY = (short)((rawState >> 8) & 0xFF);
-                state.RightThumbX = (short)((rawState >> 16) & 0xFF);
-                state.RightThumbY = (short)((rawState >> 24) & 0xFF);
-                UInt32 rawButtons = (UInt32)(rawState >> 32);
-                state.Buttons = DPad[rawButtons & 0xF] | (GamepadButtonFlags)(rawButtons & 0x00FFFFF0);
+                ushort chk = (ushort)((rawState >> 48) & 0xFFF0);
+                if (chk != 0xFD40) rawState = 0xFD40000080808080;
+                state.Buttons = (GamepadButtonFlags)((rawState >> 32) & 0x000FFFFF);
+                state.LeftThumbX = (byte)(rawState & 0xFF);
+                state.LeftThumbY = (byte)((rawState >> 8) & 0xFF);
+                state.RightThumbX = (byte)((rawState >> 16) & 0xFF);
+                state.RightThumbY = (byte)((rawState >> 24) & 0xFF);
                 return state;
             }
 
@@ -336,7 +324,6 @@ namespace ServoCommander.Drivers
         public void DebugOutput()
         {
             var state = GetCurrentState();
-            //Console.WriteLine($"RAW: {state.RawState:X}");
             Console.WriteLine($"Buttons: {state.Buttons,10}");
             Console.WriteLine($"Left: {state.LeftThumbX,3} {state.LeftThumbY,3}");
             Console.WriteLine($"Right: {state.RightThumbX,3} {state.RightThumbY,3}");
@@ -349,21 +336,7 @@ namespace ServoCommander.Drivers
 
         private GamePadState GetCurrentState()
         {
-            var state = new GamePadState();
-            state.RawState = _rawState;
-            try
-            {
-                if ((_rawState & ((ulong)0xFC << 56)) > 0)
-                {
-                    state = GamePadState.Parse(_rawState);
-                }
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                throw;
-            }
-            return state;
+            return GamePadState.Parse(_rawState);
         }
 
         private void Serial_DataReceived(object sender, PortDataReceivedEventArgs e)

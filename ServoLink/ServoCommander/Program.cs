@@ -21,7 +21,7 @@ namespace ServoCommander
             IIKSolver me = new IKSolverEx();
             var sd = new ServoDriver();
             IInputDriver id = new SerialInputDriver(); //new DS6InputDriver();
-            sd.Init();
+            //sd.Init();
             sd.Reset();
 
             //Calibrate(sd, id);

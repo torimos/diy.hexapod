@@ -116,39 +116,10 @@ void USBH_USR_OverCurrentDetected (void)
 }
 void USBH_USR_EnumerationDone(void)
 {
-//	USBH_DeviceProp_TypeDef* pdev = &USBH_Device;
-//	USBH_DevDesc_TypeDef* dd = &pdev->Dev_Desc;
-//
-//	if(pdev->speed == HPRT0_PRTSPD_HIGH_SPEED)
-//	{
-//		printf("HIGH SPEED Device at %d\n\r", pdev->address);
-//	}
-//	else if(pdev->speed == HPRT0_PRTSPD_FULL_SPEED)
-//	{
-//		printf("FULL SPEED Device at %d\n\r", pdev->address);
-//	}
-//	else if(pdev->speed == HPRT0_PRTSPD_LOW_SPEED)
-//	{
-//		printf("LOW SPEED Device at %d\n\r", pdev->address);
-//	}
-//	else
-//	{
-//		printf("ERROR: Device Speed Unknown at %d\n\r", pdev->address);
-//	}
-//
-//	printf("VID:%04X PID:%04X RID:%04X USB:%04X\n\r", dd->idVendor, dd->idProduct, dd->bcdDevice, dd->bcdUSB);
-//	printf("MPSZ:%02X #CFG:%02X CSR:%02X%02X%02X #INT:%d\n\r",dd->bMaxPacketSize, dd->bNumConfigurations, dd->bDeviceClass, dd->bDeviceSubClass,dd->bDeviceProtocol, pdev->Cfg_Desc.bNumInterfaces);
-//	u8 i=0,j;
-//	for(;i < pdev->Cfg_Desc.bNumInterfaces;i++)
-//	{
-//		USBH_InterfaceDesc_TypeDef* id = &pdev->Itf_Desc;//[i] - single
-//		printf("\tINT%02X> AS:%02X CSR:%02X%02X%02X #EP:%02X\n\r", i, id->bAlternateSetting, id->bInterfaceClass,id->bInterfaceSubClass,id->bInterfaceProtocol, id->bNumEndpoints);
-//		for(j=0;j<id->bNumEndpoints;j++)
-//		{
-//			USBH_EpDesc_TypeDef *pep = &pdev->Ep_Desc[j];//[i]
-//			printf("\t\tEP%02X> ADDR:%02X MPSZ:%04X PI:%02X ATTR:%02X\n\r", j, pep->bEndpointAddress,pep->wMaxPacketSize,pep->bInterval,pep->bmAttributes);
-//		}
-//	}
+	USBH_DeviceProp_TypeDef* pdev = &USBH_Device;
+	USBH_DevDesc_TypeDef* dd = &pdev->Dev_Desc;
+
+	USB_EnumerationDone(pdev, dd);
 }
 
 void  USR_KEYBRD_Init (void)
@@ -167,7 +138,7 @@ void  USR_MOUSE_ProcessData (HID_MOUSE_Data_TypeDef *data)
 
 void  USR_CUSTOM_HID_Init (void)
 {
-//	printf("USB Initialized.\n\r");
+	USB_Initialized();
 }
 
 void USR_CUSTOM_HID_ProcessData (uint8_t *data, uint16_t length)
