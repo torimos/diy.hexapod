@@ -46,10 +46,14 @@ namespace ServoCommander.Drivers
                 ushort chk = (ushort)((rawState >> 48) & 0xFFF0);
                 if (chk != 0xFD40) rawState = 0xFD40000080808080;
                 state.Buttons = (GamepadButtonFlags)((rawState >> 32) & 0x000FFFFF);
-                state.LeftThumbX = (byte)(rawState & 0xFF);
-                state.LeftThumbY = (byte)((rawState >> 8) & 0xFF);
+                state.LeftThumbX = (byte)(rawState & 0xFF) + 8;
+                state.LeftThumbY = (byte)((rawState >> 8) & 0xFF) - 21;
                 state.RightThumbX = (byte)((rawState >> 16) & 0xFF);
                 state.RightThumbY = (byte)((rawState >> 24) & 0xFF);
+                if (state.LeftThumbX < 0) state.LeftThumbX = 0;
+                if (state.LeftThumbX > 0xFF) state.LeftThumbX = 0xFF;
+                if (state.LeftThumbY < 0) state.LeftThumbY = 0;
+                if (state.LeftThumbY > 0xFF) state.LeftThumbY = 0xFF;
                 return state;
             }
 
@@ -273,7 +277,7 @@ namespace ServoCommander.Drivers
                             model.TravelLength.z = model.TravelLength.z / 1.75;
                         }
 
-                        model.TravelLength.y = -thumbRight.x / 4; //Right Stick Left/Right 
+                        model.TravelLength.y = -thumbRight.x / 6; //Right Stick Left/Right 
                     }
                     else
                     {
@@ -289,9 +293,9 @@ namespace ServoCommander.Drivers
                 }
                 else if (model.ControlMode == HexModel.ControlModeType.Rotate)
                 {
-                    model.BodyRot.x = thumbLeft.x;
-                    model.BodyRot.y = thumbRight.x * 2;
-                    model.BodyRot.z = -thumbLeft.y;
+                    model.BodyRot.x = thumbLeft.y;
+                    model.BodyRot.y = thumbRight.y * 2;
+                    model.BodyRot.z = -thumbLeft.x;
                     model.BodyYShift = thumbRight.y / 2;
                 }
                 else if (model.ControlMode == HexModel.ControlModeType.SingleLeg)

@@ -28,10 +28,10 @@
         public static bool[] FemurAngleInv = { true, true, true, false, false, false }; //RR RM RF LF LM LR
         public static bool[] TibiaAngleInv = { true, true, true, false, false, false }; //RR RM RF LF LM LR LF LM LR
 
-        public const double MaxBodyHeight = 100;
-        public const double BodyStandUpOffset = 35;
-        public const double LegLiftHeight = 50;
-        public const double LegLiftDoubleHeight = 80;
+        public const double MaxBodyHeight = 110;
+        public const double BodyStandUpOffset = 55;
+        public const double LegLiftHeight = 40;
+        public const double LegLiftDoubleHeight = 65;
         public const double GPlimit = 2;
         public const double TravelDeadZone = 4;
 
