@@ -19,7 +19,7 @@ volatile uint8_t uart_tx_fifo_not_empty_flag; // this flag is automatically set 
 #endif
 
 
-void uartInit(uint32_t baudRate);\
+void uartInit(uint32_t baudRate);
 void uartReset();
 void uartSendByte(uint8_t byte);
 void uartSendStr(const char *pFormat, ...);

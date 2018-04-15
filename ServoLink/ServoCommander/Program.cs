@@ -282,6 +282,7 @@ namespace ServoCommander
         {
             XYZ bodyFKPos;
             IKLegResult legIK;
+
             for (byte leg = 0; leg < HexConfig.LegsCount / 2; leg++)
             {
                 bodyFKPos = ik.BodyFK(leg,
@@ -317,18 +318,6 @@ namespace ServoCommander
                 {
                     model.LegsAngle[leg] = legIK.Result;
                 }
-            }
-        }
-        private static void DebugOutput(HexModel model, IInputDriver inputDriver)
-        {
-            if (model.DebugOutput)
-            {
-                Console.Clear();
-                Console.SetCursorPosition(0, 0);
-                Console.WriteLine(model);
-                inputDriver.DebugOutput();
-
-                Thread.Sleep(100);
             }
         }
         private static void GateSequence(HexModel model)
@@ -546,6 +535,18 @@ namespace ServoCommander
                 }
                 if (model.PrevSelectedLeg != 0xFF)
                     model.PrevSelectedLeg = 0xFF;
+            }
+        }
+        private static void DebugOutput(HexModel model, IInputDriver inputDriver)
+        {
+            if (model.DebugOutput)
+            {
+                Console.Clear();
+                Console.SetCursorPosition(0, 0);
+                Console.WriteLine(model);
+                inputDriver.DebugOutput();
+
+                Thread.Sleep(100);
             }
         }
     }

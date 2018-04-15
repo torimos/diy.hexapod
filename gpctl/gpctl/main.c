@@ -107,8 +107,12 @@ int main(void)
 	uart_init(USART3);
 #ifdef DEBUG
 	printf("\tLogitech Wirelles Controler V1.2\n\r");
-#endif		while (1)
+#endif
+//	int i = 0;
+	while (1)
 	{
+//		printf("ab%4x\n\r", i++);
+//		delay_ms(1000);
 		USBH_HID_Process();
 	}
 }

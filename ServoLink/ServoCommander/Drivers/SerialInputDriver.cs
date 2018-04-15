@@ -77,7 +77,7 @@ namespace ServoCommander.Drivers
 
         public SerialInputDriver()
         {
-            _port = new SerialPort("COM6", 115200, 200) { ReadChunkSize = 8 };
+            _port = new SerialPort("COM9", 9600, 200) { ReadChunkSize = 8 };
             bool opened = !_port.IsOpen ? _port.Open() : _port.IsOpen;
             if (opened)
             {

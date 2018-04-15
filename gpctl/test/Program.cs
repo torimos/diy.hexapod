@@ -36,9 +36,12 @@ namespace test
         public int RightThumbY { get; set; }
         public GamepadButtonFlags Buttons { get; set; }
 
+        public UInt64 RawState { get; set; }
+
         public static GamePadState Parse(UInt64 rawState)
         {
             var state = new GamePadState();
+            state.RawState = rawState;
             ushort chk = (ushort)((rawState >> 48) & 0xFFF0);
             if (chk != 0xFD40) rawState = 0xFD40000080808080;
             state.Buttons = (GamepadButtonFlags)((rawState >> 32) & 0x000FFFFF);
@@ -51,6 +54,7 @@ namespace test
 
         public void DebugOutput()
         {
+            Console.WriteLine($"RAW: {RawState:X}");
             Console.WriteLine($"Buttons: {Buttons,10}");
             Console.WriteLine($"Left: {LeftThumbX,3} {LeftThumbY,3}");
             Console.WriteLine($"Right: {RightThumbX,3} {RightThumbY,3}");
@@ -62,7 +66,7 @@ namespace test
         static UInt64 _rawState;
         static void Main(string[] args)
         {
-            var port = new SerialPort("COM6", 115200, 200) { ReadChunkSize = 8 };
+            var port = new SerialPort("COM9", 9600, 200) { ReadChunkSize = 8 };
             port.DataReceived += Port_DataReceived;
 
             if (!port.Open())
@@ -70,8 +74,7 @@ namespace test
                 Console.WriteLine("ConnERROR!");
                 return;
             }
-
-            while(!Console.KeyAvailable)
+            while (!Console.KeyAvailable)
             {
                 Console.Clear();
                 Console.SetCursorPosition(0, 0);
