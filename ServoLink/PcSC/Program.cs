@@ -14,6 +14,14 @@ namespace ServoCommander
     {
         static void Main(string[] args)
         {
+            var sd = new ServoDriver(20);
+            sd.Init("COM3");
+            sd.Reset();
+            Console.WriteLine(sd.ReadLastResult());
+        }
+
+        static void Main2(string[] args)
+        {
             Console.SetWindowSize(80, 70);
 
             var hex = new Controller();
