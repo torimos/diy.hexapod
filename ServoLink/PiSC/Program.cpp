@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 	{
 		printf("Unable to start wiringPi: %s\n", strerror(errno));
 	}
-	Controller* controller = new Controller("/dev/rfcomm0", "/dev/tty0");
+	Controller* controller = new Controller("/dev/rfcomm0", "/dev/ttyS0");
 	controller->Setup();
 	try
 	{
