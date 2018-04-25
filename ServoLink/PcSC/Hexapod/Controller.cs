@@ -3,16 +3,70 @@ using Data;
 using Drivers;
 using IK;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hexapod
 {
-    public class Controller
+    public class Controller : IDisposable
     {
-        IIKSolver me = new IKSolverEx();
+        private static int[] CoxaOffset = { 20, -40, 0, -20, -40, -20 }; //LF LM LR RR RM RF
+        private static int[] FemurOffset = { 30, 20, 50, -170, -120, -20 };//{   70,-100, -55,   0,  45, -40 }; //LF LM LR RR RM RF 
+        private static int[] TibiaOffset = { 20, 60, -50, 30, 20, 20 };//{    0,  65, -30,  40,   0,   0 }; //LF LM LR RR RM RF
+        private static byte[] LegsMap = { 3, 4, 5, 2, 1, 0 };
 
-        public void Run(HexModel model)
+        private IIKSolver iks;
+        private ServoDriver sd;
+        private SerialInputDriver id;
+        private HexModel model;
+
+        public Controller()
         {
+            iks = new IKSolverEx();
+            sd = new ServoDriver(20);
+            id = new SerialInputDriver(); //new DS6InputDriver();
+            model = new HexModel(HexConfig.LegsCount);
+        }
+
+        public void Dispose()
+        {
+            sd.Reset();
+            sd.Dispose();
+            id.Release();
+        }
+
+        public void Setup()
+        {
+            sd.Init("COM6");
+            sd.Reset();
+
+            Task.Run(() =>
+            {
+                while (!id.Terminate)
+                {
+                    DebugOutput(model, id);
+                }
+            });
+            Task.Run(() =>
+            {
+                while (!id.Terminate)
+                {
+                    id.ProcessInput(model);
+                }
+            });
+
+            InitModel(model);
+        }
+
+        public bool Loop()
+        {
+            var sw = new Stopwatch();
+            sw.Reset();
+
+            bool terminate = id.Terminate;
+
             //todo: GPPlayer
 
             SingleLegControl(model);
@@ -21,9 +75,78 @@ namespace Hexapod
 
             Balance(model);
 
-            SolveIKLegs(model, me);
-        }
+            SolveIKLegs(model, iks);
 
+            if (model.PowerOn)
+            {
+                //Calculate Servo Move time
+                if (model.ControlMode == HexModel.ControlModeType.SingleLeg)
+                {
+                    model.MoveTime = HexConfig.SingleLegControlDelay;
+                }
+                else
+                {
+                    if ((Math.Abs(model.TravelLength.x) > HexConfig.TravelDeadZone)
+                      || (Math.Abs(model.TravelLength.z) > HexConfig.TravelDeadZone)
+                      || (Math.Abs(model.TravelLength.y * 2) > HexConfig.TravelDeadZone))
+                    {
+                        model.MoveTime = (ushort)(model.gaitCur.NomGaitSpeed + (model.InputTimeDelay * 2) + model.Speed);
+
+                        //Add aditional delay when Balance mode is on
+                        if (model.BalanceMode)
+                            model.MoveTime = (ushort)(model.MoveTime + HexConfig.BalancingDelay);
+                    }
+                    else //Movement speed excl. Walking
+                        model.MoveTime = (ushort)(HexConfig.WalkingDelay + model.Speed);
+                }
+
+                UpdateServos(model.LegsAngle, model.MoveTime);
+
+                for (var LegIndex = 0; LegIndex < HexConfig.LegsCount; LegIndex++)
+                {
+                    if (((Math.Abs(model.GaitPos[LegIndex].x) > HexConfig.GPlimit) ||
+                        (Math.Abs(model.GaitPos[LegIndex].z) > HexConfig.GPlimit) ||
+                        (Math.Abs(model.GaitRotY[LegIndex]) > HexConfig.GPlimit)))
+                    {
+                        //For making sure that we are using timed move until all legs are down
+                        model.ExtraCycle = model.gaitCur.NrLiftedPos + 1;
+                        break;
+                    }
+                }
+                if (model.ExtraCycle > 0)
+                {
+                    model.ExtraCycle--;
+                    model.Walking = !(model.ExtraCycle == 0);
+                    long timeToWait = (model.PrevMoveTime - sw.ElapsedMilliseconds);
+                    sw.Restart();
+                    do
+                    {
+                    }
+                    while (sw.ElapsedMilliseconds < timeToWait);
+                }
+                sd.Commit();
+            }
+            else
+            {
+                if (model.PrevPowerOn)
+                {
+                    model.MoveTime = 600;
+                    UpdateServos(model.LegsAngle, model.MoveTime);
+                    sd.Commit();
+                    Thread.Sleep(600);
+                }
+                else
+                {
+                    sd.Reset();
+                }
+            }
+
+            model.PrevControlMode = model.ControlMode;
+            model.PrevMoveTime = model.MoveTime;
+            model.PrevPowerOn = model.PowerOn;
+
+            return terminate || id.Terminate;
+        }
 
         private void SolveIKLegs(HexModel model, IIKSolver ik)
         {
@@ -284,7 +407,119 @@ namespace Hexapod
                     model.PrevSelectedLeg = 0xFF;
             }
         }
-        private void Calibrate(ServoDriver sd, DS6InputDriver id)
+        private static void InitModel(HexModel model)
+        {
+            //Gait
+            var gaits = new Dictionary<GaitType, PhoenixGait>();
+            gaits.Add(GaitType.Ripple12, new PhoenixGait //Ripple 12
+            {
+                NomGaitSpeed = 70,
+                StepsInGait = 12,
+                NrLiftedPos = 3,
+                FrontDownPos = 2,
+                LiftDivFactor = 2,
+                TLDivFactor = 8,
+                HalfLiftHeight = 3,
+                GaitLegNr = new byte[] { 7, 11, 3, 1, 5, 9 }
+            });
+            gaits.Add(GaitType.Tripod8, new PhoenixGait //Tripod 8
+            {
+                NomGaitSpeed = 70,
+                StepsInGait = 8,
+                NrLiftedPos = 3,
+                FrontDownPos = 2,
+                LiftDivFactor = 2,
+                TLDivFactor = 4,
+                HalfLiftHeight = 3,
+                GaitLegNr = new byte[] { 1, 5, 1, 5, 1, 5 }
+            });
+            gaits.Add(GaitType.TripleTripod12, new PhoenixGait //Triple Tripod 12
+            {
+                NomGaitSpeed = 50,
+                StepsInGait = 12,
+                NrLiftedPos = 3,
+                FrontDownPos = 2,
+                LiftDivFactor = 2,
+                TLDivFactor = 8,
+                HalfLiftHeight = 3,
+                GaitLegNr = new byte[] { 5, 10, 3, 11, 4, 9 }
+            });
+            gaits.Add(GaitType.TripleTripod16, new PhoenixGait //Triple Tripod 16 steps, use 5 lifted positions
+            {
+                NomGaitSpeed = 50,
+                StepsInGait = 16,
+                NrLiftedPos = 5,
+                FrontDownPos = 3,
+                LiftDivFactor = 4,
+                TLDivFactor = 10,
+                HalfLiftHeight = 1,
+                GaitLegNr = new byte[] { 6, 13, 4, 14, 5, 12 }
+            });
+            gaits.Add(GaitType.Wave24, new PhoenixGait //Wave 24 steps
+            {
+                NomGaitSpeed = 70,
+                StepsInGait = 24,
+                NrLiftedPos = 3,
+                FrontDownPos = 2,
+                LiftDivFactor = 2,
+                TLDivFactor = 20,
+                HalfLiftHeight = 3,
+                GaitLegNr = new byte[] { 13, 17, 21, 1, 5, 9 }
+            });
+            gaits.Add(GaitType.Tripod6, new PhoenixGait //Tripod 6 steps
+            {
+                NomGaitSpeed = 70,
+                StepsInGait = 6,
+                NrLiftedPos = 2,
+                FrontDownPos = 1,
+                LiftDivFactor = 2,
+                TLDivFactor = 4,
+                HalfLiftHeight = 1,
+                GaitLegNr = new byte[] { 1, 4, 1, 4, 1, 4 }
+            });
+            model.GaitType = GaitType.Tripod6;
+            model.BalanceMode = false;
+            model.LegLiftHeight = HexConfig.LegLiftHeight;
+            model.ForceGaitStepCnt = 0;    // added to try to adjust starting positions depending on height...
+            model.GaitStep = 1;
+            model.Gaits = gaits;
+            model.gaitCur = model.Gaits[model.GaitType];
+
+            for (var i = 0; i < 6; i++)
+            {
+                model.LegsPos[i] = new XYZ(HexConfig.DefaultLegsPosX[i], HexConfig.DefaultLegsPosY[i], HexConfig.DefaultLegsPosZ[i]);
+            }
+
+            model.PrevSelectedLeg = model.SelectedLeg = 0xFF; // No Leg selected
+            model.Speed = 150;
+            model.PowerOn = false;
+            model.DebugOutput = true;
+        }
+        private void DebugOutput(HexModel model, IInputDriver inputDriver)
+        {
+            if (model.DebugOutput)
+            {
+                Console.Clear();
+                Console.SetCursorPosition(0, 0);
+                Console.WriteLine(model);
+                inputDriver.DebugOutput();
+
+                Thread.Sleep(100);
+            }
+        }
+        private void UpdateServos(CoxaFemurTibia[] results, ushort moveTime)
+        {
+            for (byte i = 0; i < LegsMap.Length; i++)
+            {
+                ushort coxaPos = (ushort)(1500 + (results[i].Coxa * 10) + CoxaOffset[LegsMap[i]]);
+                ushort femurPos = (ushort)(1500 + (results[i].Femur * 10) + FemurOffset[LegsMap[i]]);
+                ushort tibiaPos = (ushort)(1500 + (results[i].Tibia * 10) + TibiaOffset[LegsMap[i]]);
+                sd.Move(LegsMap[i] * 3, tibiaPos, moveTime);
+                sd.Move(LegsMap[i] * 3 + 1, femurPos, moveTime);
+                sd.Move(LegsMap[i] * 3 + 2, coxaPos, moveTime);
+            }
+        }
+        public static void Calibrate(ServoDriver sd, DS6InputDriver id)
         {
             bool firstRun = true;
             int selLegIndex = 0;
@@ -316,15 +551,15 @@ namespace Hexapod
                 else if (ks.IsPressed(SlimDX.DirectInput.Key.LeftArrow)) { selLegJoint--; if (selLegJoint < 0) selLegJoint = 2; }
                 else if (ks.IsPressed(SlimDX.DirectInput.Key.A)) legAngles[selLegIndex][selLegJoint] += step;
                 else if (ks.IsPressed(SlimDX.DirectInput.Key.Z)) legAngles[selLegIndex][selLegJoint] -= step;
-                else if (ks.IsPressed(SlimDX.DirectInput.Key.S)) { if (selLegJoint == 0) ServoDriver.CoxaOffset[selLegIndex] += step; else if (selLegJoint == 1) ServoDriver.FemurOffset[selLegIndex] += step; else if (selLegJoint == 2) ServoDriver.TibiaOffset[selLegIndex] += step; }
-                else if (ks.IsPressed(SlimDX.DirectInput.Key.X)) { if (selLegJoint == 0) ServoDriver.CoxaOffset[selLegIndex] -= step; else if (selLegJoint == 1) ServoDriver.FemurOffset[selLegIndex] -= step; else if (selLegJoint == 2) ServoDriver.TibiaOffset[selLegIndex] -= step; }
+                else if (ks.IsPressed(SlimDX.DirectInput.Key.S)) { if (selLegJoint == 0) CoxaOffset[selLegIndex] += step; else if (selLegJoint == 1) FemurOffset[selLegIndex] += step; else if (selLegJoint == 2) TibiaOffset[selLegIndex] += step; }
+                else if (ks.IsPressed(SlimDX.DirectInput.Key.X)) { if (selLegJoint == 0) CoxaOffset[selLegIndex] -= step; else if (selLegJoint == 1) FemurOffset[selLegIndex] -= step; else if (selLegJoint == 2) TibiaOffset[selLegIndex] -= step; }
 
                 if (ks.PressedKeys.Count > 0 || firstRun)
                 {
                     firstRun = false;
-                    sd.Move(selLegIndex * 3 + 2, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][0] : legAngles[selLegIndex][0]) + ServoDriver.CoxaOffset[selLegIndex]), 0);
-                    sd.Move(selLegIndex * 3 + 1, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][1] : legAngles[selLegIndex][1]) + ServoDriver.FemurOffset[selLegIndex]), 0);
-                    sd.Move(selLegIndex * 3 + 0, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][2] : legAngles[selLegIndex][2]) + ServoDriver.TibiaOffset[selLegIndex]), 0);
+                    sd.Move(selLegIndex * 3 + 2, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][0] : legAngles[selLegIndex][0]) + CoxaOffset[selLegIndex]), 0);
+                    sd.Move(selLegIndex * 3 + 1, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][1] : legAngles[selLegIndex][1]) + FemurOffset[selLegIndex]), 0);
+                    sd.Move(selLegIndex * 3 + 0, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][2] : legAngles[selLegIndex][2]) + TibiaOffset[selLegIndex]), 0);
                     sd.Commit();
 
                     var isCoxa = selLegJoint == 0 ? "<" : " ";
@@ -334,22 +569,10 @@ namespace Hexapod
                     for (var i = 0; i < 6; i++)
                     {
                         var selLeg = i == selLegIndex ? "<" : " ";
-                        Console.WriteLine($"{i}{selLeg}: {legAngles[i][0],5} {ServoDriver.CoxaOffset[i],5}{isCoxa}   {legAngles[i][1],5} {ServoDriver.FemurOffset[i],5}{isFemur}   {legAngles[i][2],5} {ServoDriver.TibiaOffset[i],5}{isTibia}");
+                        Console.WriteLine($"{i}{selLeg}: {legAngles[i][0],5} {CoxaOffset[i],5}{isCoxa}   {legAngles[i][1],5} {FemurOffset[i],5}{isFemur}   {legAngles[i][2],5} {TibiaOffset[i],5}{isTibia}");
                     }
                     Thread.Sleep(100);
                 }
-            }
-        }
-        public void DebugOutput(HexModel model, IInputDriver inputDriver)
-        {
-            if (model.DebugOutput)
-            {
-                Console.Clear();
-                Console.SetCursorPosition(0, 0);
-                Console.WriteLine(model);
-                inputDriver.DebugOutput();
-
-                Thread.Sleep(100);
             }
         }
     }

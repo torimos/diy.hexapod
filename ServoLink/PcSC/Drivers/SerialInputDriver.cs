@@ -2,9 +2,8 @@
 using Data;
 using System.Threading;
 using Contracts;
-using Drivers;
 
-namespace ServoCommander.Drivers
+namespace Drivers
 {
     public class SerialInputDriver : IInputDriver
     {
