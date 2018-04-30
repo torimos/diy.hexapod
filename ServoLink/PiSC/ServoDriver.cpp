@@ -15,7 +15,7 @@ static uint8_t LegsMap[] = { 3, 4, 5, 2, 1, 0 };
 
 ServoDriver::ServoDriver(const char* device)
 {
-	if ((fd = serialOpen(device, 9600)) < 0)
+	if ((fd = serialOpen(device, 115200)) < 0)
 	{
 		printf("Unable to open serial device: %s\n", strerror(errno));
 	}
@@ -46,7 +46,7 @@ void ServoDriver::Commit()
 		return;
 	}
 	long m = millis();
-	_buffer[BUFFER_LENGTH - 1] = CRC::Calculate(_buffer, NUMBER_OF_SERVO, CRC::CRC_32_MPEG2());
+	_buffer[BUFFER_LENGTH - 1] = CRC::Calculate(_buffer, sizeof(uint32_t)*NUMBER_OF_SERVO, CRC::CRC_32_MPEG2());	
 	long t = millis() - m;
 	write(fd, _buffer, sizeof(uint32_t)*BUFFER_LENGTH);
 }

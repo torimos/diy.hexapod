@@ -39,7 +39,7 @@ namespace Hexapod
 
         public void Setup()
         {
-            sd.Init("COM6");
+            sd.Init("COM4");
             sd.Reset();
 
             Task.Run(() =>

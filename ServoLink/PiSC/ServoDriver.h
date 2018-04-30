@@ -2,7 +2,7 @@
 #include "HexModel.h"
 #include <stdint.h>
 #define NUMBER_OF_SERVO 20
-#define BUFFER_LENGTH NUMBER_OF_SERVO + 1
+#define BUFFER_LENGTH (NUMBER_OF_SERVO + 1)
 class ServoDriver
 {
 	int fd;
