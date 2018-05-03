@@ -6,7 +6,8 @@
 class ServoDriver
 {
 	int fd;
-	uint32_t _buffer[BUFFER_LENGTH];
+	uint32_t _servo[BUFFER_LENGTH];
+	uint32_t _crcBuffer[BUFFER_LENGTH];
 public:
 	ServoDriver(const char* device);
 	~ServoDriver();
@@ -14,7 +15,7 @@ public:
 	void Update(CoxaFemurTibia* results, uint16_t moveTime);
 	void Reset();
 	void Commit();
-private:
+public:
 	void Move(int index, uint16_t position, uint16_t moveTime = 0);
 	void MoveAll(uint16_t position, uint16_t moveTime = 0);
 };

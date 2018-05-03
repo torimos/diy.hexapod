@@ -3,7 +3,6 @@
 #include <errno.h>
 #include <wiringPi.h>
 #include "Controller.h"
-#include "CRC.h"
 
 int main(int argc, char *argv[])
 { 

@@ -28,7 +28,7 @@ ServoDriver::~ServoDriver()
 
 void ServoDriver::Move(int index, uint16_t position, uint16_t moveTime)
 {
-	_buffer[index] = (uint32_t)(moveTime << 16) | position;
+	_servo[index] = (uint32_t)(moveTime << 16) | position;
 }
         
 void ServoDriver::MoveAll(uint16_t position, uint16_t moveTime)
@@ -39,6 +39,16 @@ void ServoDriver::MoveAll(uint16_t position, uint16_t moveTime)
 	}
 }
 
+static uint32_t swapOctetsUInt32(uint32_t toSwap)
+{
+	uint32_t tmp = 0;
+	tmp = toSwap >> 24;
+	tmp = tmp | ((toSwap & 0xff0000) >> 8);
+	tmp = tmp | ((toSwap & 0xff00) << 8);
+	tmp = tmp | ((toSwap & 0xff) << 24);
+	return tmp;
+}
+
 void ServoDriver::Commit()
 {
 	if (fd < 0) {
@@ -46,9 +56,13 @@ void ServoDriver::Commit()
 		return;
 	}
 	long m = millis();
-	_buffer[BUFFER_LENGTH - 1] = CRC::Calculate(_buffer, sizeof(uint32_t)*NUMBER_OF_SERVO, CRC::CRC_32_MPEG2());	
+	for (int i = 0; i < NUMBER_OF_SERVO; i++)
+	{
+		this->_crcBuffer[i] = swapOctetsUInt32(this->_servo[i]);
+	}
+	this->_servo[BUFFER_LENGTH - 1] = CRC::Calculate(this->_crcBuffer, sizeof(uint32_t)*NUMBER_OF_SERVO, CRC::CRC_32_MPEG2());	
 	long t = millis() - m;
-	write(fd, _buffer, sizeof(uint32_t)*BUFFER_LENGTH);
+	write(fd, this->_servo, sizeof(uint32_t)*BUFFER_LENGTH);
 }
 
 void ServoDriver::Update(CoxaFemurTibia* results, uint16_t moveTime)
