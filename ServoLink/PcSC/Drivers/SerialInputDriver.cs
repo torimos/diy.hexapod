@@ -2,6 +2,7 @@
 using Data;
 using System.Threading;
 using Contracts;
+using PcSC.Utils;
 
 namespace Drivers
 {
@@ -74,9 +75,11 @@ namespace Drivers
 
         private UInt64 _rawState = 0xFC00000880808080;
 
+        static FrameProtocol fp = new FrameProtocol();
+
         public SerialInputDriver()
         {
-            _port = new SerialPortDriver("COM9", 9600, 200) { ReadChunkSize = 8 };
+            _port = new SerialPortDriver("COM4", 9600, 200) { ReadChunkSize = 8*2 };
             bool opened = !_port.IsOpen ? _port.Open() : _port.IsOpen;
             if (opened)
             {
@@ -344,7 +347,14 @@ namespace Drivers
 
         private void Serial_DataReceived(object sender, PortDataReceivedEventArgs e)
         {
-            _rawState = BitConverter.ToUInt64(e.Data, 0);
+            for (int i = 0; i < e.Data.Length; i++)
+            {
+                if (fp.rx_pool(e.Data[i]) > 0)
+                {
+                    var buff = fp.GetBuffer();
+                    _rawState = BitConverter.ToUInt64(buff, 0);
+                }
+            }
         }
 
         private void AdjustLegPositionsToBodyHeight(HexModel model)
