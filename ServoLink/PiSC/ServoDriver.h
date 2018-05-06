@@ -9,7 +9,7 @@ class ServoDriver
 	uint32_t _servo[BUFFER_LENGTH];
 	uint32_t _crcBuffer[BUFFER_LENGTH];
 public:
-	ServoDriver(const char* device);
+	ServoDriver(const char* device, int baud);
 	~ServoDriver();
 	
 	void Update(CoxaFemurTibia* results, uint16_t moveTime);

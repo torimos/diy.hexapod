@@ -11,16 +11,21 @@
 #include <wiringPi.h>
 #include <wiringSerial.h>
 
-SerialInputDriver::SerialInputDriver(const char* device)
+SerialInputDriver::SerialInputDriver(const char* device, int baud)
 {
-	if ((fd = serialOpen(device, 9600)) < 0)
+	if ((fd = serialOpen(device, baud)) < 0)
 	{
-		printf("Unable to open serial device: %s\n", strerror(errno));
+		printf("Unable to open serial input device: %s\n", strerror(errno));
 	}
 	
 	Terminate = false;
 	memset(&state, 0, sizeof(GamePadState));
 	memset(&prev_state, 0, sizeof(GamePadState));
+	
+	rx_header_bytes = 0;
+	rx_payload_bytes = 0;
+	rx_errors = 0;
+	rx_state = RX_STATE::SEARCHING_SOF;
 }
 
 SerialInputDriver::~SerialInputDriver()
@@ -28,17 +33,71 @@ SerialInputDriver::~SerialInputDriver()
 	serialClose(fd);
 }
 
+int SerialInputDriver::rx_pool(uint8_t data)
+{
+	if (this->rx_header_bytes == 1)
+	{
+		this->rx_header_bytes = 0;
+		if ((data & 0xF0) == 0x40)
+		{
+			this->rx_errors = 0;
+			this->rx_payload_bytes = 0;
+			this->rx_buffer[7 - (this->rx_payload_bytes++)] = 0xFD;
+			this->rx_buffer[7 - (this->rx_payload_bytes++)] = data;
+			this->rx_state = RX_STATE::RECEIVING_PAYLOAD;
+			return 0;
+		}
+		else
+		{
+			this->rx_errors++;
+			this->rx_payload_bytes = 0;
+			this->rx_state = RX_STATE::SEARCHING_SOF;
+			return 0;
+		}
+	}
+
+	if (data == 0xFD)
+	{
+		this->rx_header_bytes++;
+	}
+	else
+	{
+		this->rx_header_bytes = 0;
+	}
+	switch (this->rx_state)
+	{
+	case RX_STATE::SEARCHING_SOF:
+		break;
+	case RX_STATE::RECEIVING_PAYLOAD:
+		if (data == 0xFD) // ? start of next frame
+		{
+			this->rx_state = RX_STATE::SEARCHING_SOF;
+			return 1;
+		}
+		else if (this->rx_payload_bytes > 8)// ? overflow
+		{
+			this->rx_errors++;
+			this->rx_state = RX_STATE::SEARCHING_SOF;
+		}
+		else
+		{
+			this->rx_buffer[7 - (this->rx_payload_bytes++)] = data;
+		}
+		break;
+	}
+	return 0;
+}
+
+
 uint64_t SerialInputDriver::readInput(int fd)
 {
-	uint64_t raw = 0;
-	uint64_t chk = 0;
-	int n = serialDataAvail(fd);
-	if (n < 8) return 0;
-	n = read(fd, &chk, 2);
-	if (n != 2 || (chk & 0xFFF0) != 0xFD40) return 0;
-	n = read(fd, &raw, 6);
-	if (n != 6) return 0;
-	return raw | (chk << 48);
+	int ready = this->rx_pool(serialGetchar(fd));
+	if (ready)
+	{
+		uint64_t raw = *((uint64_t*)this->rx_buffer);
+		return raw;
+	}
+	return 0;
 }
 
 GamePadState SerialInputDriver::parseInput(uint64_t rawState)
@@ -90,9 +149,16 @@ bool SerialInputDriver::hasPressedOnly(GamepadButtonFlags button)
 
 bool SerialInputDriver::ProcessInput(HexModel* model)
 {
-	uint64_t raw = readInput(fd);
-	if (raw == 0) return false;
-	state = parseInput(raw);
+	if (serialDataAvail(fd) > 0)
+	{
+		uint64_t raw = readInput(fd);
+		if (raw == 0) return false;
+		state = parseInput(raw);
+	}
+	else
+	{
+		return false;
+	}
 	if (prev_state.RawState == 0) 
 		prev_state = state;
 	

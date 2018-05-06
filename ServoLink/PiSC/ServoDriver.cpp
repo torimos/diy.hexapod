@@ -13,16 +13,18 @@ static int FemurOffset[] = { 30, 20, 50, -170, -120, -20 };//{   70,-100, -55,  
 static int TibiaOffset[] = { 20, 60, -50, 30, 20, 20 };//{    0,  65, -30,  40,   0,   0 }; //LF LM LR RR RM RF
 static uint8_t LegsMap[] = { 3, 4, 5, 2, 1, 0 };
 
-ServoDriver::ServoDriver(const char* device)
+ServoDriver::ServoDriver(const char* device, int baud)
 {
-	if ((fd = serialOpen(device, 115200)) < 0)
-	{
-		printf("Unable to open serial device: %s\n", strerror(errno));
-	}
+	fd = -1;
+//	if ((fd = serialOpen(device, baud)) < 0)
+//	{
+//		printf("Unable to open serial device: %s\n", strerror(errno));
+//	}
 }
 
 ServoDriver::~ServoDriver()
 {
+	if (fd>0)
 	serialClose(fd);
 }
 
@@ -52,7 +54,7 @@ static uint32_t swapOctetsUInt32(uint32_t toSwap)
 void ServoDriver::Commit()
 {
 	if (fd < 0) {
-		printf("Serial device not initialized.\n");
+		//printf("Serial device not initialized.\n");
 		return;
 	}
 	long m = millis();

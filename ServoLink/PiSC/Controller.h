@@ -14,7 +14,7 @@ class Controller
 	IKSolver* ik;
 	Stopwatch *sw;
 public:
-	Controller(const char* inputDevice, const char* outoutDevice);
+	Controller(const char* inputDevice, const char* outputDevice);
 	~Controller();
 	void Setup();
 	bool Loop();

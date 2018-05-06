@@ -8,12 +8,12 @@
 #include <wiringPi.h>
 #include <stdint.h>
 
-Controller::Controller(const char* inputDevice, const char* outoutDevice)
+Controller::Controller(const char* inputDevice, const char* outputDevice)
 {
-	inputDrv = new SerialInputDriver(inputDevice);
+	sd = new ServoDriver(outputDevice, 115200);
+	inputDrv = new SerialInputDriver(inputDevice, 9600);
 	ik = new IKSolver();
 	sw = new Stopwatch();
-	sd = new ServoDriver(outoutDevice);
 	model = new HexModel(HexConfig::LegsCount);
 }
 
@@ -134,6 +134,7 @@ bool Controller::Loop()
 	{
 		if (inputDrv->Terminate) return false;
 	}
+	
 	GPPlayer();
 	SingleLegControl();
 	GateSequence();
@@ -207,10 +208,11 @@ bool Controller::Loop()
 	model->PrevMoveTime = model->MoveTime;
 	model->PrevPowerOn = model->PowerOn;
 	
-	//if (inputChanged)
+	if (inputChanged)
 	{
 		Debug();
 		printf("Iteration Duration: %d\n", millis() - a);
+		fflush(stdout);
 	}
 	return true;
 }

@@ -2,6 +2,8 @@
 #include "usb_host.h"
 #include "usbh_hid_core.h"
 
+//#define DEBUGGER
+
 typedef struct
 {
 	unsigned char LeftThumbX;
@@ -52,15 +54,20 @@ void USB_DataReceived(uint8_t *data, uint16_t length)
 {
 	State* s = (State*)data;
 	s->Buttons = GPIDC | (DPad[s->Buttons & 0xF] | (s->Buttons & 0x000FFFF0));
-#ifdef DEBUG
+#ifdef DEBUGGER
 	printf("%08X %03X %03X %03X %03X \n\r", s->Buttons, s->LeftThumbX, s->LeftThumbY, s->RightThumbX, s->RightThumbY);
 #else
-	uart_send_buffer(USART3, data, length);
+	length = length * 2;
+	while (length-- > 0)
+	{
+		USART3->DR = ((data[length%8]) & (uint16_t)0x01FF);
+		while ((USART3->SR & USART_FLAG_TC) == (uint16_t)RESET) {}
+	}
 #endif
 }
 void USB_Initialized()
 {
-#ifdef DEBUG
+#ifdef DEBUGGER
 	printf("Connected to usb controller\n\r");
 #endif
 }
@@ -105,14 +112,11 @@ int main(void)
 {
 	USBH_HID_Init();
 	uart_init(USART3);
-#ifdef DEBUG
+#ifdef DEBUGGER
 	printf("\tLogitech Wirelles Controler V1.2\n\r");
 #endif
-//	int i = 0;
 	while (1)
 	{
-//		printf("ab%4x\n\r", i++);
-//		delay_ms(1000);
 		USBH_HID_Process();
 	}
 }

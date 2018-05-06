@@ -56,7 +56,7 @@ void uart_init(USART_TypeDef* usart)
 	*/
 	USART_InitTypeDef usartInit;
 
-	usartInit.USART_BaudRate = 9600;//115200;
+	usartInit.USART_BaudRate = 9600;
 	usartInit.USART_WordLength = USART_WordLength_8b;
 	usartInit.USART_StopBits = USART_StopBits_1;
 	usartInit.USART_Parity = USART_Parity_No;
@@ -80,6 +80,7 @@ void uart_init(USART_TypeDef* usart)
 
 void uart_send(USART_TypeDef* usart, u8 data)
 {
+	if (USART_GetFlagStatus(usart, USART_FLAG_TXE) != RESET) return;
 	USART_SendData(usart, data);
 	while (USART_GetFlagStatus(usart, USART_FLAG_TC) == RESET){}
 }

@@ -30,14 +30,23 @@ namespace test
             get { return _io.IsOpen; }
         }
 
-        public bool Open()
+        public int BytesToRead()
+        {
+            if (!IsOpen) return 0;
+            return _io.BytesToRead;
+        }
+
+        public bool Open(bool subscribve = false)
         {
             var ports = System.IO.Ports.SerialPort.GetPortNames();
             if (ports.Contains(_io.PortName))
             {
                 try
                 {
-                    _io.DataReceived += OnDataReceived;
+                    if (subscribve)
+                    {
+                        _io.DataReceived += OnDataReceived;
+                    }
                     _io.Open();
                 }
                 catch (Exception)
@@ -58,10 +67,20 @@ namespace test
             _io.Write(data, offset, size);
         }
 
+        public void Read(byte[] data, int offset, int size)
+        {
+            _io.Read(data, offset, size);
+        }
+
+        public int ReadByte()
+        {
+            return _io.ReadByte();
+        }
+
         private void OnDataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
             if (_io.BytesToRead == 0 || (ReadChunkSize > 0 ? _io.BytesToRead < ReadChunkSize : false)) return;
-            var dataSize = _io.Read(_dataBuffer, 0, _io.BytesToRead);
+            var dataSize = _io.Read(_dataBuffer, 0, ReadChunkSize);
             var handler = DataReceived;
             if (handler != null)
             {

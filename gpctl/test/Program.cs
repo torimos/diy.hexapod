@@ -1,93 +1,92 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace test
 {
-
-    [Flags]
-    enum GamepadButtonFlags
-    {
-        None = 0,
-        DPadUp = 1,
-        DPadRight = 2,
-        DPadDown = 4,
-        DPadLeft = 8,
-        B1 = 0x10,
-        B2 = 0x20,
-        B3 = 0x40,
-        B4 = 0x80,
-        B5 = 0x100,
-        B6 = 0x200,
-        B7 = 0x400,
-        B8 = 0x800,
-        B9 = 0x1000,
-        B10 = 0x2000,
-        LeftThumb = 0x4000,
-        RightThumb = 0x8000,
-        Vibration = 0x40000,
-        Mode = 0x80000
-    }
-
-    struct GamePadState
-    {
-        public int LeftThumbX { get; set; }
-        public int LeftThumbY { get; set; }
-        public int RightThumbX { get; set; }
-        public int RightThumbY { get; set; }
-        public GamepadButtonFlags Buttons { get; set; }
-
-        public UInt64 RawState { get; set; }
-
-        public static GamePadState Parse(UInt64 rawState)
-        {
-            var state = new GamePadState();
-            state.RawState = rawState;
-            ushort chk = (ushort)((rawState >> 48) & 0xFFF0);
-            if (chk != 0xFD40) rawState = 0xFD40000080808080;
-            state.Buttons = (GamepadButtonFlags)((rawState >> 32) & 0x000FFFFF);
-            state.LeftThumbX = (byte)(rawState & 0xFF);
-            state.LeftThumbY = (byte)((rawState >> 8) & 0xFF);
-            state.RightThumbX = (byte)((rawState >> 16) & 0xFF);
-            state.RightThumbY = (byte)((rawState >> 24) & 0xFF);
-            return state;
-        }
-
-        public void DebugOutput()
-        {
-            Console.WriteLine($"RAW: {RawState:X}");
-            Console.WriteLine($"Buttons: {Buttons,10}");
-            Console.WriteLine($"Left: {LeftThumbX,3} {LeftThumbY,3}");
-            Console.WriteLine($"Right: {RightThumbX,3} {RightThumbY,3}");
-        }
-    }
-
     class Program
     {
+        static FrameProtocol fp = new FrameProtocol();
+        static byte[] _buffer;
         static UInt64 _rawState;
-        static void Main(string[] args)
+        static GamePadState state;
+        static Stopwatch sw = new Stopwatch();
+        static long t, p = 0, pps = 0,err=0;
+       
+        static void Emulate()
         {
-            var port = new SerialPort("COM9", 9600, 200) { ReadChunkSize = 8 };
+            var sp = new SerialPort("COM1", 9600, 200);
+            if (sp.Open())
+            {
+                _rawState = 1;
+                _buffer = new byte[] { 0xFD, 0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+                var rnd = new Random();
+                int offset = 0;
+                while (!Console.KeyAvailable)
+                {
+                    if (_rawState % 4 == 0) offset = rnd.Next(8);
+                    else offset = 0;
+                    _buffer[7] = (byte)(_rawState & 0xFF);
+                    _buffer[6] = (byte)((_rawState >> 8) & 0xFF);
+                    _buffer[5] = (byte)((_rawState >> 16) & 0xFF);
+                    _buffer[4] = (byte)((_rawState >> 32) & 0xFF);
+                    sp.Write(_buffer, 0, _buffer.Length);
+                    Thread.Sleep(1000);
+                    Console.WriteLine($"#{_rawState}");
+                    _rawState++;
+                }
+                sp.Close();
+            }
+        }
+
+        static void Test()
+        {
+            var port = new SerialPort("COM4", 9600, 200) { ReadChunkSize = 8*2 };
             port.DataReceived += Port_DataReceived;
 
-            if (!port.Open())
+            if (!port.Open(true))
             {
                 Console.WriteLine("ConnERROR!");
                 return;
             }
             while (!Console.KeyAvailable)
             {
-                Console.Clear();
+                if ((sw.ElapsedMilliseconds - t) >= 1000)
+                {
+                    pps = p;
+                    p = 0;
+                    t = sw.ElapsedMilliseconds;
+                }
+
+                state = GamePadState.Parse(_rawState);
                 Console.SetCursorPosition(0, 0);
-                var state = GamePadState.Parse(_rawState);
                 state.DebugOutput();
-                Thread.Sleep(20);
+                Console.WriteLine($"pps: {pps,4}. errors: {err,4}");
             }
             port.Close();
+            p = 0xDEAFBEAF;
         }
 
         private static void Port_DataReceived(object sender, SerialPort.PortDataReceivedEventArgs e)
         {
-            _rawState = BitConverter.ToUInt64(e.Data, 0);
+            for(int i=0;i<e.Data.Length;i++)
+            {
+                if (fp.rx_pool(e.Data[i]) > 0)
+                {
+                    var buff = fp.GetBuffer();
+                    _rawState = BitConverter.ToUInt64(buff, 0);
+                    err = fp.GetErrorsCount();
+                    p++;
+                }
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            sw.Start();
+            Test();
         }
     }
 }
