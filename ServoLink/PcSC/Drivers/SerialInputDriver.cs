@@ -46,8 +46,8 @@ namespace Drivers
                 ushort chk = (ushort)((rawState >> 48) & 0xFFF0);
                 if (chk != 0xFD40) rawState = 0xFD40000080808080;
                 state.Buttons = (GamepadButtonFlags)((rawState >> 32) & 0x000FFFFF);
-                state.LeftThumbX = (byte)(rawState & 0xFF) + 8;
-                state.LeftThumbY = (byte)((rawState >> 8) & 0xFF) - 21;
+                state.LeftThumbX = (byte)(rawState & 0xFF);// + 8;
+                state.LeftThumbY = (byte)((rawState >> 8) & 0xFF);// - 21;
                 state.RightThumbX = (byte)((rawState >> 16) & 0xFF);
                 state.RightThumbY = (byte)((rawState >> 24) & 0xFF);
                 if (state.LeftThumbX < 0) state.LeftThumbX = 0;

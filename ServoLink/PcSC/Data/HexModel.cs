@@ -87,6 +87,9 @@ namespace Data
 
         public bool DebugOutput;
 
+        public long DebugDuration { get; internal set; }
+        public int TimeToWait { get; internal set; }
+
         public HexModel(byte legsCount)
         {
             LegsAngle = new CoxaFemurTibia[legsCount];

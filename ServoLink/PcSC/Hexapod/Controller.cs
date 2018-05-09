@@ -39,7 +39,7 @@ namespace Hexapod
 
         public void Setup()
         {
-            sd.Init("COM4");
+            sd.Init("COM5");
             sd.Reset();
 
             Task.Run(() =>
@@ -49,22 +49,25 @@ namespace Hexapod
                     DebugOutput(model, id);
                 }
             });
-            Task.Run(() =>
-            {
-                while (!id.Terminate)
-                {
-                    id.ProcessInput(model);
-                }
-            });
+            //Task.Run(() =>
+            //{
+            //    while (!id.Terminate)
+            //    {
+            //        id.ProcessInput(model);
+            //    }
+            //});
 
             InitModel(model);
         }
 
         public bool Loop()
         {
+            var t = new Stopwatch();
             var sw = new Stopwatch();
-            sw.Reset();
+            sw.Start();
+            t.Start();
 
+            id.ProcessInput(model);
             bool terminate = id.Terminate;
 
             //todo: GPPlayer
@@ -117,12 +120,12 @@ namespace Hexapod
                 {
                     model.ExtraCycle--;
                     model.Walking = !(model.ExtraCycle == 0);
-                    long timeToWait = (model.PrevMoveTime - sw.ElapsedMilliseconds);
+                    model.TimeToWait = (int)(model.PrevMoveTime - sw.ElapsedMilliseconds);
                     sw.Restart();
                     do
                     {
                     }
-                    while (sw.ElapsedMilliseconds < timeToWait);
+                    while (sw.ElapsedMilliseconds < model.TimeToWait);
                 }
                 sd.Commit();
             }
@@ -144,7 +147,7 @@ namespace Hexapod
             model.PrevControlMode = model.ControlMode;
             model.PrevMoveTime = model.MoveTime;
             model.PrevPowerOn = model.PowerOn;
-
+            model.DebugDuration = t.ElapsedTicks;
             return terminate || id.Terminate;
         }
 
@@ -503,7 +506,8 @@ namespace Hexapod
                 Console.SetCursorPosition(0, 0);
                 Console.WriteLine(model);
                 inputDriver.DebugOutput();
-
+                Console.WriteLine($"Duration: {model.DebugDuration}");
+                Console.WriteLine($"TimeToWait: {model.TimeToWait}");
                 Thread.Sleep(100);
             }
         }

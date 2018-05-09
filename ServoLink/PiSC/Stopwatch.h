@@ -7,5 +7,6 @@ public:
 	~Stopwatch();
 	void Restart();
 	long GetElapsedMilliseconds();
+	void Wait(long milliseconds, void (*action)());
 };
 

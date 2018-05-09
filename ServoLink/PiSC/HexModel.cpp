@@ -36,34 +36,40 @@ HexModel::~HexModel()
 	delete Gaits;
 }
 
-void HexModel::Debug()
+void HexModel::Debug(int level)
 {
 	int i = 0;
-	printf("LegsAngle:\n#,  Coxa,  Femur,  Tibia\n");
-	for (i = 0; i < LegsCount; i++)
-		printf("%d %6.1f %6.1f %6.1f %s\n", i, LegsAngle[i].Coxa, LegsAngle[i].Femur, LegsAngle[i].Tibia, (i == SelectedLeg ? "<<<<<" : "          "));
-	printf("\n");
-	printf("LegsPos:\n#,   X,   Y,   Z\n");
-	for (i = 0; i < LegsCount; i++)
-		printf("%d %6.1f %6.1f %6.1f %s\n", i, LegsPos[i].x, LegsPos[i].y, LegsPos[i].z, (i == SelectedLeg ? "<<<<<" : "          "));
-
-	printf("\n");
-	printf("Body:\n     X,    Y,    Z,    RotX,  RotY,  RotZ, YOffs\n%6.1f %6.1f %6.1f %6.1f %6.1f %6.1f %6.1f\n",
-		BodyPos.x,
-		BodyPos.y,
-		BodyPos.z,
-		BodyRot.x,
-		BodyRot.y,
-		BodyRot.z,
-		BodyYOffset);
-
-	printf("\n");
-	printf("TravelLength:\n     X,    Y,    Z\n%6.1f %6.1f %6.1f\n", TravelLength.x, TravelLength.y, TravelLength.z);
-	printf("\n");
-	printf("Gate [%d]:\n#,   X,     Y,     Z,     RotY\n", SelectedGaitType);
-	for (i = 0; i < LegsCount; i++)
-		printf("%d %6.1f %6.1f %6.1f %6.1f\n", i, GaitPos[i].x, GaitPos[i].y, GaitPos[i].z, GaitRotY[i]);
-
+	if ((level & 4) == 4)
+	{
+		printf("LegsAngle:\n#,  Coxa,  Femur,  Tibia\n");
+		for (i = 0; i < LegsCount; i++)
+			printf("%d %6.1f %6.1f %6.1f %s\n", i, LegsAngle[i].Coxa, LegsAngle[i].Femur, LegsAngle[i].Tibia, (i == SelectedLeg ? "<<<<<" : "          "));
+		printf("\n");
+		printf("LegsPos:\n#,   X,   Y,   Z\n");
+		for (i = 0; i < LegsCount; i++)
+			printf("%d %6.1f %6.1f %6.1f %s\n", i, LegsPos[i].x, LegsPos[i].y, LegsPos[i].z, (i == SelectedLeg ? "<<<<<" : "          "));
+		printf("\n");
+	}
+	if ((level & 2) == 2)
+	{
+		printf("Body:\n     X,    Y,    Z,    RotX,  RotY,  RotZ, YOffs\n%6.1f %6.1f %6.1f %6.1f %6.1f %6.1f %6.1f\n",
+			BodyPos.x,
+			BodyPos.y,
+			BodyPos.z,
+			BodyRot.x,
+			BodyRot.y,
+			BodyRot.z,
+			BodyYOffset);
+		printf("\n");
+		printf("TravelLength:\n     X,    Y,    Z\n%6.1f %6.1f %6.1f\n", TravelLength.x, TravelLength.y, TravelLength.z);
+		printf("\n");
+	}
+	if ((level& 1) == 1)
+	{
+		printf("Gate [%d]:\n#,   X,     Y,     Z,     RotY\n", SelectedGaitType);
+		for (i = 0; i < LegsCount; i++)
+			printf("%d %6.1f %6.1f %6.1f %6.1f\n", i, GaitPos[i].x, GaitPos[i].y, GaitPos[i].z, GaitRotY[i]);
+	}
 	printf("\n");
 	printf("TravelRequest:%2d Walking:%2d GaitStep:%2d ForceGaitStepCnt:%2d ExtraCycle:%2d\n", TravelRequest, WalkMethod, GaitStep, ForceGaitStepCnt, ExtraCycle);
 	printf("WalkMethod:%2d  DoubleHeightOn:%2d  DoubleTravelOn:%2d\n", WalkMethod, DoubleHeightOn, DoubleTravelOn);

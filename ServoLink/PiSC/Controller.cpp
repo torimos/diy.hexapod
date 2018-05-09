@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <wiringPi.h>
 #include <stdint.h>
+#include <pthread.h>
 
 Controller::Controller(const char* inputDevice, const char* outputDevice)
 {
@@ -30,8 +31,11 @@ void Controller::Debug()
 {
 	if (model->DebugOutput)
 	{
-		printf("\033c");
-		model->Debug();
+		//printf("\033c");
+		int row, col;
+		row = col = 0;
+		printf("\033[%d;%dH", row, col);
+		model->Debug(1);
 		inputDrv->Debug();
 	}
 }
@@ -128,7 +132,10 @@ void Controller::Setup()
 
 bool Controller::Loop()
 {
-	uint32_t a = millis();
+	long timeToWait;
+	long t = micros();
+	sw->Restart();
+	
 	bool inputChanged = inputDrv->ProcessInput(model);
 	if (inputChanged)
 	{
@@ -140,7 +147,6 @@ bool Controller::Loop()
 	GateSequence();
 	Balance();
 	SolveIKLegs();
-	
 	if (model->PowerOn)
 	{
 	    //Calculate Servo Move time
@@ -181,11 +187,12 @@ bool Controller::Loop()
 		{
 			model->ExtraCycle--;
 			model->Walking = !(model->ExtraCycle == 0);
-			long timeToWait = (model->PrevMoveTime - sw->GetElapsedMilliseconds());
-			sw->Restart();
+			timeToWait = (model->PrevMoveTime - sw->GetElapsedMilliseconds());
+			long time = millis() + timeToWait;
 			do
 			{
-			} while (sw->GetElapsedMilliseconds() < timeToWait);
+				inputDrv->ProcessInput(model);
+			} while (millis() <= time);
 		}
 		sd->Commit();
 	}
@@ -200,7 +207,8 @@ bool Controller::Loop()
 		}
 		else
 		{
-			sd->Reset();
+			sd->MoveAll(0);
+			sd->Commit();
 		}
 	}
 
@@ -208,10 +216,13 @@ bool Controller::Loop()
 	model->PrevMoveTime = model->MoveTime;
 	model->PrevPowerOn = model->PowerOn;
 	
-	if (inputChanged)
+	long t1 =  (long)micros() - t;
+	
+	//if (inputChanged)
 	{
 		Debug();
-		printf("Iteration Duration: %d\n", millis() - a);
+		printf("timeToWait: %04ld\n", timeToWait);
+		printf("Iteration Duration: %04ld\n", t1);
 		fflush(stdout);
 	}
 	return true;
@@ -281,9 +292,9 @@ void Controller::Gait(int GaitCurrentLegNr)
     // Try to reduce the number of time we look at GaitLegnr and Gaitstep
 	int LegStep = model->GaitStep - model->gaitCur->GaitLegNr[GaitCurrentLegNr];
 
-	            //Leg middle up position OK
-	            //Gait in motion	                                                                                  
-	            // For Lifted pos = 1, 3, 5
+	//Leg middle up position OK
+	//Gait in motion	                                                                                  
+	// For Lifted pos = 1, 3, 5
 	if ((model->TravelRequest && ((model->gaitCur->NrLiftedPos & 1) > 0) && LegStep == 0) || 
 	    (!model->TravelRequest && LegStep == 0 && ((fabs(model->GaitPos[GaitCurrentLegNr].x) > 2) || (fabs(model->GaitPos[GaitCurrentLegNr].z) > 2) || (fabs(model->GaitRotY[GaitCurrentLegNr]) > 2))))
 	{ //Up

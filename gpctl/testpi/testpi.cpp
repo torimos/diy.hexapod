@@ -193,7 +193,10 @@ int main(int argc, char *argv[])
 			if (raw != 0)
 			{
 				state = parseInput(raw);
-				printf("\033c");
+//				printf("\033c");
+				int row, col;
+				row = col = 0;
+				printf("\033[%d;%dH", row, col);
 				debug(state);
 				printf("RAW: %08x%08x PPS: %03d Err: %05d\n", (unsigned int)((state.RawState >> 32) & 0xFFFFFFFF), (unsigned int)(state.RawState & 0xFFFFFFFF), pps, rx_errors);
 				fflush(stdout);

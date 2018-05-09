@@ -58,7 +58,7 @@ class HexModel
 public:
 	HexModel(int legsCount);
 	~HexModel();
-	void Debug();
+	void Debug(int level);
 public:
 	int LegsCount;
 	CoxaFemurTibia* LegsAngle;
