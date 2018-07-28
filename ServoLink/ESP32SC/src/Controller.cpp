@@ -206,7 +206,6 @@ bool Controller::Loop()
 	model->PrevMoveTime = model->MoveTime;
 	model->PrevPowerOn = model->PowerOn;
 	
-	//if (inputChanged)
 	if (millis()>=debugTimeout)
 	{
 		Debug();

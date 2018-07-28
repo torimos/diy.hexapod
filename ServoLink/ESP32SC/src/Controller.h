@@ -13,7 +13,7 @@ class Controller
 	ServoDriver* sd;
 	HexModel* model;
 	IKSolver* ik;
-	Stopwatch *sw;
+	Stopwatch *sw;	
 public:
 	Controller(SerialInputDriver* a, ServoDriver* b);
 	~Controller();

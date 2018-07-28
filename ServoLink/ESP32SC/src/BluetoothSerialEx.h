@@ -39,6 +39,7 @@ class BluetoothSerialEx: public Stream
         size_t write(const uint8_t *buffer, size_t size);
         void flush();
         void end(void);
+        bool reset();
 
     private:
         String local_name;

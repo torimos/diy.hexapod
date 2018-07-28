@@ -11,6 +11,8 @@
         "*.tcc": "cpp",
         "typeinfo": "cpp",
         "functional": "cpp",
-        "cerrno": "cpp"
+        "cerrno": "cpp",
+        "deque": "cpp",
+        "unordered_set": "cpp"
     }
 }

@@ -61,7 +61,6 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
     case ESP_SPP_INIT_EVT:
         ESP_LOGI(SPP_TAG, "ESP_SPP_INIT_EVT");
         if (master) {
-            
             esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_NONE);
             esp_spp_start_discovery(peer_bd_addr);
         }
@@ -176,6 +175,12 @@ static bool _init_bt(const char *deviceName)
     return true;
 }
 
+static bool _reset_bt()
+{
+    // ????
+    return false;
+}
+
 BluetoothSerialEx::BluetoothSerialEx()
 {
     local_name = "ESP32"; //default bluetooth name
@@ -193,7 +198,7 @@ bool BluetoothSerialEx::begin(String localName)
         local_name = localName;
     }
 
-    return true;//_init_bt(local_name.c_str());
+    return _init_bt(local_name.c_str());
 }
 
 bool BluetoothSerialEx::begin(uint8_t* addr)
@@ -205,6 +210,11 @@ bool BluetoothSerialEx::begin(uint8_t* addr)
     }
 
     return _init_bt(local_name.c_str());
+}
+
+bool BluetoothSerialEx::reset()
+{
+    return _reset_bt();
 }
 
 int BluetoothSerialEx::available(void)

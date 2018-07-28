@@ -208,9 +208,12 @@ GamePadState SerialInputDriver::processStreamInput()
 	return state;
 }
 
-void SerialInputDriver::Debug()
+void SerialInputDriver::Debug(bool clear)
 {
-	Log.printf("\n\r");
+	if (clear)
+		Log.printf("\033[%d;%dH", 0, 0);
+	else
+		Log.printf("\n\r");
 	Log.printf("GamePad - RAW: %08x%08x\n\r", (unsigned int)((state.RawState >> 32) & 0xFFFFFFFF), (unsigned int)(state.RawState & 0xFFFFFFFF));
 	Log.printf("Buttons: %04x\n\r", state.Buttons);
 	Log.printf("Left: %03d %03d\n\r", state.LeftThumbX, state.LeftThumbY);
@@ -245,28 +248,6 @@ static int keyReset = 0;
 
 bool SerialInputDriver::ProcessInput(HexModel* model)
 {
-	// if (_stream->available() > 0)
-	// {
-	// 	state = processStreamInput();
-	// 	keyTimeOut = millis() + 400;
-	// 	keyReset = 1;
-	// }
-	// else
-	// {
-	// 	if (millis()>keyTimeOut && keyReset)
-	// 	{
-	// 		keyReset = 0;
-	// 		state.RawState = 0;
-	// 		uint64_t rawState = 0xFD40000080808080;
-	// 		state.Buttons = (GamepadButtonFlags)((rawState >> 32) & 0x000FFFFF);
-	// 		state.LeftThumbX = (uint8_t)(rawState & 0xFF);
-	// 		state.LeftThumbY = (uint8_t)((rawState >> 8) & 0xFF);
-	// 		state.RightThumbX = (uint8_t)((rawState >> 16) & 0xFF);
-	// 		state.RightThumbY = (uint8_t)((rawState >> 24) & 0xFF);
-	// 	}
-	// 	return false;
-	// }
-
 	if (_stream->available() > 0)
 	{
 		uint64_t raw = readInput();

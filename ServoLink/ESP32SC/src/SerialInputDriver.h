@@ -23,7 +23,7 @@ public:
 	SerialInputDriver(Stream* stream);
 	~SerialInputDriver();
 	bool ProcessInput(HexModel* model);
-	void Debug();
+	void Debug(bool clear = false);
 	bool Terminate;
 private:
 	uint64_t readInput();
