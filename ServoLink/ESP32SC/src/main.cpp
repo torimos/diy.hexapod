@@ -4,6 +4,7 @@
 #include "HexModel.h"
 #include "IKSolver.h"
 #include "Stopwatch.h"
+#include "SerialInputDriver.h"
 #include "ServoDriver.h"
 #include "Controller.h"
 #include "BluetoothSerialEx.h"

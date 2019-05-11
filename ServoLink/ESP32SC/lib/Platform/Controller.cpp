@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-Controller::Controller(SerialInputDriver* a, ServoDriver* b)
+Controller::Controller(InputDriver* a, ServoDriver* b)
 {
 	sd = b;
 	inputDrv = a;
@@ -18,9 +18,7 @@ Controller::Controller(SerialInputDriver* a, ServoDriver* b)
 
 Controller::~Controller()
 {
-	delete inputDrv;
 	delete ik;
-	delete sd;
 	delete sw;
 	delete model;
 }
@@ -129,7 +127,7 @@ bool Controller::Loop()
 	
 	if (inputChanged)
 	{
-		if (inputDrv->Terminate) return false;
+		if (inputDrv->IsTerminate()) return false;
 	}
 	
 	GPPlayer();

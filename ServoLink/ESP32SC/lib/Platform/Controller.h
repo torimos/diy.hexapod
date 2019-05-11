@@ -5,17 +5,17 @@
 #include "IKSolver.h"
 #include "Stopwatch.h"
 #include "ServoDriver.h"
-#include "SerialInputDriver.h"
+#include "InputDriver.h"
 
 class Controller
 {
-	SerialInputDriver* inputDrv;
+	InputDriver* inputDrv;
 	ServoDriver* sd;
 	HexModel* model;
 	IKSolver* ik;
 	Stopwatch *sw;	
 public:
-	Controller(SerialInputDriver* a, ServoDriver* b);
+	Controller(InputDriver* a, ServoDriver* b);
 	~Controller();
 	void Setup();
 	bool Loop();

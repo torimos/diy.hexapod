@@ -11,7 +11,7 @@
 
 SerialInputDriver::SerialInputDriver(Stream* stream)
 {
-	Terminate = false;
+	_terminate = false;
 	memset(&state, 0, sizeof(GamePadState));
 	memset(&prev_state, 0, sizeof(GamePadState));
 	
@@ -243,6 +243,7 @@ bool SerialInputDriver::hasPressedOnly(GamepadButtonFlags button)
 {
 	return ((state.Buttons & button) == button) && ((prev_state.Buttons & button) != button);
 }
+
 static long keyTimeOut = 0;
 static int keyReset = 0;
 
@@ -263,7 +264,7 @@ bool SerialInputDriver::ProcessInput(HexModel* model)
 		prev_state = state;
 	
 	if (hasPressed(GamepadButtonFlags::Btn5))
-		Terminate = true;
+		_terminate = true;
 	
 	if (model == NULL)
 		return true;

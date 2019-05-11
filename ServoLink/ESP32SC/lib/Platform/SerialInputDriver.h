@@ -3,8 +3,9 @@
 #include "GamePadState.h"
 #include "HexModel.h"
 #include "Stream.h"
+#include "InputDriver.h"
 
-class SerialInputDriver
+class SerialInputDriver : public InputDriver
 {
 	enum RX_STATE {
 		SEARCHING_SOF,
@@ -19,12 +20,13 @@ class SerialInputDriver
 	int rx_payload_bytes = 0;
 	int rx_errors = 0;
 	Stream *_stream;
+	bool _terminate;
 public:
 	SerialInputDriver(Stream* stream);
 	~SerialInputDriver();
 	bool ProcessInput(HexModel* model);
 	void Debug(bool clear = false);
-	bool Terminate;
+	bool IsTerminate() { return _terminate; }
 private:
 	uint64_t readInput();
 	GamePadState parseInput(uint64_t rawState);
