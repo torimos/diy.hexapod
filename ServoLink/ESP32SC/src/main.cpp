@@ -1,42 +1,28 @@
 #include "Platform.h"
-#include <Ticker.h>
 #include "HexConfig.h"
 #include "HexModel.h"
 #include "IKSolver.h"
 #include "Stopwatch.h"
-#include "SerialInputDriver.h"
+#include "RCInputDriver.h"
 #include "ServoDriver.h"
 #include "Controller.h"
-#include "BluetoothSerialEx.h"
 
 HardwareSerial Log(0);
 HardwareSerial SerialOutput(2);
-BluetoothSerialEx SerialBT;
-SerialInputDriver _inputDrv(&SerialBT);
+RCInputDriver _inputDrv;
 ServoDriver _sd(&SerialOutput);
 Controller controller(&_inputDrv, &_sd);
-Ticker ticker;
-uint8_t devAddr[6] = {00,0x18,0x96,0xB0,0x01,0x3D};
 
-void tickHandler()
+void setup() 
 {
-    if (!SerialBT.hasClient())
-    {
-        ESP.restart();
-    }
+	Log.begin(115200);
+    //SerialOutput.begin(115200);
+    _inputDrv.Setup();
+    //controller.Setup();
 }
 
-
-void setup() {
-	Log.begin(230400);//, SERIAL_8N1, 23, 22, false);
-
-    SerialBT.begin(devAddr);
-    SerialOutput.begin(115200);
-    controller.Setup();
-    ticker.attach_ms(5000, tickHandler);
-}
-
-void loop() {
-
-    controller.Loop();
+void loop() 
+{
+    _inputDrv.Debug();
+    //controller.Loop();
 }
