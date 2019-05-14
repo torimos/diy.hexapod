@@ -9,20 +9,20 @@
 
 HardwareSerial Log(0);
 HardwareSerial SerialOutput(2);
-RCInputDriver _inputDrv;
-ServoDriver _sd(&SerialOutput);
-Controller controller(&_inputDrv, &_sd);
+RCInputDriver inputDrv;
+ServoDriver sd(&SerialOutput);
+Controller controller(&inputDrv, &sd);
 
 void setup() 
 {
-	Log.begin(115200);
-    //SerialOutput.begin(115200);
-    _inputDrv.Setup();
-    //controller.Setup();
+	Log.begin(115200);//, SERIAL_8N1, 23, 22, false);
+    SerialOutput.begin(115200);
+    inputDrv.Setup();
+    controller.Setup();
 }
 
 void loop() 
 {
-    _inputDrv.Debug();
-    //controller.Loop();
+    //inputDrv.Debug();
+    controller.Loop();
 }
