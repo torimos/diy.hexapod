@@ -15,6 +15,7 @@
         "deque": "cpp",
         "unordered_set": "cpp",
         "system_error": "cpp",
-        "type_traits": "cpp"
+        "type_traits": "cpp",
+        "pins_arduino.h": "c"
     }
 }

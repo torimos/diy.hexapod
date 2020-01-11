@@ -6,16 +6,16 @@
 #define RC_NUM_CHANNELS 6
 #define RC_KEEPALIVE_TIMEOUT 200
 
-#define RC_MOD  0
-#define RC_PWR  1
-#define RC_LX  2
-#define RC_LY  3
-#define RC_RX  4
-#define RC_RY  5
-#define RC_SA  2
-#define RC_SB  3
-#define RC_SC  4
-#define RC_SD  5
+#define RC_MOD  0 // RC Mode
+#define RC_PWR  1 // Power On/Off
+#define RC_LX   2 // Left Stick Horiz 
+#define RC_SA   2 // [ALT] Left Stick Horiz
+#define RC_LY   3 // Left Stick Vert 
+#define RC_SB   3 // [ALT] Left Stick Vert 
+#define RC_RX   4 // Right Stick Horiz
+#define RC_SC   4 // [ALT] Right Stick Horiz
+#define RC_RY   5 // Right Stick Vert
+#define RC_SD   5 // [ALT] Right Stick Vert
 
 typedef struct
 {
@@ -36,7 +36,9 @@ typedef struct
     double LeftThumbX, LeftThumbY;
     double RightThumbX, RightThumbY;
 
+    int32_t raw[RC_NUM_CHANNELS];
     void Reset();
+    bool IsEmpty();
 } RCInputState_t;
 
 class RCInputDriver : public InputDriver
@@ -68,14 +70,15 @@ class RCInputDriver : public InputDriver
 
     RCChannel* rc_ch[RC_NUM_CHANNELS];
     bool failSafe = false;
-    RCInputState_t prevInputState;
+    RCInputState_t state;
+    RCInputState_t prev_state;
 
     static void input_loop(void* arg);
     static void calc_ch(void* arg);
     void turnOff(HexModel* model);
     void adjustLegPositionsToBodyHeight(HexModel* model);
-    RCInputState_t captureState(RCInputState_t prev);
-    RCInputState_t copyState(RCInputState_t s);
+    void captureState(RCInputState_t* s);
+    RCInputState_t copyState(RCInputState_t *s);
 public:
     RCInputDriver();
     void Setup();
