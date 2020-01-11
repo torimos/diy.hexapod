@@ -39,7 +39,7 @@ bool RCInputDriver::ProcessInput(HexModel* model)
 
 	bool adjustLegsPosition = false;
 
-	XY thumbLeft = { .x = state.LeftThumbX - 128.0, .y = -(state.LeftThumbY - 128.0) };
+	XY thumbLeft = { .x = state.LeftThumbX - 128.0, .y = (state.LeftThumbY) };
 	XY thumbRight = { .x = state.RightThumbX - 128.0, .y = -(state.RightThumbY - 128.0) };
 
     if (state.pwrHasChanged && state.pwrIsOn)
@@ -59,12 +59,23 @@ bool RCInputDriver::ProcessInput(HexModel* model)
     else if (model->PowerOn)
 	{
 
-        if (state.saHasChanged && state.saState > 0) // BodyYOffset: 0, HexConfig::BodyStandUpOffset
+        if (thumbLeft.y > 0 && (state.LeftThumbY != prev_state.LeftThumbY)) // BodyYOffset: 0, HexConfig::BodyStandUpOffset
 		{
-			if (model->BodyYOffset > 0)
+			model->BodyYOffset = thumbLeft.y;
+
+			if (model->BodyYOffset > HexConfig::MaxBodyHeight)
+			{
+				model->BodyYOffset = HexConfig::MaxBodyHeight;
+			} 
+			else if (model->BodyYOffset < 0)
+			{
 				model->BodyYOffset = 0;
-			else
-				model->BodyYOffset = HexConfig::BodyStandUpOffset;
+			}
+			
+			// if (model->BodyYOffset > 0)
+			// 	model->BodyYOffset = 0;
+			// else
+			// 	model->BodyYOffset = HexConfig::BodyStandUpOffset;
 
 			adjustLegsPosition = true;
 		}
@@ -174,6 +185,8 @@ bool RCInputDriver::ProcessInput(HexModel* model)
 		{
 			if (model->BodyPos.y > 0)
 			{
+
+			{
 				// if (hasPressed(GamepadButtonFlags::Btn9) &&
 				//     fabs(model->TravelLength.x) < HexConfig::TravelDeadZone //No movement
 				//     && fabs(model->TravelLength.z) < HexConfig::TravelDeadZone
@@ -202,14 +215,14 @@ bool RCInputDriver::ProcessInput(HexModel* model)
 				// {
 				// 	model->WalkMethod = !model->WalkMethod;
 				// }
-
-				                        //Walking
+			}
+				//Walking
 				if (model->WalkMethod)  //(Walk Methode) 
-					model->TravelLength.z = -thumbRight.y; //Right Stick Up/Down  
+					model->TravelLength.z = -thumbRight.y; //Left Stick Up/Down  
 				else
 				{
-					model->TravelLength.x = -thumbLeft.x;
-					model->TravelLength.z = -thumbLeft.y;
+					model->TravelLength.x = -thumbRight.x;
+					model->TravelLength.z = -thumbRight.y;
 				}
 
 				if (!model->DoubleTravelOn)
@@ -218,7 +231,7 @@ bool RCInputDriver::ProcessInput(HexModel* model)
 					model->TravelLength.z = model->TravelLength.z / 1.75;
 				}
 
-				model->TravelLength.y = -thumbRight.x / 6; //Right Stick Left/Right 
+				model->TravelLength.y = -thumbLeft.x / 6; //Left Stick Left/Right 
 				model->LiftUpWarning = false;
 			}
 			else
@@ -228,17 +241,17 @@ bool RCInputDriver::ProcessInput(HexModel* model)
 		}
 		else if (model->ControlMode == ControlModeType::Translate)
 		{
-			model->BodyPos.x = thumbLeft.x / 2;
-			model->BodyPos.z = thumbLeft.y / 3;
-			model->BodyRot.y = thumbRight.x * 2;
-			model->BodyYShift = -thumbRight.y / 2;
+			model->BodyPos.x = thumbRight.x / 2;
+			model->BodyPos.z = thumbRight.y / 3;
+			model->BodyRot.y = thumbLeft.x * 2;
+			model->BodyYShift = -thumbLeft.y / 2;
 		}
 		else if (model->ControlMode == ControlModeType::Rotate)
 		{
-			model->BodyRot.x = thumbLeft.y;
-			model->BodyRot.y = thumbRight.y * 2;
-			model->BodyRot.z = -thumbLeft.x;
-			model->BodyYShift = thumbRight.y / 2;
+			model->BodyRot.x = thumbRight.y;
+			model->BodyRot.y = thumbLeft.y * 2;
+			model->BodyRot.z = -thumbRight.x;
+			model->BodyYShift = thumbLeft.y / 2;
 		}
 		// else if (model->ControlMode == ControlModeType::SingleLeg)
 		// {
@@ -252,11 +265,11 @@ bool RCInputDriver::ProcessInput(HexModel* model)
 		// 	}
 
 		// 	model->SingleLegHold = isButtonPressed(state, GamepadButtonFlags::Btn6) == true;
-		// 	model->SingleLegPos.x = thumbLeft.x; //Left Stick Right/Left
-		// 	model->SingleLegPos.y = -thumbRight.y; //Right Stick Up/Down
-		// 	model->SingleLegPos.z = thumbLeft.y; //Left Stick Up/Down
+		// 	model->SingleLegPos.x = thumbRight.x; //Right Stick Right/Left
+		// 	model->SingleLegPos.y = -thumbLeft.y; //Left Stick Up/Down
+		// 	model->SingleLegPos.z = thumbRight.y; //Right Stick Up/Down
 		// }
-		model->InputTimeDelay = 128 - (int)fmax(fmax(fabs(thumbLeft.x), fabs(thumbLeft.y)), fmax(fabs(thumbRight.x), fabs(thumbRight.y)));
+		model->InputTimeDelay = 128 - (int)fmax(fmax(fabs(thumbRight.x), fabs(thumbRight.y)), fmax(fabs(thumbLeft.x), fabs(thumbLeft.y)));
         if (model->InputTimeDelay < 0) model->InputTimeDelay = 128;
     }
 
