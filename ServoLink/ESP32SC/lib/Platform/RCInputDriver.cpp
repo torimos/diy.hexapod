@@ -187,18 +187,18 @@ bool RCInputDriver::ProcessInput(HexModel* model)
 			{
 
 			{
-				// if (hasPressed(GamepadButtonFlags::Btn9) &&
-				//     fabs(model->TravelLength.x) < HexConfig::TravelDeadZone //No movement
-				//     && fabs(model->TravelLength.z) < HexConfig::TravelDeadZone
-				//     && fabs(model->TravelLength.y * 2) < HexConfig::TravelDeadZone) //Select
-				// {
-				// 	model->SelectedGaitType++;
-				// 	if ((int)model->SelectedGaitType >= model->GaitsCount)
-				// 	{
-				// 		model->SelectedGaitType = GaitType::Ripple12;
-				// 	}
-				// 	model->gaitCur = &model->Gaits[model->SelectedGaitType];
-				// }
+				if (state.modeIsOn && state.saHasChanged &&
+				    fabs(model->TravelLength.x) < HexConfig::TravelDeadZone //No movement
+				    && fabs(model->TravelLength.z) < HexConfig::TravelDeadZone
+				    && fabs(model->TravelLength.y * 2) < HexConfig::TravelDeadZone) //Select
+				{
+					model->SelectedGaitType++;
+					if ((int)model->SelectedGaitType >= model->GaitsCount)
+					{
+						model->SelectedGaitType = GaitType::Ripple12;
+					}
+					model->gaitCur = &model->Gaits[model->SelectedGaitType];
+				}
 				// else if (hasPressedOnly(GamepadButtonFlags::LeftThumb)) //Double leg lift height
 				// {
 				// 	model->DoubleHeightOn = !model->DoubleHeightOn;
