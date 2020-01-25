@@ -2,7 +2,7 @@
 #include "Platform.h"
 #include "InputDriver.h"
 #include "HexModel.h"
-
+/*
 #define RC_NUM_CHANNELS 6
 #define RC_KEEPALIVE_TIMEOUT 200
 
@@ -85,4 +85,4 @@ public:
     bool IsTerminate();
     bool ProcessInput(HexModel* model);
 	void Debug(bool clear = false);
-};
+};*/

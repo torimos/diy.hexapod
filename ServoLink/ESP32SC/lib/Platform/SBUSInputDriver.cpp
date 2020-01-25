@@ -1,30 +1,29 @@
-#include "RCInputDriver.h"
+#include "SBUSInputDriver.h"
 #include "HexConfig.h"
 #include "HexModel.h"
 #include <math.h>
-/*
-RCInputDriver::RCInputDriver()
+
+#include <SBUS.h>
+#include <HardwareSerial.h>
+
+SBUS _xmp(Serial2);
+
+SBUSInputDriver::SBUSInputDriver()
 {
-    rc_ch[5] = new RCChannel(36);
-    rc_ch[4] = new RCChannel(39);
-    rc_ch[3] = new RCChannel(34);
-    rc_ch[2] = new RCChannel(35);
-    rc_ch[1] = new RCChannel(32);
-    rc_ch[0] = new RCChannel(33);
 	state.Reset();
     prev_state.Reset();
 }
 
-bool RCInputDriver::IsTerminate()
+bool SBUSInputDriver::IsTerminate()
 {
-    return failSafe;
+    return false;//state.failSafe;
 }
 
-bool RCInputDriver::ProcessInput(HexModel* model)
+bool SBUSInputDriver::ProcessInput(HexModel* model)
 {
-	if (!failSafe)
+	if (!state.failSafe)
 	{
-    	captureState(&state);
+    	captureState(&state, &prev_state);
 	}
     else
 	{
@@ -37,14 +36,14 @@ bool RCInputDriver::ProcessInput(HexModel* model)
 	if (model == NULL)
 		return true;
 
-	bool adjustLegsPosition = false;
+		bool adjustLegsPosition = false;
 
 	XY thumbLeft = { .x = state.LeftThumbX - 128.0, .y = (state.LeftThumbY) };
 	XY thumbRight = { .x = state.RightThumbX - 128.0, .y = -(state.RightThumbY - 128.0) };
 
-    if (state.pwrHasChanged && state.pwrIsOn)
+    if (state.isPowerOn != prev_state.isPowerOn)
     {
-		if (model->PowerOn)
+		if (!state.isPowerOn)
 		{
 			turnOff(model);
 			model->PowerOn = false;
@@ -54,11 +53,9 @@ bool RCInputDriver::ProcessInput(HexModel* model)
 			model->PowerOn = true;
 			adjustLegsPosition = true;
 		}
-		delay(200);
     }
     else if (model->PowerOn)
 	{
-
         if (thumbLeft.y > 0 && (state.LeftThumbY != prev_state.LeftThumbY)) // BodyYOffset: 0, HexConfig::BodyStandUpOffset
 		{
 			model->BodyYOffset = thumbLeft.y;
@@ -80,7 +77,7 @@ bool RCInputDriver::ProcessInput(HexModel* model)
 			adjustLegsPosition = true;
 		}
 
-{
+		{
         // if (hasPressed(GamepadButtonFlags::Btn5)) // ControlMode: Translate, Walk, SingleLeg
 		// {
 		// 	if (model->ControlMode != ControlModeType::Translate)
@@ -179,7 +176,7 @@ bool RCInputDriver::ProcessInput(HexModel* model)
 		// {
 		// 	if (model->Speed < 2000) model->Speed += 50;
 		// }
-}
+		}
         model->BodyYShift = 0;
 		if (model->ControlMode == ControlModeType::Walk)
 		{
@@ -187,7 +184,7 @@ bool RCInputDriver::ProcessInput(HexModel* model)
 			{
 
 			{
-				if (state.modeIsOn && state.saHasChanged &&
+				if ((state.shState != prev_state.shState) &&
 				    fabs(model->TravelLength.x) < HexConfig::TravelDeadZone //No movement
 				    && fabs(model->TravelLength.z) < HexConfig::TravelDeadZone
 				    && fabs(model->TravelLength.y * 2) < HexConfig::TravelDeadZone) //Select
@@ -279,44 +276,38 @@ bool RCInputDriver::ProcessInput(HexModel* model)
 		adjustLegPositionsToBodyHeight(model);
 	}
     prev_state = copyState(&state);
+
     return true;
 }
 
-void RCInputDriver::Debug(bool clear)
+void SBUSInputDriver::Debug(bool clear)
 {   
     if (clear)
 		Log.printf("\033[%d;%dH", 0, 0);
 	else
         Log.println();
-    Log.printf("%s ", failSafe ? "fail" : "safe");
+    Log.printf("%s ", state.failSafe ? "fail" : "safe");
     for(int i=0;i<RC_NUM_CHANNELS;i++)
     {
         Log.printf("%5d ", state.raw[i]);
     }
     Log.println();
-    Log.printf("M: %s ", state.modeIsOn ? "on " : "off");
+    Log.printf("SC: %3d %3d %3d %3d %3d", state.saState, state.sbState, state.scState, state.sdState, state.shState);
     Log.println();
-    Log.printf("SC: %3d %3d %3d %3d ", state.saState, state.sbState, state.scState, state.sdState);
-    Log.println();
-    Log.printf("SP: %3d %3d %3d %3d ", prev_state.saState, prev_state.sbState, prev_state.scState, prev_state.sdState);
-    Log.println();
-    Log.printf("TC: %6.2f %6.2f | %6.2f %6.2f", state.LeftThumbX, state.LeftThumbY, state.RightThumbX, state.RightThumbY);
-    Log.println();
-    Log.printf("TP: %6.2f %6.2f | %6.2f %6.2f", prev_state.LeftThumbX, prev_state.LeftThumbY, prev_state.RightThumbX, prev_state.RightThumbY);
+    Log.printf("TC: %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f", state.LeftThumbX, state.LeftThumbY, state.RightThumbX, state.RightThumbY, state.LeftRot, state.RightRot);
     Log.println();
 }
 
-void RCInputDriver::Setup()
+void SBUSInputDriver::Setup()
 {
-    for (int i=0; i<RC_NUM_CHANNELS; i++) {
-        pinMode(rc_ch[i]->pin(), INPUT_PULLDOWN);
-        attachInterruptArg(rc_ch[i]->pin(), &calc_ch, rc_ch[i], CHANGE);
-    }
+	Serial2.begin(100000, SERIAL_8E2, 16, 17, true);
+    _xmp.begin();
+	
     TaskHandle_t loopTask;
-    xTaskCreate(input_loop, "RCInputLoopTask", 1024, this, 1, &loopTask);
+    xTaskCreate(input_loop, "SBUSInputLoopTask", 1024, this, 1, &loopTask);
 }
 
-void RCInputDriver::turnOff(HexModel* model)
+void SBUSInputDriver::turnOff(HexModel* model)
 {
 	model->BodyPos.x = 0;
 	model->BodyPos.y = 0;
@@ -332,37 +323,25 @@ void RCInputDriver::turnOff(HexModel* model)
 	model->SelectedLeg = 255;
 }
 
-void RCInputDriver::calc_ch(void* arg) {  
-    RCChannel* p = static_cast<RCChannel*>(arg);
-    if (digitalRead(p->pin()) == HIGH) 
-    {
-        p->start();
-    } 
-    else 
-    {
-        p->end();
-    }
-}
-
-void RCInputDriver::input_loop(void* arg)
+void SBUSInputDriver::input_loop(void* arg)
 {
-    RCInputDriver* pThis = static_cast<RCInputDriver*>(arg);
+    SBUSInputDriver* pThis = static_cast<SBUSInputDriver*>(arg);
+	bool lostFrame = false;
+	uint16_t rc_ch[RC_NUM_CHANNELS];
     while(true)
     {
-        noInterrupts();
-        pThis->failSafe = false;
-        unsigned long now = millis();
-        for (int i=0;i<RC_NUM_CHANNELS;i++)
-        {
-            pThis->rc_ch[i]->value(true);
-            pThis->failSafe |= (now - pThis->rc_ch[i]->timestamp()) > RC_KEEPALIVE_TIMEOUT;
-        }
-        interrupts();
-        delay(1);
+		if (_xmp.read(&rc_ch[0], &pThis->state.failSafe, &lostFrame))
+		{
+			for (int i=0;i<RC_NUM_CHANNELS;i++)
+			{
+				pThis->state.raw[i] = rc_ch[i] - RC_VAL_MIN;
+			}
+		}
+		delay(1);
     }
 }
 
-void RCInputDriver::adjustLegPositionsToBodyHeight(HexModel* model)
+void SBUSInputDriver::adjustLegPositionsToBodyHeight(HexModel* model)
 {
 	const double MIN_XZ_LEG_ADJUST = HexConfig::CoxaLength;
 	const double MAX_XZ_LEG_ADJUST = HexConfig::CoxaLength + HexConfig::TibiaLength + HexConfig::FemurLength / 4;
@@ -410,63 +389,43 @@ void RCInputDriver::adjustLegPositionsToBodyHeight(HexModel* model)
 	}
 }
 
-void RCInputDriver::captureState(RCInputState_t* s)
+void SBUSInputDriver::captureState(RCInputState_t* s, RCInputState_t* p)
 {
-	RCInputState_t prev;
-	prev = copyState(s);	
+	const double m = RC_VAL_MAX / 255.0;
+
 	noInterrupts();
-	for (int i=0;i<RC_NUM_CHANNELS;i++)
-	{
-		s->raw[i] = ((int32_t)rc_ch[i]->value() - 1500);
-	}
+
+	s->isPowerOn = s->raw[RC_SF] > RC_VAL_MID;
+	s->LeftThumbX = -128.0 + s->raw[RC_LX] / m;
+	s->LeftThumbY = -128.0 + s->raw[RC_LY] / m;
+	s->RightThumbX = -128.0 + s->raw[RC_RX] / m;
+	s->RightThumbY = -128.0 + s->raw[RC_RY] / m;
+	s->LeftRot = s->raw[RC_S1] / m;
+	s->RightRot = s->raw[RC_S2] / m;
+	s->saState = (1 + s->raw[RC_SA]) / RC_VAL_MID;
+	s->sbState = (1 + s->raw[RC_SB]) / RC_VAL_MID;
+	s->scState = (1 + s->raw[RC_SC]) / RC_VAL_MID;
+	s->sdState = (1 + s->raw[RC_SD]) / RC_VAL_MID;
+	s->shState = (1 + s->raw[RC_SH]) / RC_VAL_MID;
+
 	interrupts();
-	
-    s->pwrIsOn = s->raw[RC_PWR] > 0;
-    s->pwrHasChanged = prev.pwrIsOn != s->pwrIsOn;
-
-    s->modeIsOn = s->raw[RC_MOD] > 0;
-    s->modeHasChanged = prev.modeIsOn != s->modeIsOn;
-
-    if (s->modeIsOn)
-    {
-        s->saState = 1 + s->raw[RC_SA] / 500;
-        s->saHasChanged =  prev.saState != s->saState;
-        s->sbState = 1 + s->raw[RC_SB] / 500;
-        s->sbHasChanged =  prev.sbState != s->sbState;
-        s->scState = 1 + s->raw[RC_SC] / 500;
-        s->scHasChanged =  prev.scState != s->scState;
-        s->sdState = 1 + s->raw[RC_SD] / 500;
-        s->sdHasChanged =  prev.sdState != s->sdState;
-    }
-    else 
-	{
-		
-        s->LeftThumbX = 128.0 + s->raw[RC_LX] / 4.0;
-        s->LeftThumbY = 128.0 + s->raw[RC_LY] / 4.0;
-        s->RightThumbX = 128.0 + s->raw[RC_RX] / 4.0;
-        s->RightThumbY = 128.0 - s->raw[RC_RY] / 4.0;
-    }
 }
 
-RCInputState_t RCInputDriver::copyState(RCInputState_t *s)
+RCInputState_t SBUSInputDriver::copyState(RCInputState_t *s)
 {
     RCInputState_t ns;
-    ns.pwrIsOn = s->pwrIsOn;
-    ns.pwrHasChanged = false;
-    ns.modeIsOn = s->modeIsOn;
-    ns.modeHasChanged = false;
+    ns.isPowerOn = s->isPowerOn;
+    ns.shState = s->shState;
     ns.saState = s->saState;
-    ns.saHasChanged = false;
     ns.sbState = s->sbState;
-    ns.sbHasChanged = false;
     ns.scState = s->scState;
-    ns.scHasChanged = false;
     ns.sdState = s->sdState;
-    ns.sdHasChanged = false;
 	ns.LeftThumbX = s->LeftThumbX;
 	ns.LeftThumbY = s->LeftThumbY;
 	ns.RightThumbX = s->RightThumbX;
 	ns.RightThumbY = s->RightThumbY;
+	ns.LeftRot = s->LeftRot;
+	ns.RightRot = s->RightRot;
 	for (int i=0;i<RC_NUM_CHANNELS;i++)
 	{
 		ns.raw[i] = s->raw[i];
@@ -475,20 +434,16 @@ RCInputState_t RCInputDriver::copyState(RCInputState_t *s)
 }
 
 void RCInputState_t::Reset() {
-    pwrHasChanged = false;
-    pwrIsOn = false;
-    modeHasChanged = false;
-    modeIsOn = false;
-    saHasChanged = false;
+    isPowerOn = false;
     saState = 0;
-    sbHasChanged = false;
     sbState = 0;
-    scHasChanged = false;
     scState = 0;
-    sdHasChanged = false;
     sdState = 0;
+    shState = 0;
 	LeftThumbX = LeftThumbY = 0;
 	RightThumbX = RightThumbY = 0;
+	LeftRot = RightRot = 0;
+	failSafe = true;
 	for (int i=0;i<RC_NUM_CHANNELS;i++)
 	{
 		raw[i] = 0;
@@ -497,7 +452,5 @@ void RCInputState_t::Reset() {
 
 bool RCInputState_t::IsEmpty() {
     return (saState == 0) && (sbState == 0) && (scState == 0) && (sdState == 0) &&
-		(LeftThumbX == 0) && (LeftThumbY == 0) && (RightThumbX == 0) && (RightThumbY == 0);
+		(LeftThumbX == 0) && (LeftThumbY == 0) && (RightThumbX == 0) && (RightThumbY == 0)&& (LeftRot == 0) && (RightRot == 0);
 }
-
-*/

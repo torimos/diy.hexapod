@@ -3,19 +3,19 @@
 #include "HexModel.h"
 #include "IKSolver.h"
 #include "Stopwatch.h"
-#include "RCInputDriver.h"
+#include "SBUSInputDriver.h"
 #include "ServoDriver.h"
 #include "Controller.h"
 
 HardwareSerial Log(0);
 HardwareSerial SerialOutput(2);
-RCInputDriver inputDrv;
+SBUSInputDriver inputDrv;
 ServoDriver sd(&SerialOutput);
 Controller controller(&inputDrv, &sd);
 
 void setup() 
 {
-	Log.begin(115200);//, SERIAL_8N1, 23, 22, false);
+	Log.begin(115200);
     SerialOutput.begin(115200);
     inputDrv.Setup();
     controller.Setup();
@@ -23,6 +23,6 @@ void setup()
 
 void loop() 
 {
-    //inputDrv.Debug();
+    //inputDrv.Debug(true);
     controller.Loop();
 }

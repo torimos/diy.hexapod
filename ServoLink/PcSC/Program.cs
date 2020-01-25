@@ -14,7 +14,7 @@ namespace ServoCommander
                 ctrl.Setup();
                 while (true)
                 {
-                    if (ctrl.Loop()) break;
+                    if (ctrl.Loop()) bgit reak;
                 }
             }
         }
