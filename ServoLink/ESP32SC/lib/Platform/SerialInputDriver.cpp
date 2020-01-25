@@ -290,7 +290,7 @@ bool SerialInputDriver::ProcessInput(HexModel* model)
 	}
 	else if (model->PowerOn)
 	{
-		if (hasPressed(GamepadButtonFlags::Btn5))
+		if (hasPressed(GamepadButtonFlags::Btn5)) // ControlMode: Translate, Walk, SingleLeg
 		{
 			if (model->ControlMode != ControlModeType::Translate)
 			{
@@ -306,7 +306,7 @@ bool SerialInputDriver::ProcessInput(HexModel* model)
 			}
 			delay(200);
 		}
-		else if (hasPressed(GamepadButtonFlags::Btn6))
+		else if (hasPressed(GamepadButtonFlags::Btn6)) // ControlMode: Rotate, Walk, SingleLeg
 		{
 			if (model->ControlMode != ControlModeType::Rotate)
 			{
@@ -322,7 +322,7 @@ bool SerialInputDriver::ProcessInput(HexModel* model)
 			}
 			delay(200);
 		}
-		else if (hasPressed(GamepadButtonFlags::Btn3)) // Circle
+		else if (hasPressed(GamepadButtonFlags::Btn3)) // Circle. ControlMode/SelectedLeg: SingleLeg/0x00, Walk,0xFF
 		{
 			if ((fabs(model->TravelLength.x) < HexConfig::TravelDeadZone)
 			  || (fabs(model->TravelLength.z) < HexConfig::TravelDeadZone)
@@ -343,7 +343,7 @@ bool SerialInputDriver::ProcessInput(HexModel* model)
 				}
 			}
 		}
-		else if (hasPressed(GamepadButtonFlags::Btn2)) // Cross
+		else if (hasPressed(GamepadButtonFlags::Btn2)) // Cross. ControlMode: GPPlayer, Walk
 		{
 			if (model->ControlMode != ControlModeType::GPPlayer)
 			{
@@ -353,11 +353,11 @@ bool SerialInputDriver::ProcessInput(HexModel* model)
 			else
 				model->ControlMode = ControlModeType::Walk;
 		}
-		else if (hasPressed(GamepadButtonFlags::Btn1)) // Square
+		else if (hasPressed(GamepadButtonFlags::Btn1)) // Square. BalanceMode: On/Off
 		{
 			model->BalanceMode = !model->BalanceMode;
 		}
-		else if (hasPressed(GamepadButtonFlags::Btn4)) // Triangle
+		else if (hasPressed(GamepadButtonFlags::Btn4)) // Triangle. BodyYOffset: 0, HexConfig::BodyStandUpOffset
 		{
 			if (model->BodyYOffset > 0)
 				model->BodyYOffset = 0;
@@ -366,26 +366,26 @@ bool SerialInputDriver::ProcessInput(HexModel* model)
 
 			adjustLegsPosition = true;
 		}
-		else if (isButtonPressed(state, GamepadButtonFlags::DPadUp, 50) == true)
+		else if (isButtonPressed(state, GamepadButtonFlags::DPadUp, 50) == true) // Up. BodyYOffset: +5. max HexConfig::MaxBodyHeight
 		{
 			model->BodyYOffset += 5;
 			if (model->BodyYOffset > HexConfig::MaxBodyHeight)
 				model->BodyYOffset = HexConfig::MaxBodyHeight;
 			adjustLegsPosition = true;
 		}
-		else if (isButtonPressed(state, GamepadButtonFlags::DPadDown, 50) == true)
+		else if (isButtonPressed(state, GamepadButtonFlags::DPadDown, 50) == true) // Down. BodyYOffset: -5. min 0
 		{
 			if (model->BodyYOffset > 5)
-				model->BodyYOffset -= 10;
+				model->BodyYOffset -= 5;
 			else
 				model->BodyYOffset = 0;
 			adjustLegsPosition = true;
 		}
-		else if (isButtonPressed(state, GamepadButtonFlags::DPadRight, 50) == true)
+		else if (isButtonPressed(state, GamepadButtonFlags::DPadRight, 50) == true) // Left. Speed: -50. min 0
 		{
 			if (model->Speed >= 50) model->Speed -= 50;
 		}
-		else if (isButtonPressed(state, GamepadButtonFlags::DPadLeft, 50) == true)
+		else if (isButtonPressed(state, GamepadButtonFlags::DPadLeft, 50) == true) // Right. Speed: +50. max 2000
 		{
 			if (model->Speed < 2000) model->Speed += 50;
 		}
@@ -419,7 +419,7 @@ bool SerialInputDriver::ProcessInput(HexModel* model)
 				{
 					model->DoubleTravelOn = !model->DoubleTravelOn;
 				}
-				else if (hasPressed(GamepadButtonFlags::LeftThumb | GamepadButtonFlags::RightThumb)) // Switch between Walk method 1 && Walk method 2
+				else if (hasPressed(GamepadButtonFlags::LeftThumb | GamepadButtonFlags::RightThumb)) // Switch between WalkMethod 1 && WalkMethod 2
 				{
 					model->WalkMethod = !model->WalkMethod;
 				}
