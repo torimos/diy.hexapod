@@ -8,7 +8,7 @@ namespace ServoCommander
     {
         static void Main(string[] args)
         {
-            Console.SetWindowSize(80, 70);
+            Console.SetWindowSize(120, 60);
             using (var ctrl = new Controller())
             {
                 ctrl.Setup();
