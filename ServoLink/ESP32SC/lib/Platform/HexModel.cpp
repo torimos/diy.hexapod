@@ -81,6 +81,5 @@ void HexModel::Debug(int level)
 	Log.printf("InputTimeDelay: %5d\n\r", InputTimeDelay);
 	Log.printf("ControlMode: %5d\n\r", ControlMode);
 	Log.printf("PowerOn: %5d\n\r", PowerOn);
-	if (LiftUpWarning)
-		Log.printf("!!!Lift hexapod UP first!!!");
+	Log.printf("Need Lift: %s\n\r", LiftUpWarning ? "true" : "false");
 }

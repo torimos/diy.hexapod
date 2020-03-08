@@ -2,6 +2,7 @@
 #include "Platform.h"
 #include "InputDriver.h"
 #include "HexModel.h"
+#include <SBUS.h>
 
 #define RC_NUM_CHANNELS 16
 #define RC_VAL_MIN 172
@@ -44,6 +45,7 @@ typedef struct
 
 class SBUSInputDriver : public InputDriver
 {
+    SBUS* _xmp;
     RCInputState_t state;
     RCInputState_t prev_state;
 
@@ -53,7 +55,7 @@ class SBUSInputDriver : public InputDriver
     void captureState(RCInputState_t* s, RCInputState_t* p);
     RCInputState_t copyState(RCInputState_t *s);
 public:
-    SBUSInputDriver();
+    SBUSInputDriver(HardwareSerial& serial);
     void Setup();
     bool IsTerminate();
     bool ProcessInput(HexModel* model);

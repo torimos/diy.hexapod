@@ -10,6 +10,7 @@ namespace Contracts
         bool Open();
         void Close();
         void Write(byte[] data, int offset, int size);
+        void Write(string data);
     }
 
     public class PortDataReceivedEventArgs: EventArgs

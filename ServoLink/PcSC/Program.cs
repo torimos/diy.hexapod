@@ -1,22 +1,25 @@
 ﻿using System;
-using Drivers;
 using Hexapod;
+using PcSC.Hexapod;
 
 namespace ServoCommander
 {
     partial class Program
     {
+
         static void Main(string[] args)
         {
-            Console.SetWindowSize(120, 42);
-            using (var ctrl = new Controller())
-            {
-                ctrl.Setup();
-                while (true)
-                {
-                    if (ctrl.Loop()) break;
-                }
-            }
+            //Console.SetWindowSize(120, 42);
+            //using (var ctrl = new Controller())
+            //{
+            //    ctrl.Setup();
+            //    while (true)
+            //    {
+            //        if (ctrl.Loop()) break;
+            //    }
+            //}
+
+            CallibrateHelper.Run();
         }
     }
 }

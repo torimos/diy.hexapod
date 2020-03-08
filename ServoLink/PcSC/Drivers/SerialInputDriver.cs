@@ -79,7 +79,7 @@ namespace Drivers
 
         public SerialInputDriver()
         {
-            _port = new SerialPortDriver("COM5", 9600, 200) { ReadChunkSize = 8*2 };
+            _port = new SerialPortDriver("COM4", 9600, 200) { ReadChunkSize = 8*2 };
             bool opened = !_port.IsOpen ? _port.Open() : _port.IsOpen;
             if (opened)
             {

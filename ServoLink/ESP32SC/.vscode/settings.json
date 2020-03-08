@@ -17,6 +17,7 @@
         "system_error": "cpp",
         "type_traits": "cpp",
         "pins_arduino.h": "c",
-        "string": "cpp"
+        "string": "cpp",
+        "sstream": "cpp"
     }
 }

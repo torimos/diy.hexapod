@@ -3,6 +3,8 @@ using CRC;
 using Data;
 using System;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using Utils;
 
 namespace Drivers
@@ -10,6 +12,7 @@ namespace Drivers
     public class ServoDriver: IDisposable
     {
         private readonly uint[] _servos;
+        private readonly uint[] _last_servos;
         private readonly IBinaryHelper _binaryHelper = new BinaryHelper();
         private ISerialPortDriver _port;
         string _response;
@@ -17,6 +20,7 @@ namespace Drivers
         public ServoDriver(ushort numberOfServos)
         {
             _servos = new uint[numberOfServos == 0 ? 1 : numberOfServos];
+            _last_servos = new uint[numberOfServos == 0 ? 1 : numberOfServos];
         }
 
         public bool Init(string port)
@@ -66,6 +70,7 @@ namespace Drivers
             _servos[index] = (uint)(moveTime << 16) | position;
         }
 
+
         public void Commit(int timeOut = 100)
         {
             _response = string.Empty;
@@ -80,6 +85,7 @@ namespace Drivers
             if (!IsConnected()) return;
             MoveAll(0);
             Commit();
+            Thread.Sleep(50);
         }
 
         public string GetLastResult()

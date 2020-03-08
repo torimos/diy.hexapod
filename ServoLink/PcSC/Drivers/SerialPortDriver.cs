@@ -54,6 +54,11 @@ namespace Drivers
             _io.Write(data, offset, size);
         }
 
+        public void Write(string data)
+        {
+            _io.Write(data);
+        }
+
         private void OnDataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
             if (_io.BytesToRead == 0 || (ReadChunkSize > 0 ? _io.BytesToRead < ReadChunkSize : false)) return;

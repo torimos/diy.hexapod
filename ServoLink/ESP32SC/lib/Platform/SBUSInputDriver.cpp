@@ -3,13 +3,12 @@
 #include "HexModel.h"
 #include <math.h>
 
-#include <SBUS.h>
 #include <HardwareSerial.h>
 
-SBUS _xmp(Serial2);
 
-SBUSInputDriver::SBUSInputDriver()
+SBUSInputDriver::SBUSInputDriver(HardwareSerial& serial)
 {
+	_xmp = new SBUS(serial);
 	state.Reset();
     prev_state.Reset();
 }
@@ -36,9 +35,9 @@ bool SBUSInputDriver::ProcessInput(HexModel* model)
 	if (model == NULL)
 		return true;
 
-		bool adjustLegsPosition = false;
+	bool adjustLegsPosition = false;
 
-	XY thumbLeft = { .x = state.LeftThumbX - 128.0, .y = (state.LeftThumbY) };
+	XY thumbLeft = { .x = state.LeftThumbX - 128.0, .y =  state.LeftThumbY - 128.0 };
 	XY thumbRight = { .x = state.RightThumbX - 128.0, .y = -(state.RightThumbY - 128.0) };
 
     if (state.isPowerOn != prev_state.isPowerOn)
@@ -56,28 +55,28 @@ bool SBUSInputDriver::ProcessInput(HexModel* model)
     }
     else if (model->PowerOn)
 	{
-        if (thumbLeft.y > 0 && (state.LeftThumbY != prev_state.LeftThumbY)) // BodyYOffset: 0, HexConfig::BodyStandUpOffset
+        if (state.shState != prev_state.shState && state.shState > 0)
 		{
-			model->BodyYOffset = thumbLeft.y;
-
-			if (model->BodyYOffset > HexConfig::MaxBodyHeight)
-			{
-				model->BodyYOffset = HexConfig::MaxBodyHeight;
-			} 
-			else if (model->BodyYOffset < 0)
-			{
+			if (model->BodyYOffset > 0)
 				model->BodyYOffset = 0;
-			}
-			
-			// if (model->BodyYOffset > 0)
-			// 	model->BodyYOffset = 0;
-			// else
-			// 	model->BodyYOffset = HexConfig::BodyStandUpOffset;
-
+			else
+				model->BodyYOffset = HexConfig::BodyStandUpOffset;
 			adjustLegsPosition = true;
 		}
-
+		else if (state.RightRot != prev_state.RightRot)
 		{
+			model->BodyYOffset = HexConfig::BodyStandUpOffset + (state.RightRot/2)-64.0;
+			if (model->BodyYOffset > HexConfig::MaxBodyHeight)
+				model->BodyYOffset = HexConfig::MaxBodyHeight;
+			else if (model->BodyYOffset < (HexConfig::BodyStandUpOffset-15))
+				model->BodyYOffset = HexConfig::BodyStandUpOffset-15;
+			adjustLegsPosition = true;
+		}
+		if (state.LeftRot != prev_state.LeftRot)
+		{
+			model->Speed = 256 - state.LeftRot;
+		}
+
         // if (hasPressed(GamepadButtonFlags::Btn5)) // ControlMode: Translate, Walk, SingleLeg
 		// {
 		// 	if (model->ControlMode != ControlModeType::Translate)
@@ -176,15 +175,12 @@ bool SBUSInputDriver::ProcessInput(HexModel* model)
 		// {
 		// 	if (model->Speed < 2000) model->Speed += 50;
 		// }
-		}
         model->BodyYShift = 0;
 		if (model->ControlMode == ControlModeType::Walk)
 		{
 			if (model->BodyPos.y > 0)
 			{
-
-			{
-				if ((state.shState != prev_state.shState) &&
+				if ((state.saState != prev_state.saState) &&
 				    fabs(model->TravelLength.x) < HexConfig::TravelDeadZone //No movement
 				    && fabs(model->TravelLength.z) < HexConfig::TravelDeadZone
 				    && fabs(model->TravelLength.y * 2) < HexConfig::TravelDeadZone) //Select
@@ -212,7 +208,6 @@ bool SBUSInputDriver::ProcessInput(HexModel* model)
 				// {
 				// 	model->WalkMethod = !model->WalkMethod;
 				// }
-			}
 				//Walking
 				if (model->WalkMethod)  //(Walk Methode) 
 					model->TravelLength.z = -thumbRight.y; //Left Stick Up/Down  
@@ -250,8 +245,8 @@ bool SBUSInputDriver::ProcessInput(HexModel* model)
 			model->BodyRot.z = -thumbRight.x;
 			model->BodyYShift = thumbLeft.y / 2;
 		}
-		// else if (model->ControlMode == ControlModeType::SingleLeg)
-		// {
+		else if (model->ControlMode == ControlModeType::SingleLeg)
+		{
 		// 	if (hasPressed(GamepadButtonFlags::Btn9)) //Select
 		// 	{
 		// 		model->SelectedLeg++;
@@ -260,12 +255,11 @@ bool SBUSInputDriver::ProcessInput(HexModel* model)
 		// 			model->SelectedLeg = 0;
 		// 		}
 		// 	}
-
 		// 	model->SingleLegHold = isButtonPressed(state, GamepadButtonFlags::Btn6) == true;
 		// 	model->SingleLegPos.x = thumbRight.x; //Right Stick Right/Left
 		// 	model->SingleLegPos.y = -thumbLeft.y; //Left Stick Up/Down
 		// 	model->SingleLegPos.z = thumbRight.y; //Right Stick Up/Down
-		// }
+		}
 		model->InputTimeDelay = 128 - (int)fmax(fmax(fabs(thumbRight.x), fabs(thumbRight.y)), fmax(fabs(thumbLeft.x), fabs(thumbLeft.y)));
         if (model->InputTimeDelay < 0) model->InputTimeDelay = 128;
     }
@@ -276,7 +270,6 @@ bool SBUSInputDriver::ProcessInput(HexModel* model)
 		adjustLegPositionsToBodyHeight(model);
 	}
     prev_state = copyState(&state);
-
     return true;
 }
 
@@ -300,8 +293,7 @@ void SBUSInputDriver::Debug(bool clear)
 
 void SBUSInputDriver::Setup()
 {
-	Serial2.begin(100000, SERIAL_8E2, 16, 17, true);
-    _xmp.begin();
+   _xmp->begin();
 	
     TaskHandle_t loopTask;
     xTaskCreate(input_loop, "SBUSInputLoopTask", 1024, this, 1, &loopTask);
@@ -330,7 +322,7 @@ void SBUSInputDriver::input_loop(void* arg)
 	uint16_t rc_ch[RC_NUM_CHANNELS];
     while(true)
     {
-		if (_xmp.read(&rc_ch[0], &pThis->state.failSafe, &lostFrame))
+		if (pThis->_xmp->read(&rc_ch[0], &pThis->state.failSafe, &lostFrame))
 		{
 			for (int i=0;i<RC_NUM_CHANNELS;i++)
 			{
@@ -396,10 +388,10 @@ void SBUSInputDriver::captureState(RCInputState_t* s, RCInputState_t* p)
 	noInterrupts();
 
 	s->isPowerOn = s->raw[RC_SF] > RC_VAL_MID;
-	s->LeftThumbX = -128.0 + s->raw[RC_LX] / m;
-	s->LeftThumbY = -128.0 + s->raw[RC_LY] / m;
-	s->RightThumbX = -128.0 + s->raw[RC_RX] / m;
-	s->RightThumbY = -128.0 + s->raw[RC_RY] / m;
+	s->LeftThumbX = s->raw[RC_LX] / m;
+	s->LeftThumbY = s->raw[RC_LY] / m;
+	s->RightThumbX = s->raw[RC_RX] / m;
+	s->RightThumbY = s->raw[RC_RY] / m;
 	s->LeftRot = s->raw[RC_S1] / m;
 	s->RightRot = s->raw[RC_S2] / m;
 	s->saState = (1 + s->raw[RC_SA]) / RC_VAL_MID;
