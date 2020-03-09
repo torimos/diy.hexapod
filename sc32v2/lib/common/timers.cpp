@@ -23,10 +23,11 @@ void initServos(int period)
   for(int i=0;i<20;i++)
   {
     int pin = timer_pins_map[i];
-    gpio_set_mode(PIN_MAP[pin].gpio_device, PIN_MAP[pin].gpio_bit, GPIO_AF_OUTPUT_PP);
+    gpio_set_mode(PIN_MAP[pin].gpio_device, PIN_MAP[pin].gpio_bit, GPIO_INPUT_PD);
   }
   for (int i=0;i<5;i++)
   {
+    _ccrData[i][0] = _ccrData[i][1] = _ccrData[i][2] =_ccrData[i][3] = 0;
     timer_dev* dev = timers_map[i];
     timer_set_prescaler(dev, (F_CPU / 1000000) - 1);
     timer_set_reload(dev, period - 1);
@@ -39,6 +40,11 @@ void initServos(int period)
     timer_set_mode(dev, 3, TIMER_PWM );
     timer_set_mode(dev, 4, TIMER_PWM );
     timer_attach_interrupt(dev, TIMER_UPDATE_INTERRUPT, timers_handlers[i]);
+  }
+  for(int i=0;i<20;i++)
+  {
+    int pin = timer_pins_map[i];
+    gpio_set_mode(PIN_MAP[pin].gpio_device, PIN_MAP[pin].gpio_bit, GPIO_AF_OUTPUT_PP);
   }
 }
 void clock_IrqHandler(){

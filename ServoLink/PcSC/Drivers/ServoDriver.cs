@@ -77,6 +77,7 @@ namespace Drivers
             if (!IsConnected()) return;
             var crc = Crc.ComputeHash(CrcAlgorithms.Crc32Mpeg2, _servos);
             var buffer = _binaryHelper.ConvertToByteArray(_servos, (UInt32)crc);
+            Console.WriteLine(string.Join(' ', buffer.Select(x => $"{x:X}")));
             _port.Write(buffer, 0, buffer.Length);
         }
 

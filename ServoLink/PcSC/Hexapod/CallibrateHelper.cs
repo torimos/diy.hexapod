@@ -92,7 +92,7 @@ namespace PcSC.Hexapod
             }
 
             ServoDriver sd = new ServoDriver(20);
-            sd.Init("COM11");
+            sd.Init("COM13");
             bool run = true;
             int leg = 0, last_leg = 0;
             int offsetMax = 1000;

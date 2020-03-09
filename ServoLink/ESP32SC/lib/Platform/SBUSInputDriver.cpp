@@ -38,7 +38,7 @@ bool SBUSInputDriver::ProcessInput(HexModel* model)
 	bool adjustLegsPosition = false;
 
 	XY thumbLeft = { .x = state.LeftThumbX - 128.0, .y =  state.LeftThumbY - 128.0 };
-	XY thumbRight = { .x = state.RightThumbX - 128.0, .y = -(state.RightThumbY - 128.0) };
+	XY thumbRight = { .x = state.RightThumbX - 128.0, .y = (state.RightThumbY - 128.0) };
 
     if (state.isPowerOn != prev_state.isPowerOn)
     {

@@ -7,6 +7,13 @@
 #include <errno.h>
 #include <stdint.h>
 
+// LF RF
+// LM RM
+// LR RR
+static int ServoMap[] = { 16,17,18, 19,12,13, 14,15, 8,  3,2,1,  0,7,6, 5,4,11 }; //tfc   //RR RM RF LR LM LF
+static int ServoInv[] = { 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1 };
+static int ServoOffset[] = { 10,-170,-30, -20,-130,-40, 0,-20,0, 20,80,30, 70,220,-40, -40,90,20 };
+
 Controller::Controller(InputDriver* a, ServoDriver* b)
 {
 	sd = b;
@@ -158,7 +165,7 @@ bool Controller::Loop()
 				model->MoveTime = (uint16_t)(HexConfig::WalkingDelay + model->Speed);
 		}
 
-		sd->Update(model->LegsAngle, model->MoveTime);
+		UpdateServos(model->LegsAngle, model->MoveTime);
 
 		for (int LegIndex = 0; LegIndex < HexConfig::LegsCount; LegIndex++)
 		{
@@ -189,7 +196,7 @@ bool Controller::Loop()
 		if (model->PrevPowerOn)
 		{
 			model->MoveTime = 600;
-			sd->Update(model->LegsAngle, model->MoveTime);
+			UpdateServos(model->LegsAngle, model->MoveTime);
 			sd->Commit();
 			delay(600);
 		}
@@ -502,5 +509,19 @@ void Controller::SolveIKLegs()
 		{
 			model->LegsAngle[leg] = legIK.Result;
 		}
+	}
+}
+
+void Controller::UpdateServos(CoxaFemurTibia* results, ushort moveTime)
+{
+	for (byte i = 0; i < HexConfig::LegsCount; i++)
+	{
+		// tfc-cft => /"*-*"
+		ushort tibiaPos = (ushort)(1500 + ((results[i].Tibia * 10) + ServoOffset[i * 3]) * ServoInv[i * 3]);
+		ushort femurPos = (ushort)(1500 + ((results[i].Femur * 10) + ServoOffset[i * 3 + 1]) * ServoInv[i * 3 + 1]);
+		ushort coxaPos = (ushort)(1500 + ((results[i].Coxa * 10) + ServoOffset[i * 3 + 2]) * ServoInv[i * 3 + 2]);
+		sd->Move(ServoMap[i * 3], tibiaPos, moveTime);
+		sd->Move(ServoMap[i * 3 + 1], femurPos, moveTime);
+		sd->Move(ServoMap[i * 3 + 2], coxaPos, moveTime);
 	}
 }

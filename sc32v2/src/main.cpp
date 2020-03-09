@@ -60,7 +60,7 @@ void servoGrpupInit(uint8_t groupId)
 
 void timerHandler(uint8_t id, uint16_t *pwmData)
 {
-  for (int sid = 0; sid < 4; ++sid)
+	for (int sid = 0; sid < 4; ++sid)
 	{
 		servo_typedef* servo = &servos[id * 4 + sid];
 		if (servo->positionDelta)
@@ -86,19 +86,20 @@ void timerHandler(uint8_t id, uint16_t *pwmData)
 }
 
 void setup() {
-	Serial.end();
-	Serial1.end();
-	Serial2.end();
-	Serial3.end();
-	Serial4.end();
-	Serial5.begin(115200);
-	initServos(SERVO_PWM_PERIOD);
 	servoGrpupInit(0);
 	servoGrpupInit(1);
 	servoGrpupInit(2);
 	servoGrpupInit(3);
-	Serial5.println("SC32 V2.1");
+	initServos(SERVO_PWM_PERIOD);
+	Serial.end();
+	Serial1.end();
+	Serial2.end();
+	Serial3.end();
+	Serial4.begin(115200);
+	Serial5.begin(115200);
+	Serial4.println("SC32 V2.1.2");
 }
+
 void loop() {
   while (Serial5.available()>0)
   {
@@ -111,15 +112,22 @@ void loop() {
     if (_frameOffset >= SERIAL_DATA_FRAME_SIZE)
     {
       uint32_t crcdiff = crc32(serialData, SERVO_COUNT) - serialData[SERVO_COUNT];
+	  Serial4.print(millis(),16);
+	  Serial4.print(" CRC: ");
       if (crcdiff == 0)
       {
         processSerialData();
-        Serial5.println("OK");
+        Serial4.println("OK");
       }
       else
       {
-        Serial5.flush();
-        Serial5.println("ER");
+        Serial4.flush();
+        Serial4.println("ER");
+		for (int i=0;i<SERIAL_DATA_FRAME_SIZE;i++)
+		{
+	  		Serial4.print(serialData[i], 16);
+		}
+		Serial4.println();
       }
       _frameTicks = _frameOffset = 0;
     }
