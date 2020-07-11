@@ -42,7 +42,7 @@ void setup()
 {
 	Log.begin(115200);
 	inputSerial.begin(100000, SERIAL_8E2, 16, 17, true);
-    servoSerial.begin(115200, SERIAL_8N1, 22, 23);
+    servoSerial.begin(115200, SERIAL_8N1, 27, 14);
     inputDrv.Setup();
     sd.Init();
     sd.Reset();
