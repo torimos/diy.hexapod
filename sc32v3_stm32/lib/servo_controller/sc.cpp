@@ -96,6 +96,7 @@ void sc_init() {
 	servoGrpupInit(1);
 	servoGrpupInit(2);
 	servoGrpupInit(3);
+	servoGrpupInit(4);
 	initServos(SERVO_PWM_PERIOD);
 }
 
