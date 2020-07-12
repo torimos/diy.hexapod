@@ -112,7 +112,7 @@ void sc_loop() {
     if (_frameOffset >= SERIAL_DATA_FRAME_SIZE)
     {
       uint32_t crcdiff = crc32(serialData, SERVO_COUNT) - serialData[SERVO_COUNT];
-      logger.print(millis(),16);
+      logger.print(millis());
       logger.print(" CRC: ");
       if (crcdiff == 0)
       {
