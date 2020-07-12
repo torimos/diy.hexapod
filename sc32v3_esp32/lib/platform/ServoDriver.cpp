@@ -85,7 +85,7 @@ void ServoDriver::Move(int index, uint16_t position, uint16_t moveTime)
         
 void ServoDriver::MoveAll(uint16_t position, uint16_t moveTime)
 {
-	for (int i = 0; i < 20; i++)
+	for (int i = 0; i < NUMBER_OF_SERVO; i++)
 	{
 		Move(i, position, moveTime);
 	}

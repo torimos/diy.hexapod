@@ -17,8 +17,10 @@ void setup() {
 void loop() {
   sd.MoveAll(1000);
   sd.Commit();
+  StateLed.Flash(CRGB(0,4,0), 1, 150);
   delay(1000);
   sd.MoveAll(2000);
   sd.Commit();
+  StateLed.Flash(CRGB(4,0,0), 1, 150);
   delay(1000);
 }

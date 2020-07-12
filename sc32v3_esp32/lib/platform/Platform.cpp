@@ -8,7 +8,7 @@ void ResetSTM32()
 {
   pinMode(STM32_NRST_PIN, OUTPUT);
   digitalWrite(STM32_NRST_PIN, LOW);
-  delay(10);
+  delay(5);
   digitalWrite(STM32_NRST_PIN, HIGH);
   delay(5);
   STM32uart.begin(115200, SERIAL_8N1, 27, 14);

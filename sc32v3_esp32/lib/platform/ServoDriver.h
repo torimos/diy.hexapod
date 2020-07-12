@@ -4,7 +4,7 @@
 #include "Stream.h"
 #include <stdint.h>
 
-#define NUMBER_OF_SERVO 20
+#define NUMBER_OF_SERVO 26
 #define BUFFER_LENGTH (NUMBER_OF_SERVO + 1)
 class ServoDriver
 {
