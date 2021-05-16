@@ -16,7 +16,7 @@ void ResetSTM32()
 
 void Platform_Init()
 {
+  ResetSTM32();
   Logger.begin(115200);	
   //Logger.printf("\033c");
-  ResetSTM32();
 }
