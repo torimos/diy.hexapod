@@ -2,7 +2,7 @@
 #include "HexConfig.h"
 #include "HexModel.h"
 #include <math.h>
-
+/*
 RCInputDriver::RCInputDriver()
 {
     rc_ch[5] = new RCChannel(36);
@@ -499,3 +499,5 @@ bool RCInputState_t::IsEmpty() {
     return (saState == 0) && (sbState == 0) && (scState == 0) && (sdState == 0) &&
 		(LeftThumbX == 0) && (LeftThumbY == 0) && (RightThumbX == 0) && (RightThumbY == 0);
 }
+
+*/

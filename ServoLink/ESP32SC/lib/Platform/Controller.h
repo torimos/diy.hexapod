@@ -29,5 +29,6 @@ private:
 	void BalCalcOneLeg(double posX, double posZ, double posY, int BalLegNr);
 	void Balance();
 	void SolveIKLegs();
+	void UpdateServos(CoxaFemurTibia* results, ushort moveTime);
 };
 

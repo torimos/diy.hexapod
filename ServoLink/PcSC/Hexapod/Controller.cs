@@ -12,21 +12,23 @@ namespace Hexapod
 {
     public class Controller : IDisposable
     {
-        private static int[] CoxaOffset = { 20, -40, 0, -20, -40, -20 }; //LF LM LR RR RM RF
-        private static int[] FemurOffset = { 30, 20, 50, -170, -120, -20 };//{   70,-100, -55,   0,  45, -40 }; //LF LM LR RR RM RF 
-        private static int[] TibiaOffset = { 20, 60, -50, 30, 20, 20 };//{    0,  65, -30,  40,   0,   0 }; //LF LM LR RR RM RF
-        private static byte[] LegsMap = { 3, 4, 5, 2, 1, 0 };
+        // LF RF
+        // LM RM
+        // LR RR
+        private static int[] ServoMap = new int[] { 16,17,18, 19,12,13, 14,15, 8,  3,2,1,  0,7,6, 5,4,11 }; //tfc   //RR RM RF LR LM LF
+        private static int[] ServoInv = new int[] { 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1 };
+        private static int[] ServoOffset = new int[] { 10,-170,-30, -20,-130,-40, 0,-20,0, 20,80,30, 70,220,-40, -40,90,20 };
 
         private IIKSolver iks;
         private ServoDriver sd;
-        private SerialInputDriver id;
+        private IInputDriver id;
         private HexModel model;
 
         public Controller()
         {
             iks = new IKSolverEx();
             sd = new ServoDriver(20);
-            id = new SerialInputDriver(); //new DS6InputDriver();
+            id = new SerialInputDriver();
             model = new HexModel(HexConfig.LegsCount);
         }
 
@@ -39,7 +41,7 @@ namespace Hexapod
 
         public void Setup()
         {
-            sd.Init("COM5");
+            sd.Init("COM11");
             sd.Reset();
 
             Task.Run(() =>
@@ -513,17 +515,18 @@ namespace Hexapod
         }
         private void UpdateServos(CoxaFemurTibia[] results, ushort moveTime)
         {
-            for (byte i = 0; i < LegsMap.Length; i++)
+            for (byte i = 0; i < HexConfig.LegsCount; i++)
             {
-                ushort coxaPos = (ushort)(1500 + (results[i].Coxa * 10) + CoxaOffset[LegsMap[i]]);
-                ushort femurPos = (ushort)(1500 + (results[i].Femur * 10) + FemurOffset[LegsMap[i]]);
-                ushort tibiaPos = (ushort)(1500 + (results[i].Tibia * 10) + TibiaOffset[LegsMap[i]]);
-                sd.Move(LegsMap[i] * 3, tibiaPos, moveTime);
-                sd.Move(LegsMap[i] * 3 + 1, femurPos, moveTime);
-                sd.Move(LegsMap[i] * 3 + 2, coxaPos, moveTime);
+                // tfc-cft => /"*-*"\
+                ushort tibiaPos = (ushort)(1500 + ((results[i].Tibia * 10) + ServoOffset[i * 3])*ServoInv[i * 3]);
+                ushort femurPos = (ushort)(1500 + ((results[i].Femur * 10) + ServoOffset[i * 3 + 1]) *ServoInv[i * 3 + 1]);
+                ushort coxaPos = (ushort)(1500 + ((results[i].Coxa * 10) + ServoOffset[i * 3 + 2]) *ServoInv[i * 3 + 2]);
+                sd.Move(ServoMap[i * 3], tibiaPos, moveTime);
+                sd.Move(ServoMap[i * 3 + 1], femurPos, moveTime);
+                sd.Move(ServoMap[i * 3 + 2], coxaPos, moveTime);
             }
         }
-        public static void Calibrate(ServoDriver sd, DS6InputDriver id)
+        public static void Calibrate(ServoDriver sd, IInputDriver id)
         {
             bool firstRun = true;
             int selLegIndex = 0;
@@ -538,45 +541,45 @@ namespace Hexapod
 
             while (!id.Terminate)
             {
-                var ks = id.Keyboard.GetCurrentState();
-                var step = (ks.IsPressed(SlimDX.DirectInput.Key.LeftControl)) ? 10 : ((ks.IsPressed(SlimDX.DirectInput.Key.LeftShift)) ? 50 : 1);
-                if (ks.IsPressed(SlimDX.DirectInput.Key.Escape)) break;
-                else if (ks.IsPressed(SlimDX.DirectInput.Key.DownArrow))
-                {
-                    selLegIndex = (selLegIndex + 1) % 6;
-                    sd.MoveAll(0);
-                }
-                else if (ks.IsPressed(SlimDX.DirectInput.Key.UpArrow))
-                {
-                    selLegIndex--; if (selLegIndex < 0) selLegIndex = 5;
-                    sd.MoveAll(0);
-                }
-                else if (ks.IsPressed(SlimDX.DirectInput.Key.RightArrow)) selLegJoint = (selLegJoint + 1) % 3;
-                else if (ks.IsPressed(SlimDX.DirectInput.Key.LeftArrow)) { selLegJoint--; if (selLegJoint < 0) selLegJoint = 2; }
-                else if (ks.IsPressed(SlimDX.DirectInput.Key.A)) legAngles[selLegIndex][selLegJoint] += step;
-                else if (ks.IsPressed(SlimDX.DirectInput.Key.Z)) legAngles[selLegIndex][selLegJoint] -= step;
-                else if (ks.IsPressed(SlimDX.DirectInput.Key.S)) { if (selLegJoint == 0) CoxaOffset[selLegIndex] += step; else if (selLegJoint == 1) FemurOffset[selLegIndex] += step; else if (selLegJoint == 2) TibiaOffset[selLegIndex] += step; }
-                else if (ks.IsPressed(SlimDX.DirectInput.Key.X)) { if (selLegJoint == 0) CoxaOffset[selLegIndex] -= step; else if (selLegJoint == 1) FemurOffset[selLegIndex] -= step; else if (selLegJoint == 2) TibiaOffset[selLegIndex] -= step; }
+                // var ks = id.Keyboard.GetCurrentState();
+                // var step = (ks.IsPressed(SlimDX.DirectInput.Key.LeftControl)) ? 10 : ((ks.IsPressed(SlimDX.DirectInput.Key.LeftShift)) ? 50 : 1);
+                // if (ks.IsPressed(SlimDX.DirectInput.Key.Escape)) break;
+                // else if (ks.IsPressed(SlimDX.DirectInput.Key.DownArrow))
+                // {
+                //     selLegIndex = (selLegIndex + 1) % 6;
+                //     sd.MoveAll(0);
+                // }
+                // else if (ks.IsPressed(SlimDX.DirectInput.Key.UpArrow))
+                // {
+                //     selLegIndex--; if (selLegIndex < 0) selLegIndex = 5;
+                //     sd.MoveAll(0);
+                // }
+                // else if (ks.IsPressed(SlimDX.DirectInput.Key.RightArrow)) selLegJoint = (selLegJoint + 1) % 3;
+                // else if (ks.IsPressed(SlimDX.DirectInput.Key.LeftArrow)) { selLegJoint--; if (selLegJoint < 0) selLegJoint = 2; }
+                // else if (ks.IsPressed(SlimDX.DirectInput.Key.A)) legAngles[selLegIndex][selLegJoint] += step;
+                // else if (ks.IsPressed(SlimDX.DirectInput.Key.Z)) legAngles[selLegIndex][selLegJoint] -= step;
+                // else if (ks.IsPressed(SlimDX.DirectInput.Key.S)) { if (selLegJoint == 0) CoxaOffset[selLegIndex] += step; else if (selLegJoint == 1) FemurOffset[selLegIndex] += step; else if (selLegJoint == 2) TibiaOffset[selLegIndex] += step; }
+                // else if (ks.IsPressed(SlimDX.DirectInput.Key.X)) { if (selLegJoint == 0) CoxaOffset[selLegIndex] -= step; else if (selLegJoint == 1) FemurOffset[selLegIndex] -= step; else if (selLegJoint == 2) TibiaOffset[selLegIndex] -= step; }
 
-                if (ks.PressedKeys.Count > 0 || firstRun)
-                {
-                    firstRun = false;
-                    sd.Move(selLegIndex * 3 + 2, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][0] : legAngles[selLegIndex][0]) + CoxaOffset[selLegIndex]), 0);
-                    sd.Move(selLegIndex * 3 + 1, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][1] : legAngles[selLegIndex][1]) + FemurOffset[selLegIndex]), 0);
-                    sd.Move(selLegIndex * 3 + 0, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][2] : legAngles[selLegIndex][2]) + TibiaOffset[selLegIndex]), 0);
-                    sd.Commit();
+                // if (ks.PressedKeys.Count > 0 || firstRun)
+                // {
+                //     firstRun = false;
+                //     sd.Move(selLegIndex * 3 + 2, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][0] : legAngles[selLegIndex][0]) + CoxaOffset[selLegIndex]), 0);
+                //     sd.Move(selLegIndex * 3 + 1, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][1] : legAngles[selLegIndex][1]) + FemurOffset[selLegIndex]), 0);
+                //     sd.Move(selLegIndex * 3 + 0, (ushort)(1500 + (selLegIndex > 2 ? -legAngles[selLegIndex][2] : legAngles[selLegIndex][2]) + TibiaOffset[selLegIndex]), 0);
+                //     sd.Commit();
 
-                    var isCoxa = selLegJoint == 0 ? "<" : " ";
-                    var isFemur = selLegJoint == 1 ? "<" : " ";
-                    var isTibia = selLegJoint == 2 ? "<" : " ";
-                    Console.SetCursorPosition(0, 0);
-                    for (var i = 0; i < 6; i++)
-                    {
-                        var selLeg = i == selLegIndex ? "<" : " ";
-                        Console.WriteLine($"{i}{selLeg}: {legAngles[i][0],5} {CoxaOffset[i],5}{isCoxa}   {legAngles[i][1],5} {FemurOffset[i],5}{isFemur}   {legAngles[i][2],5} {TibiaOffset[i],5}{isTibia}");
-                    }
-                    Thread.Sleep(100);
-                }
+                //     var isCoxa = selLegJoint == 0 ? "<" : " ";
+                //     var isFemur = selLegJoint == 1 ? "<" : " ";
+                //     var isTibia = selLegJoint == 2 ? "<" : " ";
+                //     Console.SetCursorPosition(0, 0);
+                //     for (var i = 0; i < 6; i++)
+                //     {
+                //         var selLeg = i == selLegIndex ? "<" : " ";
+                //         Console.WriteLine($"{i}{selLeg}: {legAngles[i][0],5} {CoxaOffset[i],5}{isCoxa}   {legAngles[i][1],5} {FemurOffset[i],5}{isFemur}   {legAngles[i][2],5} {TibiaOffset[i],5}{isTibia}");
+                //     }
+                //     Thread.Sleep(100);
+                // }
             }
         }
     }

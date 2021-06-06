@@ -1,0 +1,5 @@
+Import("env","projenv")
+env.ProcessUnFlags("-DVECT_TAB_ADDR=0x08000000")
+env.Append(CPPDEFINES=("VECT_TAB_ADDR", 0x08008000))
+projenv.ProcessUnFlags("-DVECT_TAB_ADDR=0x08000000")
+projenv.Append(CPPDEFINES=("VECT_TAB_ADDR", 0x08008000))

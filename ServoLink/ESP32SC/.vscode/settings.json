@@ -16,6 +16,8 @@
         "unordered_set": "cpp",
         "system_error": "cpp",
         "type_traits": "cpp",
-        "pins_arduino.h": "c"
+        "pins_arduino.h": "c",
+        "string": "cpp",
+        "sstream": "cpp"
     }
 }
