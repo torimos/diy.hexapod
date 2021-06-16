@@ -63,11 +63,11 @@ void HexModel::Debug(int level)
 				BodyRot.z,
 				BodyYOffset);
 			Log.printf("\n\r");
-			Log.printf("TravelLength:\n\r     X,    Y,    Z\n\r%6.1f %6.1f %6.1f\n\r", TravelLength.x, TravelLength.y, TravelLength.z);
-			Log.printf("\n\r");
 		}
 		if ((level& 1) == 1)
 		{
+			Log.printf("TravelLength:\n\r     X,    Y,    Z\n\r%6.1f %6.1f %6.1f\n\r", TravelLength.x, TravelLength.y, TravelLength.z);
+			Log.printf("\n\r");
 			Log.printf("Gate [%d]:\n\r#,   X,     Y,     Z,     RotY\n\r", SelectedGaitType);
 			for (i = 0; i < LegsCount; i++)
 				Log.printf("%d %6.1f %6.1f %6.1f %6.1f\n\r", i, GaitPos[i].x, GaitPos[i].y, GaitPos[i].z, GaitRotY[i]);

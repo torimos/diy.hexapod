@@ -1,7 +1,7 @@
 #include "Platform.h"
 
 const int STM32_NRST_PIN = 26;
-HardwareSerial Logger(0);
+HardwareSerial Log(0);
 HardwareSerial STM32uart(1);
 
 void ResetSTM32()
@@ -17,6 +17,6 @@ void ResetSTM32()
 void Platform_Init()
 {
   ResetSTM32();
-  Logger.begin(115200);	
-  //Logger.printf("\033c");
+  Log.begin(115200);	
+  //Log.printf("\033c");
 }

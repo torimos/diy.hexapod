@@ -5,7 +5,7 @@
 #include "CRC.h"
 #include "Stopwatch.h"
 
-extern HardwareSerial Logger;
+extern HardwareSerial Log;
 extern HardwareSerial STM32uart;
 
 void ResetSTM32();
