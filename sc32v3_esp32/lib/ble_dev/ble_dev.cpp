@@ -18,10 +18,12 @@ static uint32_t last_ble_run = 0;
 
 class MyClientCallback : public BLEClientCallbacks {
     void onConnect(BLEClient* pclient) {
+        doScan = false;
     }
 
     void onDisconnect(BLEClient* pclient) {
         connected = false;
+        doScan = true;
     }
 };
 
@@ -39,8 +41,6 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
             BLEDevice::getScan()->stop();
             myDevice = new BLEAdvertisedDevice(advertisedDevice);
             doConnect = true;
-            doScan = true;
-
         } // Found our server
     } // onResult
 }; // MyAdvertisedDeviceCallbacks
@@ -134,7 +134,7 @@ void ble_begin(ble_data_callback callback) {
 
 void ble_run() {
     uint32_t time = millis();
-    if ((time-last_ble_run)>1000)
+    if ((time-last_ble_run)>500)
     {
         if (doConnect == true) {
             if (connectToServer()) {
@@ -146,10 +146,10 @@ void ble_run() {
             doConnect = false;
         }
 
-        if(doScan){
-            //BLEDevice::getScan()->start(0);  
-            // this is just example to start scan after disconnect, most likely there is better way to do it in arduino
-        }
+        // if(doScan){
+        //     BLEDevice::getScan()->start(2);  
+        //     // this is just example to start scan after disconnect, most likely there is better way to do it in arduino
+        // }
         last_ble_run = time;
     }
 }
