@@ -17,7 +17,7 @@ static uint32_t last_ble_run = 0;
 
 class MyClientCallback : public BLEClientCallbacks {
     void onConnect(BLEClient* pClient) {
-        Log.println("Connected");
+        //Log.println("Connected");
         /** After connection we should change the parameters if we don't need fast response times.
          *  These settings are 150ms interval, 0 latency, 450ms timout.
          *  Timeout should be a multiple of the interval, minimum is 100ms.
@@ -29,8 +29,8 @@ class MyClientCallback : public BLEClientCallbacks {
     }
 
     void onDisconnect(BLEClient* pClient) {
-        Log.print(pClient->getPeerAddress().toString().c_str());
-        Log.println(" Disconnected - Starting scan");
+        //Log.print(pClient->getPeerAddress().toString().c_str());
+        //Log.println(" Disconnected - Starting scan");
         connected = false;
         doScan = true;
     }
@@ -41,11 +41,11 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
      * Called for each advertising BLE server.
      */
     void onResult(BLEAdvertisedDevice *advertisedDevice) {
-        Log.print("Advertised Device found: ");
-        Log.println(advertisedDevice->toString().c_str());
+        //Log.print("Advertised Device found: ");
+        //Log.println(advertisedDevice->toString().c_str());
         // We have found a device, let us now see if it contains the service we are looking for.
         if (advertisedDevice->haveServiceUUID() && advertisedDevice->isAdvertisingService(serviceUUID)) {
-            Log.println("Found Our Service");
+            //Log.println("Found Our Service");
             BLEDevice::getScan()->stop();
             myDevice = advertisedDevice;
             doConnect = true;
@@ -81,10 +81,10 @@ bool connectToServer() {
         pClient = NimBLEDevice::getClientByPeerAddress(myDevice->getAddress());
         if(pClient){
             if(!pClient->connect(myDevice, false)) {
-                Log.println("Reconnect failed");
+                //Log.println("Reconnect failed");
                 return false;
             }
-            Log.println("Reconnected client");
+            //Log.println("Reconnected client");
         }
         /** We don't already have a client that knows this device,
          *  we will check for a client that is disconnected that we can use.
@@ -96,12 +96,12 @@ bool connectToServer() {
 
     if(!pClient) {
         if(NimBLEDevice::getClientListSize() >= NIMBLE_MAX_CONNECTIONS) {
-            Log.println("Max clients reached - no more connections available");
+            //Log.println("Max clients reached - no more connections available");
             return false;
         }
     
         pClient  = BLEDevice::createClient();
-        Log.println("New client created");
+        //Log.println("New client created");
 
         pClient->setClientCallbacks(new MyClientCallback(), false);
 
@@ -116,35 +116,35 @@ bool connectToServer() {
         if (!pClient->connect(myDevice)) {
             /** Created a client but failed to connect, don't need to keep it as it has no data */
             NimBLEDevice::deleteClient(pClient);
-            Log.println("Failed to connect, deleted client");
+            //Log.println("Failed to connect, deleted client");
             return false;
         }
     }
 
     if(!pClient->isConnected()) {
         if (!pClient->connect(myDevice)) {
-            Log.println("Failed to connect");
+            //Log.println("Failed to connect");
             return false;
         }
     }
 
-    Log.print("Connected to: ");
-    Log.println(pClient->getPeerAddress().toString().c_str());
-    Log.print("RSSI: ");
-    Log.println(pClient->getRssi());
+    //Log.print("Connected to: ");
+    //Log.println(pClient->getPeerAddress().toString().c_str());
+    //Log.print("RSSI: ");
+    //Log.println(pClient->getRssi());
 
     // Obtain a reference to the service we are after in the remote BLE server.
     BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
     if (pRemoteService == nullptr) {
-        Log.print("BLE: Failed to find our service UUID: ");
-        Log.println(serviceUUID.toString().c_str());
+        //Log.print("BLE: Failed to find our service UUID: ");
+        //Log.println(serviceUUID.toString().c_str());
         pClient->disconnect();
         return false;
     }
 
     // Obtain a reference to the in/out characteristics in the service of the remote BLE server.
     auto charsMap = pRemoteService->getCharacteristics(true);
-    Log.printf("Characteristics count=%d begin=%x end=%x\n\r",charsMap->capacity(), charsMap->begin(), charsMap->end());
+    //Log.printf("Characteristics count=%d begin=%x end=%x\n\r",charsMap->capacity(), charsMap->begin(), charsMap->end());
     int inputs_cnt = 0;
     for (auto it = charsMap->begin(); it != charsMap->end(); ++it)
     {
@@ -158,14 +158,14 @@ bool connectToServer() {
             else {
                 inputs[inputs_cnt++] = ch;
             }
-            Log.printf("Found %s h: %02X r:%d, w:%d, n:%d", ch->getUUID().toString().c_str(), ch->getHandle(), ch->canRead(), ch->canWrite(), ch->canNotify());
-            Log.println();
+            //Log.printf("Found %s h: %02X r:%d, w:%d, n:%d", ch->getUUID().toString().c_str(), ch->getHandle(), ch->canRead(), ch->canWrite(), ch->canNotify());
+            //Log.println();
         }
     }
 
     if (inputs[0] == NULL || inputs[1] == NULL || output == NULL ||
         !inputs[0]->canRead() || !inputs[1]->canRead() || !output->canWrite()) {
-        Log.println("BLE: No input or output characteristics detected");
+        //Log.println("BLE: No input or output characteristics detected");
         return false;
     }
 
@@ -201,10 +201,10 @@ void ble_run() {
     {
         if (doConnect == true) {
             if (connectToServer()) {
-                Log.println("BLE: We are now connected to the BLE Server.");
+                //Log.println("BLE: We are now connected to the BLE Server.");
                 Log.printf("\033c");
             } else {
-                Log.println("BLE: We have failed to connect to the server; there is nothin more we will do.");
+                //Log.println("BLE: We have failed to connect to the server; there is nothin more we will do.");
             }
             doConnect = false;
         }
