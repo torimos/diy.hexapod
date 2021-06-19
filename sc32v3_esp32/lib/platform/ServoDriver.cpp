@@ -76,6 +76,11 @@ void ServoDriver::Commit()
 	memcpy(xTaskParams.buffer, this->_servos, sizeof(uint32_t)*BUFFER_LENGTH);
 	//xTaskParams.ready = 1;
 	this->_stream->write(xTaskParams.buffer, sizeof(uint32_t)*BUFFER_LENGTH);
+
+	Log.print("#Commit: ");
+	for (int i = 0; i < NUMBER_OF_SERVO; i++)
+		Log.printf("%02x", this->_servos[i]);
+	Log.println();
 }
 
 void ServoDriver::Move(int index, uint16_t position, uint16_t moveTime)
