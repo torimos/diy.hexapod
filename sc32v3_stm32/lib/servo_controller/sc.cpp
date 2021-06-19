@@ -48,13 +48,16 @@ void sc_loop() {
 		if (_frameOffset >= SERIAL_DATA_FRAME_SIZE)
 		{
 			uint32_t crcdiff = crc32(serialData, SERVO_COUNT) - serialData[SERVO_COUNT];
-			logger.print(_frameCount++);
-			logger.print(" CRC: ");
 			if (crcdiff == 0)
 			{
 				processSerialData();
-				logger.println("OK");
+				logger.print("@");
+				logger.print(_frameCount++, 16);
+				for (int i=0;i<SERIAL_DATA_FRAME_SIZE;i++)
+					logger.print(serialData[i], 16);
+				logger.println();
 			}
+			#if DEBUG_LVL >= 5
 			else
 			{
 				logger.println(" ER");
@@ -64,6 +67,7 @@ void sc_loop() {
 				}
 				logger.println();
 			}
+			#endif
 			_frameTicksTimeOut = _frameOffset = 0;
 		}
 	}

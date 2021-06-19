@@ -5,7 +5,7 @@
 void setup() {
   Serial.end();
 	logger.begin(115200);
-	logger.println("SC32 SW V3.0.1 HW V2.0");
+	logger.println("#id SC32 SW V3.0.1 HW V2.0");
 
   sc_init(&Serial5);
 }
