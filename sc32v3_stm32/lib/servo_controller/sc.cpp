@@ -25,7 +25,7 @@ void sc_init(HardwareSerial* inputSerial) {
 	sc_write_all(0);
 	initServos(SERVO_PWM_PERIOD);
 	_input = inputSerial;
-	_input->begin(115200, SERIAL_8N1);//921600
+	_input->begin(115200, SERIAL_8N1);
 }
 
 uint8_t rx_buf[128];

@@ -11,7 +11,7 @@ void ResetSTM32()
   delay(5);
   digitalWrite(STM32_NRST_PIN, HIGH);
   delay(5);
-  STM32uart.begin(115200, SERIAL_8N1, 27, 14); //921600
+  STM32uart.begin(115200, SERIAL_8N1, 27, 14);
 }
 
 void Platform_Init()
