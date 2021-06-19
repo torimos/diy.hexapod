@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include "StateLed.h"
-#include "CRC.h"
+#include "crc32.h"
 #include "Stopwatch.h"
 
 extern HardwareSerial Log;

@@ -5,11 +5,9 @@
 #include <stdint.h>
 
 #define NUMBER_OF_SERVO 26
-#define BUFFER_LENGTH (NUMBER_OF_SERVO + 1)
 class ServoDriver
 {
-	uint32_t _servos[BUFFER_LENGTH];
-	uint32_t _crcBuffer[BUFFER_LENGTH];
+	uint32_t _servos[NUMBER_OF_SERVO];
 	Stream *_stream;
 public:
 	ServoDriver(Stream* stream);
