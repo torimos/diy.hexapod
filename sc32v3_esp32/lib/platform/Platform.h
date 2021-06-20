@@ -7,6 +7,7 @@
 
 extern HardwareSerial Log;
 extern HardwareSerial STM32uart;
+extern HardwareSerial DEBUGuart;
 
 void ResetSTM32();
 void Platform_Init();

@@ -72,6 +72,7 @@ void ServoDriver::Commit()
 	xTaskParams.frame.crc = get_CRC32((uint8_t*)xTaskParams.frame.data, xTaskParams.frame.len);
 	//xTaskParams.ready = 1;
 	this->_stream->write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
+	DEBUGuart.write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
 }
 
 void ServoDriver::Move(int index, uint16_t position, uint16_t moveTime)

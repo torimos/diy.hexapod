@@ -3,6 +3,7 @@
 const int STM32_NRST_PIN = 26;
 HardwareSerial Log(0);
 HardwareSerial STM32uart(1);
+HardwareSerial DEBUGuart(2);
 
 void ResetSTM32()
 {
@@ -17,6 +18,7 @@ void ResetSTM32()
 void Platform_Init()
 {
   ResetSTM32();
+  DEBUGuart.begin(115200);
   Log.begin(115200);	
   //Log.printf("\033c");
 }
