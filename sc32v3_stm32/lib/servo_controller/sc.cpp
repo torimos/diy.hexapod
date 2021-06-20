@@ -14,8 +14,22 @@ typedef struct
 	uint16_t positionNew;
 } servo_typedef;
 
+#pragma pack(push, 1)
+typedef struct {
+	uint32_t header;
+	uint16_t len;
+	uint32_t data[NUMBER_OF_SERVO];
+	uint32_t crc;
+} uart_frame_t;
+#pragma pack(pop)
+
 servo_typedef servos[NUMBER_OF_SERVO];
 const int servos_map[NUMBER_OF_SERVO] = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12, 19,18,17,16, 20,21,22,23,24,25};
+uint8_t rx_buf[114];
+uint8_t frame_buf[228];
+int frame_buf_len = 0;
+int frame_cnt = 0;
+char sbuf[128];
 
 HardwareSerial* _input;
 
@@ -27,20 +41,6 @@ void sc_init(HardwareSerial* inputSerial) {
 	_input = inputSerial;
 	_input->begin(115200, SERIAL_8N1);
 }
-
-uint8_t rx_buf[128];
-uint8_t frame_buf[256];
-int frame_buf_len = 0;
-int frame_cnt = 0;
-
-#pragma pack(push, 1)
-typedef struct {
-	uint32_t header;
-	uint16_t len;
-	uint32_t data[NUMBER_OF_SERVO];
-	uint32_t crc;
-} uart_frame_t;
-#pragma pack(pop)
 
 size_t uart_read(uint8_t *buffer, size_t size)
 {
@@ -75,7 +75,7 @@ size_t frame_buf_read()
   }
   return 0;
 }
-char sbuf[256];
+
 int parse_frame()
 {
     if (frame_buf_len > 0)
@@ -112,13 +112,19 @@ int parse_frame()
 					{
 						processServoData(frame->data);
 						frame_buf_len = 0;
-						logger.print("@");
-						//logger.print(frame_cnt++, 16);
-						for (int i=0;i<NUMBER_OF_SERVO;i++) {
-							sprintf(sbuf,"%08X ", frame->data[i]);
-							logger.print(sbuf);
-						}
-						logger.println();
+						// logger.print("@");
+						// //logger.print(frame_cnt++, 16);
+						// for (int i=0;i<NUMBER_OF_SERVO;i++) {
+						// 	sprintf(sbuf,"%08X", frame->data[i]);
+						// 	logger.print(sbuf);
+						// }
+						// logger.println();
+						logger.write(frame, sizeof(uart_frame_t));
+						// uint8_t*p = (uint8_t*)frame;
+						// for (uint32_t i=0;i<sizeof(uart_frame_t);i++) {
+						// 	logger.print(p[i]);
+						// }
+						logger.flush();
 						return 1;
 					}
 					// else {
