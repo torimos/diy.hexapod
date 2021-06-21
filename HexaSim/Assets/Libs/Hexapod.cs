@@ -14,6 +14,8 @@ public class Hexapod
 
     Vector3? lastHexaPos = null;
     Vector3? hexaNewPosition = null;
+    float? lastHexaRotY = null;
+    float? hexaNewRotY = null;
 
     public void Create(MonoBehaviour parent)
     {
@@ -65,26 +67,6 @@ public class Hexapod
         UpdateBody();
     }
 
-    public void ProcessFrameData(FrameReadyEventArgs args)
-    {
-        for (int i = 0; i < servos.Length; i++)
-        {
-            servos[i].ProcessData(args.Servos[i]);
-        }
-        var model = args.Model;
-        float newPosX = 0, newPosY = 0, newPosZ = 0;
-        if (lastHexaPos != null)
-        {
-            newPosX = lastHexaPos.Value.x;
-            newPosZ = lastHexaPos.Value.z;
-        }
-        newPosY = (float)(model.pos.y / 100.0f) + HexConfig.otherJointSize / 2;
-        newPosX += (float)(model.tlen.x / 500.0f);
-        newPosZ += (float)(model.tlen.z / 500.0f);
-        hexaNewPosition = new Vector3(newPosX, newPosY, newPosZ);
-        Debug.Log($"Model tlen={model.tlen} rot={model.rot} pos={model.pos} pwr={model.turnedOn}");
-    }
-
     public void Reset()
     {
         legs[0].Update(HexConfig.coxaInitAngle, HexConfig.femurInitAngle, HexConfig.tibiaInitAngle);
@@ -126,15 +108,49 @@ public class Hexapod
         //    minLegY += legs[i].tibiaEnd.transform.position.y;
         //}
         //minLegY /= 6;
+        //hexapod.transform.position = new Vector3(0, -minLegY, 0);
 
         if (hexaNewPosition != null)
         {
-            //Debug.Log($" minLegY={minLegY} pos={hexaNewPosition.Value}");
             hexapod.transform.position = hexaNewPosition.Value;
             lastHexaPos = hexapod.transform.position;
             hexaNewPosition = null;
         }
-        //hexapod.transform.position = new Vector3(0, -minLegY, 0);
+
+        if (hexaNewRotY != null)
+        {
+            hexapod.transform.rotation = Quaternion.AngleAxis(hexaNewRotY.Value, new Vector3(0, 1, 0));
+            lastHexaRotY = hexaNewRotY.Value;
+            hexaNewRotY = null;
+        }
+    }
+
+    public void ProcessFrameData(FrameReadyEventArgs args)
+    {
+        for (int i = 0; i < servos.Length; i++)
+        {
+            servos[i].ProcessData(args.Servos[i]);
+        }
+        var model = args.Model;
+
+        float newPosX = 0, newPosY, newPosZ = 0, newRotY = 0;
+        if (lastHexaPos != null)
+        {
+            newPosX = lastHexaPos.Value.x;
+            newPosZ = lastHexaPos.Value.z;
+        }
+        newPosY = (float)(model.pos.y / 100.0f) + HexConfig.otherJointSize / 2;
+        newPosX += (float)(model.tlen.x / 500.0f);
+        newPosZ += (float)(model.tlen.z / 500.0f);
+        if (lastHexaRotY != null)
+        {
+            newRotY = lastHexaRotY.Value;
+        }
+        newRotY -= (float)(model.tlen.y / 10.0f);
+
+        hexaNewRotY = newRotY;
+        hexaNewPosition = new Vector3(newPosX, newPosY, newPosZ);
+        Debug.Log($"Model tlen={model.tlen} rot={model.rot} pos={model.pos} pwr={model.turnedOn}");
     }
 
     private void Create3DModel()
