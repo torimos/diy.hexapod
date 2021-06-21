@@ -58,6 +58,7 @@ void ServoDriver::Init()
 {
 	xTaskParams.stream = stream;
 	xTaskParams.debugStream = debugStream;
+	#if WRITE_TO_SC32_IN_BACKGROUND
     xTaskCreate(
 		write_thread,       /* Function that implements the task. */
 		"servoworker",          /* Text name for the task. */
@@ -65,7 +66,7 @@ void ServoDriver::Init()
 		( void * ) &xTaskParams,    /* Parameter passed into the task. */
 		1,/* Priority at which the task is created. */
 		&xHandle );      /* Used to pass out the created task's handle. */
-
+	#endif
 	delay(500);
 }
 
@@ -95,9 +96,8 @@ void ServoDriver::Commit()
 	memcpy(xTaskParams.frame.data, this->_servos, xTaskParams.frame.len);
 	xTaskParams.frame.crc = get_CRC32((uint8_t*)xTaskParams.frame.data, xTaskParams.frame.len);
 	xTaskParams.ready = 1;
-	if (!xHandle)
-	{
-		this->stream->write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
-		this->debugStream->write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
-	}
+	#if !WRITE_TO_SC32_IN_BACKGROUND
+	this->stream->write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
+	this->debugStream->write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
+	#endif
 }
