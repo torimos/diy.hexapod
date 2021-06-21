@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Diagnostics;
 using UnityEngine;
 
@@ -8,8 +9,9 @@ public class Hexapod
     private ServoState[] servos = new ServoState[26];
     private GameObject hexapod;
     private Stopwatch last_leg_updated;
+    private IEnumerator servoUpdateCorutine;
 
-    public void Create()
+    public void Create(MonoBehaviour parent)
     {
         last_leg_updated = new Stopwatch();
         last_leg_updated.Restart();
@@ -18,38 +20,45 @@ public class Hexapod
 
         Create3DModel();
         Reset();
+
+        servoUpdateCorutine = ServoUpdateRutine(0.02f);
+        parent.StartCoroutine(servoUpdateCorutine);
     }
 
-    public void Update()
+    private IEnumerator ServoUpdateRutine(float waitTime)
     {
-        if (last_leg_updated.ElapsedMilliseconds > 20)
+        while(true)
         {
+            yield return new WaitForSeconds(waitTime);
             for (int i = 0; i < servos.Length; i++)
             {
                 servos[i].Update();
             }
-            for (int i = 0; i < HexConfig.LegsCount; i++)
-            {
-                uint sdC = (uint)servos[HexConfig.ServoMap[i, 0]].position;
-                uint sdF = (uint)servos[HexConfig.ServoMap[i, 1]].position;
-                uint sdT = (uint)servos[HexConfig.ServoMap[i, 2]].position;
-
-                if (sdC == 0 || sdF == 0 || sdT == 0)
-                {
-                    legs[i].Reset();
-                    return;
-                }
-
-                float d = 10f;
-                float c = ((int)(sdC & 0xFFFF) - 1500) / d;
-                float f = ((int)(sdF & 0xFFFF) - 1500) / d;
-                float t = ((int)(sdT & 0xFFFF) - 1500) / d;
-
-                legs[i].Update(c, f, t);
-            }
-            //UpdateBody();
-            last_leg_updated.Restart();
         }
+    }
+
+    public void Update()
+    {
+        for (int i = 0; i < HexConfig.LegsCount; i++)
+        {
+            uint sdC = (uint)servos[HexConfig.ServoMap[i, 0]].position;
+            uint sdF = (uint)servos[HexConfig.ServoMap[i, 1]].position;
+            uint sdT = (uint)servos[HexConfig.ServoMap[i, 2]].position;
+
+            if (sdC == 0 || sdF == 0 || sdT == 0)
+            {
+                legs[i].Reset();
+                return;
+            }
+
+            float d = 10f;
+            float c = ((int)(sdC & 0xFFFF) - 1500) / d;
+            float f = ((int)(sdF & 0xFFFF) - 1500) / d;
+            float t = ((int)(sdT & 0xFFFF) - 1500) / d;
+
+            legs[i].Update(c, f, t);
+        }
+        //UpdateBody();
     }
 
     public void ProcessFrameData(uint[] data)

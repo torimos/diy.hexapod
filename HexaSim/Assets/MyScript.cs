@@ -8,7 +8,7 @@ public partial class MyScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        hexapod.Create();
+        hexapod.Create(this);
 
         frameReader.Create();
         frameReader.OnFrameReady += OnFrameReady;

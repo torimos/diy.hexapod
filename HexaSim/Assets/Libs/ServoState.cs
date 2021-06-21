@@ -9,7 +9,7 @@
         int moveTime = (int)((data >> 16) & 0xFFFF);
         int pos = (int)((data) & 0xFFFF);
 
-        int ticks = moveTime / 20;
+        int ticks = moveTime / 20; //20ms servo update time
         if (position != pos &&
             position > 0 &&
             pos > 0 &&
