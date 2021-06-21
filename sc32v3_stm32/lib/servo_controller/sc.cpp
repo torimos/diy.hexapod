@@ -24,12 +24,10 @@ typedef struct {
 #pragma pack(pop)
 
 servo_typedef servos[NUMBER_OF_SERVO];
-const int servos_map[NUMBER_OF_SERVO] = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12, 19,18,17,16, 20,21,22,23,24,25};
 uint8_t rx_buf[114];
 uint8_t frame_buf[228];
 int frame_buf_len = 0;
 int frame_cnt = 0;
-char sbuf[128];
 
 HardwareSerial* _input;
 
@@ -112,35 +110,12 @@ int parse_frame()
 					{
 						processServoData(frame->data);
 						frame_buf_len = 0;
-						// logger.print("@");
-						// //logger.print(frame_cnt++, 16);
-						// for (int i=0;i<NUMBER_OF_SERVO;i++) {
-						// 	sprintf(sbuf,"%08X", frame->data[i]);
-						// 	logger.print(sbuf);
-						// }
-						// logger.println();
+						#if DEBUG_SERVO_DATA
 						logger.write(frame, sizeof(uart_frame_t));
-						// uint8_t*p = (uint8_t*)frame;
-						// for (uint32_t i=0;i<sizeof(uart_frame_t);i++) {
-						// 	logger.print(p[i]);
-						// }
 						logger.flush();
+						#endif
 						return 1;
 					}
-					// else {
-					// 	logger.print("#CRC ERR. crc received ");
-					// 	logger.print(frame->crc, 16);
-					// 	logger.print(" but expected ");
-					// 	logger.print(expected_crc32, 16);
-					// 	logger.println();
-						
-					// 	logger.print("#");
-					// 	for (int i=0;i<frame_buf_len;i++) {
-					// 		logger.print(frame_buf[i], 16);
-					// 		logger.print(' ');
-					// 	}
-					// 	logger.println();
-					// }
 				}
             }
         }
@@ -170,31 +145,28 @@ void sc_write_all(int us)
 	}
 }
 
-void timerHandler(uint8_t id, uint16_t *pwmData, uint16_t pwmDataSize)
+uint16_t timer_getPWMValue(uint8_t sid)
 {
-	for (int sid = 0; sid < pwmDataSize; sid++)
+	servo_typedef* servo = &servos[sid];
+	if (servo->positionDelta)
 	{
-		servo_typedef* servo = &servos[servos_map[id * 4 + sid]];
-		if (servo->positionDelta)
+		servo->position += servo->positionDelta;
+		if (servo->positionDelta > 0)
 		{
-			servo->position += servo->positionDelta;
-			if (servo->positionDelta > 0)
-			{
-				if (servo->position >= servo->positionNew) {
-					servo->position = servo->positionNew;
-					servo->positionDelta = 0;
-				}
-			}
-			else if (servo->positionDelta < 0)
-			{
-				if (servo->position <= servo->positionNew) {
-					servo->position = servo->positionNew;
-					servo->positionDelta = 0;
-				}
+			if (servo->position >= servo->positionNew) {
+				servo->position = servo->positionNew;
+				servo->positionDelta = 0;
 			}
 		}
-		pwmData[sid] = servo->position;
+		else if (servo->positionDelta < 0)
+		{
+			if (servo->position <= servo->positionNew) {
+				servo->position = servo->positionNew;
+				servo->positionDelta = 0;
+			}
+		}
 	}
+	return servo->position;
 }
 
 void processServoData(uint32_t* data)
@@ -203,7 +175,7 @@ void processServoData(uint32_t* data)
 	{
 		uint16_t moveTime = (data[sid] >> 16) & 0xFFFF;
 		uint16_t positionNew = (data[sid]) & 0xFFFF;
-		//data[sid] = 0;
+
 		int ticks = moveTime / SERVO_PWM_PERIOD_MS;
 		if (servos[sid].position != positionNew &&
 			servos[sid].position > 0 &&

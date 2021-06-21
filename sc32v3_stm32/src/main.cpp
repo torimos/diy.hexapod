@@ -11,9 +11,4 @@ void setup() {
 
 void loop() {
   sc_loop();
-
-  // sc_write_all(1500);
-  // delay(1000);
-  // sc_write_all(1000);
-  // delay(1000);
 }

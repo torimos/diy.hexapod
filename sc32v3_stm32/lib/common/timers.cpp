@@ -12,6 +12,8 @@ void Timer6_IrqHandler();
 
 int pwm_pins_map[] = {/*T4*/PB9,PB8,PB7,PB6,  /*T1*/PA11,PA10,PA9,PA8,  /*T8*/PC9,PC8,PC7,PC6,  /*T3*/PB1,PB0,PA7,PA6,  /*T2*/PA3,PA2,PA1,PA0 };
 int dpwm_pins_map[] = {/*TD*/PB15,PB14,PB13,PB12,PB11,PB10 };
+const int channels_map[] = {/*T4*/3,2,1,0, /*T1*/7,6,5,4, /*T8*/11,10,9,8, /*T3*/15,14,13,12, /*T2*/19,18,17,16, /*TD*/20,21,22,23,24,25};
+
 voidFuncPtr pwm_timer_handlers[] { Timer0_IrqHandler, Timer1_IrqHandler, Timer2_IrqHandler, Timer3_IrqHandler, Timer4_IrqHandler };
 voidFuncPtr basic_timer_handlers[] { Timer5_IrqHandler, Timer6_IrqHandler };
 timer_dev* pwm_timers_map[] { TIMER4, TIMER1, TIMER8, TIMER3, TIMER2 };
@@ -24,8 +26,9 @@ volatile uint16_t _dpwm_step = 10;
 volatile uint16_t _dpwm_counter = 0;
 uint16_t _pwmZeroData[4] = {0,0,0,0};
 
-void __attribute__((weak)) timerHandler(uint8_t id, uint16_t *pwmData, uint16_t pwmDataSize)
+uint16_t __attribute__((weak)) timer_getPWMValue(uint8_t sid)
 {
+  return 0;
 }
 
 void initServos(uint16_t period)
@@ -66,29 +69,34 @@ void initServos(uint16_t period)
 }
 
 void Timer0_IrqHandler(){
-  timerHandler(0, (uint16_t *)_pwmData[0], 4);
+  for (int sid = 0; sid < 4; sid++)
+    _pwmData[0][sid] = timer_getPWMValue(channels_map[sid]);
   TIM_CCR4(pwm_timers_map[0], _pwmData[0]);
 }
 void Timer1_IrqHandler(){
-  timerHandler(1, (uint16_t *)_pwmData[1], 4);
+  for (int sid = 0; sid < 4; sid++)
+    _pwmData[1][sid] = timer_getPWMValue(channels_map[4 + sid]);
   TIM_CCR4(pwm_timers_map[1], _pwmData[1]);
 }
 void Timer2_IrqHandler(){
-  timerHandler(2, (uint16_t *)_pwmData[2], 4);
+  for (int sid = 0; sid < 4; sid++)
+    _pwmData[2][sid] = timer_getPWMValue(channels_map[8 + sid]);
   TIM_CCR4(pwm_timers_map[2], _pwmData[2]);
 }
 void Timer3_IrqHandler(){
-  timerHandler(3, (uint16_t *)_pwmData[3], 4);
+  for (int sid = 0; sid < 4; sid++)
+    _pwmData[3][sid] = timer_getPWMValue(channels_map[12 + sid]);
   TIM_CCR4(pwm_timers_map[3], _pwmData[3]);
 }
 void Timer4_IrqHandler(){
-  timerHandler(4, (uint16_t *)_pwmData[4], 4);
+  for (int sid = 0; sid < 4; sid++)
+    _pwmData[4][sid] = timer_getPWMValue(channels_map[16 + sid]);
   TIM_CCR4(pwm_timers_map[4], _pwmData[4]);
 }
 void Timer5_IrqHandler(){
-  timerHandler(5, (uint16_t *)_dpwm_data, 6);
   for(int i=0;i<6;i++)
   {
+    _dpwm_data[i] = timer_getPWMValue(channels_map[20 + i]);
     int pin = dpwm_pins_map[i];
     if (_dpwm_counter == 0)  
       gpio_write_bit(PIN_MAP[pin].gpio_device, PIN_MAP[pin].gpio_bit, 1);
