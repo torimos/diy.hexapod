@@ -3,15 +3,15 @@
 int HexConfig::LegsCount = 6;
 double HexConfig::CoxaMin = -65;//-95
 double HexConfig::CoxaMax = 65;//75
-double HexConfig::CoxaLength = 29;
+double HexConfig::CoxaLength = 30;
 
 double HexConfig::FemurMin = -105;
 double HexConfig::FemurMax = 45;
-double HexConfig::FemurLength = 57;
+double HexConfig::FemurLength = 55;
 
 double HexConfig::TibiaMin = -40;
 double HexConfig::TibiaMax = 80;
-double HexConfig::TibiaLength = 141;
+double HexConfig::TibiaLength = 140;
 
 short HexConfig::OffsetX[] = { -54, -108, -54, 54, 108, 54 }; //RR RM RF LF LM LR
 
