@@ -116,4 +116,15 @@ public class Leg
 
         //Debug.Log($"{legSegment.name} {tibiaEnd.transform.position}");
     }
+
+    public void Reset(float cAngle = HexConfig.coxaInitAngle, float fAngle = HexConfig.femurInitAngle, float tAngle = HexConfig.tibiaInitAngle)
+    {
+        if (!mirror)
+        {
+            cAngle *= -1f;
+            fAngle *= -1f;
+            tAngle *= -1f;
+        }
+        Update(cAngle, fAngle, tAngle);
+    }
 }

@@ -1,5 +1,7 @@
 ﻿public class HexConfig
 {
+    public const int LegsCount = 6;
+
     public const float coxaJointSize = 0.3f;
     public const float otherJointSize = coxaJointSize * 0.8f;
 
@@ -27,7 +29,7 @@
     // 5 LF ^ RF 0
     // 4 LM + RM 1
     // 3 LR . RR 2
-    public static int[,] ServoMap = new int[6, 3] { //cfr RR RM RF  LR LM LF
+    public static int[,] ServoMap = new int[LegsCount, 3] { //cfr RR RM RF  LR LM LF
         {18,17,16}, {13,12,19}, { 8,15,14},
         { 1, 2, 3}, { 6, 7, 0}, {11, 4, 5}
     };

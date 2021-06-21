@@ -1,11 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using SerialPortLib2;
+using System;
 using System.IO;
 
 public class FrameReader
 {
-    byte[] frame_buf = new byte[228 * 20];
-    int frame_buf_len = 0;
+    private SerialPortInput serialPort = new SerialPortInput(false);
+    private byte[] frame_buf = new byte[228 * 10];
+    private int frame_buf_len = 0;
+
     public class FrameReadyEventArgs
     {
         public uint[] Data;
@@ -13,7 +15,20 @@ public class FrameReader
     public delegate void FrameReadyEventHandler(object sender, FrameReadyEventArgs e);
     public event FrameReadyEventHandler OnFrameReady;
 
-    public void Update(byte[] rx_buf)
+    public void Create()
+    {
+        serialPort.SetPort("COM3", 115200);
+        serialPort.ConnectionStatusChanged += SerialPort_ConnectionStatusChanged;
+        serialPort.MessageReceived += SerialPort_MessageReceived;
+        serialPort.Connect();
+    }
+
+    internal void Destroy()
+    {
+        serialPort.Disconnect();
+    }
+
+    private void Update(byte[] rx_buf)
     {
         int rx_len = rx_buf.Length;
         if (rx_len > 0)
@@ -75,5 +90,14 @@ public class FrameReader
                 }
             }
         }
+    }
+
+    private void SerialPort_MessageReceived(object sender, MessageReceivedEventArgs args)
+    {
+        Update(args.Data);
+    }
+
+    private void SerialPort_ConnectionStatusChanged(object sender, ConnectionStatusChangedEventArgs args)
+    {
     }
 }

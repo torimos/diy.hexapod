@@ -8,8 +8,9 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <RootNamespace></RootNamespace>
-    <ProjectGuid>{C0090B42-A80B-DF2D-74FB-044B3669A501}</ProjectGuid>
+    <RootNamespace>
+    </RootNamespace>
+    <ProjectGuid>{A0B20EB0-B02A-1D5E-EC5E-C8A40CC18C2F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp</AssemblyName>
@@ -58,11 +59,12 @@
   <ItemGroup>
     <Compile Include="Assets\MyScript.cs" />
     <Compile Include="Assets\Libs\Leg.cs" />
+    <Compile Include="Assets\Libs\Hexapod.cs" />
+    <Compile Include="Assets\Libs\HexConfig.cs" />
     <Compile Include="Assets\Libs\FrameReader.cs" />
     <Compile Include="Assets\Libs\Crc32.cs" />
     <Compile Include="Assets\FlyCamera.cs" />
-    <Compile Include="Assets\Libs\HexConfig.cs" />
-    <Compile Include="Assets\Libs\Hexapod.cs" />
+    <Compile Include="Assets\Libs\ServoState.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Packages\System.Buffers.4.5.1\lib\netstandard2.0\System.Buffers.xml" />
