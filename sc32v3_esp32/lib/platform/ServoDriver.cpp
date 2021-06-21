@@ -58,13 +58,13 @@ void ServoDriver::Init()
 {
 	xTaskParams.stream = stream;
 	xTaskParams.debugStream = debugStream;
-    // xTaskCreate(
-	// 	write_thread,       /* Function that implements the task. */
-	// 	"servoworker",          /* Text name for the task. */
-	// 	10240,      /* Stack size in words, not bytes. */
-	// 	( void * ) &xTaskParams,    /* Parameter passed into the task. */
-	// 	1,/* Priority at which the task is created. */
-	// 	&xHandle );      /* Used to pass out the created task's handle. */
+    xTaskCreate(
+		write_thread,       /* Function that implements the task. */
+		"servoworker",          /* Text name for the task. */
+		10240,      /* Stack size in words, not bytes. */
+		( void * ) &xTaskParams,    /* Parameter passed into the task. */
+		1,/* Priority at which the task is created. */
+		&xHandle );      /* Used to pass out the created task's handle. */
 
 	delay(500);
 }
