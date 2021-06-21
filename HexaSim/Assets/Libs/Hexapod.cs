@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Diagnostics;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 public class Hexapod
 {
@@ -10,6 +11,9 @@ public class Hexapod
     private GameObject hexapod;
     private Stopwatch last_leg_updated;
     private IEnumerator servoUpdateCorutine;
+
+    Vector3? lastHexaPos = null;
+    Vector3? hexaNewPosition = null;
 
     public void Create(MonoBehaviour parent)
     {
@@ -58,15 +62,27 @@ public class Hexapod
 
             legs[i].Update(c, f, t);
         }
-        //UpdateBody();
+        UpdateBody();
     }
 
-    public void ProcessFrameData(uint[] data)
+    public void ProcessFrameData(FrameReadyEventArgs args)
     {
         for (int i = 0; i < servos.Length; i++)
         {
-            servos[i].ProcessData(data[i]);
+            servos[i].ProcessData(args.Servos[i]);
         }
+        var model = args.Model;
+        float newPosX = 0, newPosY = 0, newPosZ = 0;
+        if (lastHexaPos != null)
+        {
+            newPosX = lastHexaPos.Value.x;
+            newPosZ = lastHexaPos.Value.z;
+        }
+        newPosY = (float)(model.pos.y / 100.0f) + HexConfig.otherJointSize / 2;
+        newPosX += (float)(model.tlen.x / 500.0f);
+        newPosZ += (float)(model.tlen.z / 500.0f);
+        hexaNewPosition = new Vector3(newPosX, newPosY, newPosZ);
+        Debug.Log($"Model tlen={model.tlen} rot={model.rot} pos={model.pos} pwr={model.turnedOn}");
     }
 
     public void Reset()
@@ -104,23 +120,27 @@ public class Hexapod
 
     private void UpdateBody()
     {
-        float minLegY = 0;
-        for (int i = 0; i < legs.Length; i++)
+        //float minLegY = 0;
+        //for (int i = 0; i < legs.Length; i++)
+        //{
+        //    minLegY += legs[i].tibiaEnd.transform.position.y;
+        //}
+        //minLegY /= 6;
+
+        if (hexaNewPosition != null)
         {
-            minLegY += legs[i].tibiaEnd.transform.position.y;
+            //Debug.Log($" minLegY={minLegY} pos={hexaNewPosition.Value}");
+            hexapod.transform.position = hexaNewPosition.Value;
+            lastHexaPos = hexapod.transform.position;
+            hexaNewPosition = null;
         }
-        minLegY /= 6;
-
-        //minLegY += 0.26f;
-        //minLegY -= HexConfig.otherJointSize/2;
-
-        //Debug.Log(minLegY);
         //hexapod.transform.position = new Vector3(0, -minLegY, 0);
     }
 
     private void Create3DModel()
     {
         hexapod = new GameObject("hexapod");
+        hexapod.transform.position = new Vector3(0, 0, 0);
 
         var hexaBase = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         hexaBase.name = "hexaBase";

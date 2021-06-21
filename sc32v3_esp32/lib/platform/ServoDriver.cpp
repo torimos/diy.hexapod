@@ -10,20 +10,11 @@
 #include "freertos/task.h"
 
 TaskHandle_t xHandle = NULL;
-#pragma pack(push, 1)
-typedef struct {
-	uint32_t header;
-	uint16_t len;
-	uint32_t data[NUMBER_OF_SERVO];
-	uint32_t crc;
-} uart_frame_t;
-#pragma pack(pop)
 
 typedef struct {
 	uart_frame_t frame;
 	uint8_t ready;
 	Stream* stream;
-	Stream* debugStream;
 } task_params;
 static task_params xTaskParams;
 
@@ -35,17 +26,15 @@ void write_thread( void * ptr )
 		if (params->ready)
 		{
 			params->stream->write((uint8_t*)&params->frame, sizeof(uart_frame_t));
-			params->debugStream->write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
 			params->ready = 0;
 		}
 		vTaskDelay(5 / portTICK_PERIOD_MS);
 	}
 }
 
-ServoDriver::ServoDriver(Stream* stream, Stream* debugStream)
+ServoDriver::ServoDriver(Stream* stream)
 {
 	this->stream = stream;
-	this->debugStream = debugStream;
 }
 
 ServoDriver::~ServoDriver()
@@ -57,7 +46,6 @@ ServoDriver::~ServoDriver()
 void ServoDriver::Init()
 {
 	xTaskParams.stream = stream;
-	xTaskParams.debugStream = debugStream;
 	#if WRITE_TO_SC32_IN_BACKGROUND
     xTaskCreate(
 		write_thread,       /* Function that implements the task. */
@@ -91,13 +79,16 @@ void ServoDriver::Reset()
 
 void ServoDriver::Commit()
 {
-	xTaskParams.frame.header = 0x5332412B; // +A2S
-	xTaskParams.frame.len = sizeof(uint32_t)*NUMBER_OF_SERVO;
-	memcpy(xTaskParams.frame.data, this->_servos, xTaskParams.frame.len);
-	xTaskParams.frame.crc = get_CRC32((uint8_t*)xTaskParams.frame.data, xTaskParams.frame.len);
+	uint16_t servoDataSize = sizeof(uint32_t)*NUMBER_OF_SERVO;
+	uint32_t crc = get_CRC32((uint8_t*)this->_servos, servoDataSize);
+
+	xTaskParams.frame.header = FRAME_HEADER_ID;
+	xTaskParams.frame.len = servoDataSize;
+	xTaskParams.frame.crc = crc;
+	memcpy(xTaskParams.frame.data, this->_servos, servoDataSize);
+
 	xTaskParams.ready = 1;
 	#if !WRITE_TO_SC32_IN_BACKGROUND
 	this->stream->write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
-	this->debugStream->write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
 	#endif
 }

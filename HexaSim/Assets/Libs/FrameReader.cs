@@ -8,10 +8,6 @@ public class FrameReader
     private byte[] frame_buf = new byte[228 * 10];
     private int frame_buf_len = 0;
 
-    public class FrameReadyEventArgs
-    {
-        public uint[] Data;
-    }
     public delegate void FrameReadyEventHandler(object sender, FrameReadyEventArgs e);
     public event FrameReadyEventHandler OnFrameReady;
 
@@ -68,22 +64,21 @@ public class FrameReader
                 if ((frame_buf.Length - frame_buf_len) >= 1)
                     for (int i = 0; i < frame_buf.Length - frame_buf_len; i++)
                         frame_buf[i + frame_buf_len] = 0x55;
-
-                if (frame_buf_len >= 112)
+                
+                const int expectedDataSize = 177;
+                if (frame_buf_len >= expectedDataSize)
                 {
                     frame_br.BaseStream.Seek(4, SeekOrigin.Begin);
                     ushort data_size = frame_br.ReadUInt16();
-                    if (data_size / 4 == 26)
+                    if (data_size == expectedDataSize)
                     {
+                        uint actual_crc32 = frame_br.ReadUInt32();
                         var data = frame_br.ReadBytes(data_size);
                         uint expected_crc32 = Crc32.Get(data);
-                        uint actual_crc32 = frame_br.ReadUInt32();
                         bool crc_valid = expected_crc32 == actual_crc32;
                         if (crc_valid)
                         {
-                            var data32 = new uint[data.Length / 4];
-                            Buffer.BlockCopy(data, 0, data32, 0, data.Length);
-                            OnFrameReady(this, new FrameReadyEventArgs { Data = data32 });
+                            OnFrameReady(this, FrameReadyEventArgsBuilder.Create(data));
                             frame_buf_len = 0;
                         }
                     }

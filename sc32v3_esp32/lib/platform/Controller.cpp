@@ -14,13 +14,14 @@ static int ServoMap[] = { 16,17,18, 19,12,13, 14,15,8,  3,2,1,  0,7,6, 5,4,11 };
 static int ServoInv[] = { 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1 };
 static int ServoOffset[] = {0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0}; //{ 10,-170,-30, -20,-130,-40, 0,-20,0, 20,80,30, 70,220,-40, -40,90,20 };
 
-Controller::Controller(InputDriver* a, ServoDriver* b)
+Controller::Controller(InputDriver* a, ServoDriver* b, Stream* debugStream)
 {
 	sd = b;
 	inputDrv = a;
 	ik = new IKSolver();
 	sw = new Stopwatch();
 	model = new HexModel(HexConfig::LegsCount);
+	this->debugStream = debugStream;
 }
 
 Controller::~Controller()
@@ -190,7 +191,7 @@ bool Controller::Loop()
 				inputDrv->ProcessInput(model);
 			} while (millis() <= time);
 		}
-		sd->Commit();
+		CommitServos();
 	}
 	else
 	{
@@ -198,13 +199,13 @@ bool Controller::Loop()
 		{
 			model->MoveTime = 600;
 			UpdateServos(model->LegsAngle, model->MoveTime);
-			sd->Commit();
+			CommitServos();
 			delay(600);
 		}
 		else
 		{
 			sd->MoveAll(0);
-			sd->Commit();
+			CommitServos();
 		}
 	}
 
@@ -224,6 +225,7 @@ bool Controller::Loop()
 			long t1 =  (long)micros() - t;
 			Log.printf("Iteration Duration: %08ld\n\r", t1);
 		}
+
 		debugTimeout = millis()+50;
 	}
 	return true;
@@ -520,4 +522,25 @@ void Controller::UpdateServos(CoxaFemurTibia* results, ushort moveTime)
 		sd->Move(ServoMap[i * 3 + 1], femurPos, moveTime);
 		sd->Move(ServoMap[i * 3 + 2], coxaPos, moveTime);
 	}
+}
+void Controller::CommitServos()
+{
+	sd->Commit();
+
+	frame_t dbgFrame;
+	dbgFrame.header = FRAME_HEADER_ID;
+	dbgFrame.len = sizeof(frame_data_t);
+	dbgFrame.data.travelLength.x = model->TravelLength.x;
+	dbgFrame.data.travelLength.y = model->TravelLength.y;
+	dbgFrame.data.travelLength.z = model->TravelLength.z;
+	dbgFrame.data.bodyPos.x = model->BodyPos.x;
+	dbgFrame.data.bodyPos.y = model->BodyPos.y;
+	dbgFrame.data.bodyPos.z = model->BodyPos.z;
+	dbgFrame.data.bodyRot.x = model->BodyRot.x;
+	dbgFrame.data.bodyRot.y = model->BodyRot.y;
+	dbgFrame.data.bodyRot.z = model->BodyRot.z;
+	dbgFrame.data.turnedOn = model->PowerOn;
+	memcpy(dbgFrame.data.servos, sd->GetServos(), NUMBER_OF_SERVO * sizeof(uint32_t));
+	dbgFrame.crc = get_CRC32((uint8_t*)&dbgFrame.data, dbgFrame.len);
+	debugStream->write((uint8_t*)&dbgFrame, sizeof(frame_t));
 }

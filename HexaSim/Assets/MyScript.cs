@@ -20,9 +20,9 @@ public partial class MyScript : MonoBehaviour
         hexapod.Update();
     }
 
-    private void OnFrameReady(object sender, FrameReader.FrameReadyEventArgs args)
+    private void OnFrameReady(object sender, FrameReadyEventArgs args)
     {
-        hexapod.ProcessFrameData(args.Data);
+        hexapod.ProcessFrameData(args);
     }
 
     void OnDestroy()

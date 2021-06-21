@@ -24,19 +24,6 @@ typedef enum
 
 typedef struct
 {
-	double x;
-	double y;
-} XY;
-
-typedef struct
-{
-	double x;
-	double y;
-	double z;
-} XYZ;
-
-typedef struct
-{
 	double Coxa;
 	double Femur;
 	double Tibia;

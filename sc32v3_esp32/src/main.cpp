@@ -8,9 +8,9 @@
 #include "Controller.h"
 #include <ble_dev.h>
 
-ServoDriver sd(&STM32uart, &DEBUGuart);
+ServoDriver sd(&STM32uart);
 BLEInputDriver inputDrv;
-Controller controller(&inputDrv, &sd);
+Controller controller(&inputDrv, &sd, &DEBUGuart);
 
 void bleDataCallback(std::string source, uint8_t id, uint8_t* data, size_t length) {
 //   Log.print("[");

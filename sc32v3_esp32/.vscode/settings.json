@@ -8,6 +8,14 @@
         "vector": "cpp",
         "initializer_list": "cpp",
         "list": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "exception": "cpp",
+        "functional": "cpp",
+        "iomanip": "cpp",
+        "istream": "cpp",
+        "limits": "cpp",
+        "ostream": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp"
     }
 }

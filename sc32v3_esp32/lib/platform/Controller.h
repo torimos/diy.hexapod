@@ -13,9 +13,10 @@ class Controller
 	ServoDriver* sd;
 	HexModel* model;
 	IKSolver* ik;
-	Stopwatch *sw;	
+	Stopwatch *sw;
+	Stream* debugStream;
 public:
-	Controller(InputDriver* a, ServoDriver* b);
+	Controller(InputDriver* a, ServoDriver* b, Stream* debugStream);
 	~Controller();
 	void Setup();
 	bool Loop();
@@ -29,5 +30,6 @@ private:
 	void Balance();
 	void SolveIKLegs();
 	void UpdateServos(CoxaFemurTibia* results, ushort moveTime);
+	void CommitServos();
 };
 
