@@ -23,6 +23,7 @@ typedef struct {
 	uart_frame_t frame;
 	uint8_t ready;
 	Stream* stream;
+	Stream* debugStream;
 } task_params;
 static task_params xTaskParams;
 
@@ -34,15 +35,17 @@ void write_thread( void * ptr )
 		if (params->ready)
 		{
 			params->stream->write((uint8_t*)&params->frame, sizeof(uart_frame_t));
+			params->debugStream->write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
 			params->ready = 0;
 		}
 		vTaskDelay(5 / portTICK_PERIOD_MS);
 	}
 }
 
-ServoDriver::ServoDriver(Stream* stream)
+ServoDriver::ServoDriver(Stream* stream, Stream* debugStream)
 {
-	_stream = stream;
+	this->stream = stream;
+	this->debugStream = debugStream;
 }
 
 ServoDriver::~ServoDriver()
@@ -53,7 +56,8 @@ ServoDriver::~ServoDriver()
 
 void ServoDriver::Init()
 {
-	xTaskParams.stream = _stream;
+	xTaskParams.stream = stream;
+	xTaskParams.debugStream = debugStream;
     // xTaskCreate(
 	// 	write_thread,       /* Function that implements the task. */
 	// 	"servoworker",          /* Text name for the task. */
@@ -61,18 +65,8 @@ void ServoDriver::Init()
 	// 	( void * ) &xTaskParams,    /* Parameter passed into the task. */
 	// 	1,/* Priority at which the task is created. */
 	// 	&xHandle );      /* Used to pass out the created task's handle. */
-	delay(500);
-}
 
-void ServoDriver::Commit()
-{
-	xTaskParams.frame.header = 0x5332412B; // +A2S
-	xTaskParams.frame.len = sizeof(uint32_t)*NUMBER_OF_SERVO;
-	memcpy(xTaskParams.frame.data, this->_servos, xTaskParams.frame.len);
-	xTaskParams.frame.crc = get_CRC32((uint8_t*)xTaskParams.frame.data, xTaskParams.frame.len);
-	//xTaskParams.ready = 1;
-	this->_stream->write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
-	DEBUGuart.write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
+	delay(500);
 }
 
 void ServoDriver::Move(int index, uint16_t position, uint16_t moveTime)
@@ -92,4 +86,18 @@ void ServoDriver::Reset()
 {    
 	MoveAll(0);
 	Commit();
+}
+
+void ServoDriver::Commit()
+{
+	xTaskParams.frame.header = 0x5332412B; // +A2S
+	xTaskParams.frame.len = sizeof(uint32_t)*NUMBER_OF_SERVO;
+	memcpy(xTaskParams.frame.data, this->_servos, xTaskParams.frame.len);
+	xTaskParams.frame.crc = get_CRC32((uint8_t*)xTaskParams.frame.data, xTaskParams.frame.len);
+	xTaskParams.ready = 1;
+	if (!xHandle)
+	{
+		this->stream->write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
+		this->debugStream->write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
+	}
 }

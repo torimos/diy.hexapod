@@ -8,7 +8,7 @@
 #include "Controller.h"
 #include <ble_dev.h>
 
-ServoDriver sd(&STM32uart);
+ServoDriver sd(&STM32uart, &DEBUGuart);
 BLEInputDriver inputDrv;
 Controller controller(&inputDrv, &sd);
 

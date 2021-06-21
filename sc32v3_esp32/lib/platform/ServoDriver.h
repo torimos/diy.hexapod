@@ -8,9 +8,10 @@
 class ServoDriver
 {
 	uint32_t _servos[NUMBER_OF_SERVO];
-	Stream *_stream;
+	Stream *stream;
+	Stream *debugStream;
 public:
-	ServoDriver(Stream* stream);
+	ServoDriver(Stream* stream, Stream* debugStream);
 	~ServoDriver();
 	
 	void Init();
