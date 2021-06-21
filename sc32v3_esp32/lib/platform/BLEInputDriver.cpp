@@ -86,7 +86,7 @@ bool BLEInputDriver::ProcessInput(HexModel* model)
 	else
 	{
 		state.buttons = incomingData.buttons;
-		state.axis_data[0] = -(int16_t)((incomingData.axis_data[0]-2048) / 12);
+		state.axis_data[0] = (int16_t)((incomingData.axis_data[0]-2048) / 12);
 		state.axis_data[1] = -(int16_t)((incomingData.axis_data[1]-2048) / 12);
 		state.axis_data[2] = (int16_t)((incomingData.axis_data[2]-2048) / 12);
 		state.axis_data[3] = -(int16_t)((incomingData.axis_data[3]-2048) / 12);
@@ -108,7 +108,7 @@ bool BLEInputDriver::ProcessInput(HexModel* model)
 
 	bool adjustLegsPosition = false;
 	
-	XY thumbLeft = { .x = state.axis_data[0], .y = -(state.axis_data[1]) };
+	XY thumbLeft = { .x = state.axis_data[0], .y = (state.axis_data[1]) };
 	XY thumbRight = { .x = state.axis_data[2], .y = -(state.axis_data[3]) };
 	
 	if (hasPressed(BUTTON_START))
