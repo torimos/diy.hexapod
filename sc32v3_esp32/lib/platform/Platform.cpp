@@ -17,6 +17,7 @@ void ResetSTM32()
 
 void Platform_Init()
 {
+  pinMode(USR_PIN, INPUT_PULLUP);
   ResetSTM32();
   DEBUGuart.begin(115200);
   Log.begin(115200);	
