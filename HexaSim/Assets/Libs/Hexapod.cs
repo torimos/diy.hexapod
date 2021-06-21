@@ -48,7 +48,7 @@ public class Hexapod
             if (sdC == 0 || sdF == 0 || sdT == 0)
             {
                 legs[i].Reset();
-                return;
+                continue;
             }
 
             float d = 10f;
