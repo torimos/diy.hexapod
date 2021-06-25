@@ -35,6 +35,7 @@ void bleDataCallback(std::string source, uint8_t id, uint8_t* data, size_t lengt
 
 void setup() {
   Platform_Init();
+  StateLed.Flash(CRGB(0,0,4), 3, 250);
   inputDrv.Setup();
   sd.Init();
   sd.Reset();
@@ -42,7 +43,8 @@ void setup() {
   delay(200);
   Log.println("Setup is done.");
   ble_begin(bleDataCallback);
-
+  StateLed.Flash(CRGB(4,0,0), 1, 150);
+  
 // StateLed.Flash(CRGB(0,0,4), 3, 250);
 // sd.MoveAll(1000);
 // sd.Commit();
