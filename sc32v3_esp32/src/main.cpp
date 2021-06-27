@@ -44,18 +44,8 @@ void setup() {
   Log.println("Setup is done.");
   ble_begin(bleDataCallback);
   StateLed.Flash(CRGB(0,0,8), 2, 150);
-
-// StateLed.Flash(CRGB(0,0,4), 3, 250);
-// sd.MoveAll(1000);
-// sd.Commit();
-// StateLed.Flash(CRGB(0,4,0), 1, 150);
-// delay(1000);
-// sd.MoveAll(2000);
-// sd.Commit();
-// StateLed.Flash(CRGB(4,0,0), 1, 150);
-// delay(1000);
-
 }
+
 int offsets[3] = {-450, 0, 450};
 int colors[3][3] = { {4, 0, 0}, {0, 4, 0}, {0, 0, 4} };
 uint mode = 3;
@@ -82,14 +72,4 @@ void loop() {
     ble_run();
     controller.Loop();
   }
-
-
-// sd.MoveAll(1000);
-// sd.Commit();
-// StateLed.Flash(CRGB(0,4,0), 1, 150);
-// delay(1000);
-// sd.MoveAll(2000);
-// sd.Commit();
-// StateLed.Flash(CRGB(4,0,0), 1, 150);
-// delay(1000);
 }

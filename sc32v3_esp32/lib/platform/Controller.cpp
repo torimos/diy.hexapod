@@ -7,9 +7,9 @@
 #include <errno.h>
 #include <stdint.h>
 
-// LF RF
-// LM RM
-// LR RR
+// 5 LF ^ RF 0
+// 4 LM + RM 1
+// 3 LR . RR 2
 static int ServoMap[] = {
 	 8, 7, 6, 	//RR - tfc
 	 5, 4, 3, 	//RM
@@ -26,8 +26,16 @@ static int ServoInv[] = {
 	-1,-1,1,	//LM
 	-1,-1,1		//LF 
 };
-static int ServoOffset[] = {0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0};
- //{ 10,-170,-30, -20,-130,-40, 0,-20,0, 20,80,30, 70,220,-40, -40,90,20 };
+static int ServoOffset[] =
+{ 
+	0,0,0, //10,-170,-30,	//RR - tfc
+	0,0,0, //-20,-130,-40,	//RM
+	0,0,0, //0,-20,0,		//RF
+
+	0,0,0, //20,80,30,		//LR
+	0,0,0, //70,220,-40,	//LM
+	0,0,0, //-40,90,20		//LF 
+};
 
 Controller::Controller(InputDriver* a, ServoDriver* b, Stream* debugStream)
 {
