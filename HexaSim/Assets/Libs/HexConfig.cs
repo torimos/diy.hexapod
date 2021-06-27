@@ -21,7 +21,7 @@
     public const float femurOffsetAngle = 90;
     public const float femurLength = 0.55f;
 
-    public const float tibiaInitAngle = -90;
+    public const float tibiaInitAngle = 90;
     public const float tibiaOffsetAngle = 90;
     public const float tibiaLength = 1.4f;
 
@@ -29,8 +29,12 @@
     // 5 LF ^ RF 0
     // 4 LM + RM 1
     // 3 LR . RR 2
-    public static int[,] ServoMap = new int[LegsCount, 3] { //cfr RR RM RF  LR LM LF
-        {18,17,16}, {13,12,19}, { 8,15,14},
-        { 1, 2, 3}, { 6, 7, 0}, {11, 4, 5}
+    public static int[,] ServoMap = new int[LegsCount, 3] {
+        { 8, 7, 6 }, 	//RR - tfc
+        { 5, 4, 3 }, 	//RM
+        { 2, 1, 0 },  	//RF
+        { 11,12,13 }, 	//LR
+        { 14,15,16 }, 	//LM
+        { 17,18,19 },	//LF 
     };
 }

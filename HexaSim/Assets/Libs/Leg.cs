@@ -111,8 +111,8 @@ public class Leg
         }
 
         coxaSegment.transform.localRotation = Quaternion.AngleAxis(HexConfig.coxaOffsetAngle - coxaAngle, new Vector3(0, 1, 0));
-        femurSegment.transform.localRotation = Quaternion.AngleAxis(HexConfig.femurOffsetAngle + femurAngle, new Vector3(0, 0, 1));
-        tibiaSegment.transform.localRotation = Quaternion.AngleAxis(HexConfig.tibiaOffsetAngle - tibiaAngle, new Vector3(0, 0, 1));
+        femurSegment.transform.localRotation = Quaternion.AngleAxis(HexConfig.femurOffsetAngle - femurAngle, new Vector3(0, 0, 1));
+        tibiaSegment.transform.localRotation = Quaternion.AngleAxis(HexConfig.tibiaOffsetAngle + tibiaAngle, new Vector3(0, 0, 1));
 
         //Debug.Log($"{legSegment.name} {tibiaEnd.transform.position}");
     }

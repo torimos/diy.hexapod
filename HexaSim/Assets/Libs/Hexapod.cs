@@ -47,9 +47,9 @@ public class Hexapod
     {
         for (int i = 0; i < HexConfig.LegsCount; i++)
         {
-            uint sdC = (uint)servos[HexConfig.ServoMap[i, 0]].position;
+            uint sdC = (uint)servos[HexConfig.ServoMap[i, 2]].position;
             uint sdF = (uint)servos[HexConfig.ServoMap[i, 1]].position;
-            uint sdT = (uint)servos[HexConfig.ServoMap[i, 2]].position;
+            uint sdT = (uint)servos[HexConfig.ServoMap[i, 0]].position;
 
             if (sdC == 0 || sdF == 0 || sdT == 0)
             {
@@ -80,9 +80,9 @@ public class Hexapod
 
     public void UpdateLeg(uint[] servoData, int legIdx)
     {
-        uint sdC = servoData[HexConfig.ServoMap[legIdx, 0]];
+        uint sdC = servoData[HexConfig.ServoMap[legIdx, 2]];
         uint sdF = servoData[HexConfig.ServoMap[legIdx, 1]];
-        uint sdT = servoData[HexConfig.ServoMap[legIdx, 2]];
+        uint sdT = servoData[HexConfig.ServoMap[legIdx, 0]];
 
         if (sdC == 0 || sdF == 0 || sdT == 0)
         {
