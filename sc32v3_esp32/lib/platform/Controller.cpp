@@ -10,9 +10,24 @@
 // LF RF
 // LM RM
 // LR RR
-static int ServoMap[] = { 16,17,18, 19,12,13, 14,15,8,  3,2,1,  0,7,6, 5,4,11 }; //tfc   //RR RM RF LR LM LF
-static int ServoInv[] = { 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1 };
-static int ServoOffset[] = {0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0}; //{ 10,-170,-30, -20,-130,-40, 0,-20,0, 20,80,30, 70,220,-40, -40,90,20 };
+static int ServoMap[] = {
+	 8, 7, 6, 	//RR - tfc
+	 5, 4, 3, 	//RM
+	 2, 1, 0,  	//RF
+	11,12,13, 	//LR
+	14,15,16, 	//LM
+	17,18,19,	//LF 
+};
+static int ServoInv[] = { 
+	-1,-1,1,	//RR - tfc
+	-1,-1,1,	//RM
+	-1,-1,1,	//RF
+	-1,-1,1,	//LR
+	-1,-1,1,	//LM
+	-1,-1,1		//LF 
+};
+static int ServoOffset[] = {0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0};
+ //{ 10,-170,-30, -20,-130,-40, 0,-20,0, 20,80,30, 70,220,-40, -40,90,20 };
 
 Controller::Controller(InputDriver* a, ServoDriver* b, Stream* debugStream)
 {
