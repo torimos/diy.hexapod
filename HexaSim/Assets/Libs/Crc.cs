@@ -1,4 +1,4 @@
-﻿public class Crc32
+﻿public class Crc
 {
     private static uint[] crc32_table = new uint[]
     {
@@ -49,7 +49,7 @@
         return newValue;
     }
 
-    public static uint Get(byte[] data)
+    public static uint Get_CRC32(byte[] data)
     {
         uint crc = 0xFFFFFFFF;
         uint i = 0, j = 0;
@@ -59,5 +59,19 @@
             crc = crc32_table[(byte)crc ^ i] ^ (crc >> 8);
         }
         return (uint)crc;
+    }
+
+    public static ushort Get_CRC16(byte[] data)
+    {
+        uint j = 0;
+        byte x;
+        ushort checksum = (ushort)data.Length;
+        while (j < data.Length)
+        {
+            x = (byte)(checksum >> 8 ^ data[j++]);
+            x ^= (byte)(x >> 4);
+            checksum = (ushort)((checksum << 8) ^ ((ushort)(x << 12)) ^ ((ushort)(x << 5)) ^ x);
+        }
+        return checksum;
     }
 }

@@ -5,7 +5,7 @@ using System.IO;
 public class FrameReader
 {
     private SerialPortInput serialPort = new SerialPortInput(false);
-    private byte[] frame_buf = new byte[228 * 10];
+    private byte[] frame_buf = new byte[1024*2];
     private int frame_buf_len = 0;
 
     public delegate void FrameReadyEventHandler(object sender, FrameReadyEventArgs e);
@@ -74,7 +74,7 @@ public class FrameReader
                     {
                         uint actual_crc32 = frame_br.ReadUInt32();
                         var data = frame_br.ReadBytes(data_size);
-                        uint expected_crc32 = Crc32.Get(data);
+                        uint expected_crc32 = Crc.Get_CRC32(data);
                         bool crc_valid = expected_crc32 == actual_crc32;
                         if (crc_valid)
                         {
