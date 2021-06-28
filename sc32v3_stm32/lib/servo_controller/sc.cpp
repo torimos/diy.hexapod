@@ -37,7 +37,6 @@ void processServoData(uint32_t* data);
 void sc_init(HardwareSerial* inputSerial) {
 	sc_write_all(0);
 	initServos(SERVO_PWM_PERIOD);
-	inputSerial;
 	_sp = new SerialProtocol(inputSerial);
 	#if DEBUG_SERVO_DATA
 	_debugSP = new SerialProtocol(&logger);
