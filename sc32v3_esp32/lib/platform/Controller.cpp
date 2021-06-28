@@ -7,6 +7,8 @@
 #include <errno.h>
 #include <stdint.h>
 
+#define FRAME_DEBUG_HEADER_ID 0x412B
+
 // 5 LF ^ RF 0
 // 4 LM + RM 1
 // 3 LR . RR 2
@@ -562,5 +564,5 @@ void Controller::CommitServos()
 	dbgFrame.bodyRot.z = model->BodyRot.z;
 	dbgFrame.turnedOn = model->PowerOn;
 	memcpy(dbgFrame.servos, sd->GetServos(), NUMBER_OF_SERVO * sizeof(uint32_t));
-	debugSP->write16(FRAME_HEADER_ID, &dbgFrame, sizeof(frame_data_t));
+	debugSP->write(FRAME_DEBUG_HEADER_ID, &dbgFrame, sizeof(frame_data_t));
 }

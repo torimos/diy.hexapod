@@ -1,6 +1,13 @@
 ﻿using System;
 using System.IO;
 
+public enum FrameHeaderType
+{
+    ESP32Debug = 0x412B,
+    STM32Debug = 0xFA2C,
+    Unknown = 0xFFFF
+}
+
 public class FrameReadyEventArgs
 {
     public struct XYZ

@@ -8,7 +8,7 @@ SerialProtocol::SerialProtocol(Stream* stream)
     memset(frame_buf, EMPTY_BYTE, sizeof(frame_buf));
 }
 
-void SerialProtocol::write16(uint16_t header, void* data, uint16_t size)
+void SerialProtocol::write(uint16_t header, void* data, uint16_t size)
 {
     uint16_t checksum = get_CRC16(data, size);
     stream->write((uint8_t*)&header, sizeof(uint16_t));
@@ -17,21 +17,12 @@ void SerialProtocol::write16(uint16_t header, void* data, uint16_t size)
     stream->write((uint8_t*)&checksum, sizeof(uint16_t));
 }
 
-void SerialProtocol::write32(uint32_t header, void* data, uint16_t size)
-{
-    uint32_t checksum = get_CRC32(data, size);
-    stream->write((uint8_t*)&header, sizeof(uint32_t));
-    stream->write((uint8_t*)&size, sizeof(uint16_t));
-    stream->write((uint8_t*)data, size);
-    stream->write((uint8_t*)&checksum, sizeof(uint32_t));
-}
-
-bool SerialProtocol::read16(uint16_t header, void* data, uint16_t size) {
+bool SerialProtocol::read(uint16_t header, void* data, uint16_t size) {
     frame_buf_read();
-    return parse_frame16(header, data, size);
+    return parse_frame(header, data, size);
 }
 
-bool SerialProtocol::parse_frame16(uint16_t header, void* result_data, uint16_t expected_size)
+bool SerialProtocol::parse_frame(uint16_t header, void* result_data, uint16_t expected_size)
 {
     if (frame_buf_len > 0)
     {
@@ -63,19 +54,9 @@ bool SerialProtocol::parse_frame16(uint16_t header, void* result_data, uint16_t 
                     if (crc == expected_crc)
                     {
                         memcpy(result_data, &frame_buf[4], data_size);
-                        move_frame(6 + data_size);
+                        frame_buf_len = 0;
                         return true;
                     }
-                    // remove invalid frame [header]+[data len]
-                    else
-                    {
-                        move_frame(4);
-                    }
-                }
-                // remove invalid frame [header]
-                else
-                {
-                    move_frame(2);
                 }
             }
         }
