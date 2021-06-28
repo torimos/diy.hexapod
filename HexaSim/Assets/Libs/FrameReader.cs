@@ -77,7 +77,7 @@ public class FrameReader
                         bool crc_valid = actual_crc == expected_crc;
                         if (crc_valid)
                         {
-                            OnFrameReady(this, FrameReadyEventArgsBuilder.Create(data));
+                            OnFrameReady(this, FrameReadyEventArgsBuilder.Create(header, data));
                             frame_buf_len = 0;
                         }
                     }

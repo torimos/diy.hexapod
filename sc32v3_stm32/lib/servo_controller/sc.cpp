@@ -1,7 +1,10 @@
 #include "sc.h"
 #include "logger.h"
 #include "timers.h"
-#include "crc32.h"
+#include "SerialProtocol.h"
+
+#define FRAME_TO_SC_HEADER_ID 0xFB2C
+#define FRAME_DEBUG_HEADER_ID 0x412C
 
 #define NUMBER_OF_SERVO 26
 #define SERVO_PWM_PERIOD 20000
@@ -24,108 +27,31 @@ typedef struct {
 #pragma pack(pop)
 
 servo_typedef servos[NUMBER_OF_SERVO];
-uint8_t rx_buf[114];
-uint8_t frame_buf[228];
-int frame_buf_len = 0;
-int frame_cnt = 0;
+uint32_t servo_data[NUMBER_OF_SERVO];
 
-HardwareSerial* _input;
+SerialProtocol* _sp;
+SerialProtocol* _debugSP;
 
 void processServoData(uint32_t* data);
 
 void sc_init(HardwareSerial* inputSerial) {
 	sc_write_all(0);
 	initServos(SERVO_PWM_PERIOD);
-	_input = inputSerial;
-	_input->begin(115200, SERIAL_8N1);
-}
-
-size_t uart_read(uint8_t *buffer, size_t size)
-{
-    size_t avail = _input->available();
-    if (size < avail) {
-        avail = size;
-    }
-    size_t count = 0;
-    while(count < avail) {
-        *buffer++ = _input->read();
-        count++;
-    }
-    return count;
-}
-
-size_t frame_buf_read()
-{
-  size_t rx_len =  uart_read(rx_buf, sizeof(rx_buf));
-  _input->flush();
-  if (rx_len <= 0) 
-    return rx_len;
-  else
-  {
-    if ((frame_buf_len + rx_len) > sizeof(frame_buf))
-    {
-      // data overflow
-      frame_buf_len = 0;
-    }
-    memcpy(frame_buf+frame_buf_len, rx_buf, rx_len);
-    frame_buf_len += rx_len;
-    return rx_len;
-  }
-  return 0;
-}
-
-int parse_frame()
-{
-    if (frame_buf_len > 0)
-    {
-        int frame_start_offset = 0;
-        bool header_found = false;
-        while(frame_start_offset < (frame_buf_len-4))
-        {
-            uint32_t* header = (uint32_t*)&frame_buf[frame_start_offset];
-            if (*header ==  0x5332412B)
-            {
-                header_found = true;
-                break;
-            }
-            frame_start_offset++;
-        }
-        if (header_found)
-        {	
-            // align frame start with 0 start index in buffer
-            memmove(frame_buf, &frame_buf[frame_start_offset], frame_buf_len-frame_start_offset);
-            frame_buf_len = frame_buf_len-frame_start_offset;
-            if ((sizeof(frame_buf) - frame_buf_len) >= 1)
-                memset(frame_buf+frame_buf_len, 0x55, sizeof(frame_buf) - frame_buf_len);
-
-            if (frame_buf_len >= sizeof(uart_frame_t))
-            {
-				uart_frame_t* frame = (uart_frame_t*)frame_buf;
-                int16_t data_size = frame->len;
-				if (frame->len == sizeof(frame->data))
-				{
-					uint32_t expected_crc32 = get_CRC32((uint8_t*)frame->data, data_size);
-					bool crc_valid = expected_crc32 == frame->crc;
-					if (crc_valid)
-					{
-						processServoData(frame->data);
-						frame_buf_len = 0;
-						#if DEBUG_SERVO_DATA
-						logger.write(frame, sizeof(uart_frame_t));
-						logger.flush();
-						#endif
-						return 1;
-					}
-				}
-            }
-        }
-    }
-    return 0;
+	inputSerial;
+	_sp = new SerialProtocol(inputSerial);
+	#if DEBUG_SERVO_DATA
+	_debugSP = new SerialProtocol(&logger);
+	#endif
 }
 
 void sc_loop() {
-	parse_frame();
-	frame_buf_read();
+	if (_sp->read(FRAME_TO_SC_HEADER_ID, servo_data, sizeof(uint32_t)*NUMBER_OF_SERVO))
+	{
+		processServoData(servo_data);
+		#if DEBUG_SERVO_DATA
+		_debugSP->write(FRAME_DEBUG_HEADER_ID, servo_data, sizeof(uint32_t)*NUMBER_OF_SERVO);
+		#endif
+	}
 }
 
 void sc_write(int sid, int us)

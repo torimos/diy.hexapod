@@ -1,4 +1,4 @@
-#include "crc32.h"
+#include "crc.h"
 
 uint32_t crc32_table[] =
 {
@@ -36,13 +36,28 @@ uint32_t crc32_table[] =
     0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
 };
 
-uint32_t get_CRC32(uint8_t *data, int16_t len) {
+uint32_t get_CRC32(void* data, uint16_t size) {
     uint32_t crc = 0;
+    uint8_t* data_p = (uint8_t*)data;
     int i = 0;
-    for ( crc = -1; len; crc = crc32_table[(uint8_t)crc ^ i] ^ (crc >> 8) )
+    for ( crc = -1; size; crc = crc32_table[(uint8_t)crc ^ i] ^ (crc >> 8) )
     {
-        i = *data++;
-        --len;
+        i = *data_p++;
+        --size;
     }
     return crc;
+}
+
+uint16_t get_CRC16(void* data, uint16_t size)
+{
+    uint8_t* data_p = (uint8_t*)data;
+    uint8_t x;
+    uint16_t checksum = size;
+    while (size--)
+    {
+        x = checksum >> 8 ^ *data_p++;
+        x ^= x >> 4;
+        checksum = (checksum << 8) ^ ((uint16_t)(x << 12)) ^ ((uint16_t)(x << 5)) ^ ((uint16_t)x);
+    }
+    return checksum;
 }
