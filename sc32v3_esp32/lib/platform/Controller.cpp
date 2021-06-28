@@ -44,7 +44,6 @@ Controller::Controller(InputDriver* a, ServoDriver* b, Stream* debugStream)
 	ik = new IKSolver();
 	sw = new Stopwatch();
 	model = new HexModel(HexConfig::LegsCount);
-	//this->debugStream = debugStream;
 	debugSP = new SerialProtocol(debugStream);
 }
 
