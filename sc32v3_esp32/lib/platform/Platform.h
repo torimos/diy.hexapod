@@ -10,8 +10,6 @@
 #define USR_PIN 0
 #define NUMBER_OF_SERVO 26
 
-#define FRAME_HEADER_ID 0x5332412B  // +A2S
-
 extern HardwareSerial Log;
 extern HardwareSerial STM32uart;
 extern HardwareSerial DEBUGuart;
@@ -32,13 +30,6 @@ typedef struct
 } XYZ;
 
 typedef struct {
-	uint32_t header;
-	uint16_t len;
-	uint32_t data[NUMBER_OF_SERVO];
-	uint32_t crc;
-} uart_frame_t;
-
-typedef struct {
 	uint32_t servos[NUMBER_OF_SERVO];
 	XYZ travelLength;
     XYZ bodyPos;
@@ -46,12 +37,6 @@ typedef struct {
 	bool turnedOn;
 } frame_data_t;
 
-typedef struct {
-	uint32_t header;
-	uint16_t len;
-	uint32_t crc;
-    frame_data_t data;
-} frame_t;
 #pragma pack(pop)
 
 void ResetSTM32();

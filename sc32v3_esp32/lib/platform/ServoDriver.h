@@ -1,12 +1,13 @@
 #pragma once
 #include "Platform.h"
 #include "Stream.h"
+#include "SerialProtocol.h"
 #include <stdint.h>
 
 class ServoDriver
 {
 	uint32_t _servos[NUMBER_OF_SERVO];
-	Stream *stream;
+	SerialProtocol* sp;
 	
 public:
 	uint32_t* GetServos() { return _servos; }

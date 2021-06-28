@@ -1,5 +1,4 @@
 #include "ServoDriver.h"
-#include "crc.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -9,12 +8,14 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#define FRAME_TO_SC_HEADER_ID 0xFB2C
+
 TaskHandle_t xHandle = NULL;
 
 typedef struct {
-	uart_frame_t frame;
-	uint8_t ready;
-	Stream* stream;
+	uint32_t frame_data[NUMBER_OF_SERVO];
+	uint16_t frame_data_size;
+	SerialProtocol* sp;
 } task_params;
 static task_params xTaskParams;
 
@@ -23,10 +24,10 @@ void write_thread( void * ptr )
 	auto params = (task_params *)ptr;
 	while (1)
 	{
-		if (params->ready)
+		if (params->frame_data_size > 0)
 		{
-			params->stream->write((uint8_t*)&params->frame, sizeof(uart_frame_t));
-			params->ready = 0;
+			params->sp->write(FRAME_TO_SC_HEADER_ID, &xTaskParams.frame_data, params->frame_data_size);
+			params->frame_data_size = 0;
 		}
 		vTaskDelay(5 / portTICK_PERIOD_MS);
 	}
@@ -34,7 +35,7 @@ void write_thread( void * ptr )
 
 ServoDriver::ServoDriver(Stream* stream)
 {
-	this->stream = stream;
+	sp = new SerialProtocol(stream);
 }
 
 ServoDriver::~ServoDriver()
@@ -45,7 +46,7 @@ ServoDriver::~ServoDriver()
 
 void ServoDriver::Init()
 {
-	xTaskParams.stream = stream;
+	xTaskParams.sp = sp;
 	#if WRITE_TO_SC32_IN_BACKGROUND
     xTaskCreate(
 		write_thread,       /* Function that implements the task. */
@@ -79,16 +80,11 @@ void ServoDriver::Reset()
 
 void ServoDriver::Commit()
 {
-	uint16_t servoDataSize = sizeof(uint32_t)*NUMBER_OF_SERVO;
-	uint32_t crc = get_CRC32((uint8_t*)this->_servos, servoDataSize);
-
-	xTaskParams.frame.header = FRAME_HEADER_ID;
-	xTaskParams.frame.len = servoDataSize;
-	xTaskParams.frame.crc = crc;
-	memcpy(xTaskParams.frame.data, this->_servos, servoDataSize);
-
-	xTaskParams.ready = 1;
+	uint16_t sz = sizeof(uint32_t)*NUMBER_OF_SERVO;
 	#if !WRITE_TO_SC32_IN_BACKGROUND
-	this->stream->write((uint8_t*)&xTaskParams.frame, sizeof(uart_frame_t));
+	sp->write(FRAME_TO_SC_HEADER_ID, &this->_servos, sz);
+	#else
+	memcpy(xTaskParams.frame_data, this->_servos, sz);
+	xTaskParams.frame_data_size = sz;
 	#endif
 }
