@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include "StateLed.h"
-#include "crc32.h"
+#include "crc.h"
 #include "Stopwatch.h"
 
 #define WRITE_TO_SC32_IN_BACKGROUND 1

@@ -44,7 +44,8 @@ Controller::Controller(InputDriver* a, ServoDriver* b, Stream* debugStream)
 	ik = new IKSolver();
 	sw = new Stopwatch();
 	model = new HexModel(HexConfig::LegsCount);
-	this->debugStream = debugStream;
+	//this->debugStream = debugStream;
+	debugSP = new SerialProtocol(debugStream);
 }
 
 Controller::~Controller()
@@ -550,20 +551,17 @@ void Controller::CommitServos()
 {
 	sd->Commit();
 
-	frame_t dbgFrame;
-	dbgFrame.header = FRAME_HEADER_ID;
-	dbgFrame.len = sizeof(frame_data_t);
-	dbgFrame.data.travelLength.x = model->TravelLength.x;
-	dbgFrame.data.travelLength.y = model->TravelLength.y;
-	dbgFrame.data.travelLength.z = model->TravelLength.z;
-	dbgFrame.data.bodyPos.x = model->BodyPos.x;
-	dbgFrame.data.bodyPos.y = model->BodyPos.y;
-	dbgFrame.data.bodyPos.z = model->BodyPos.z;
-	dbgFrame.data.bodyRot.x = model->BodyRot.x;
-	dbgFrame.data.bodyRot.y = model->BodyRot.y;
-	dbgFrame.data.bodyRot.z = model->BodyRot.z;
-	dbgFrame.data.turnedOn = model->PowerOn;
-	memcpy(dbgFrame.data.servos, sd->GetServos(), NUMBER_OF_SERVO * sizeof(uint32_t));
-	dbgFrame.crc = get_CRC32((uint8_t*)&dbgFrame.data, dbgFrame.len);
-	debugStream->write((uint8_t*)&dbgFrame, sizeof(frame_t));
+	frame_data_t dbgFrame;
+	dbgFrame.travelLength.x = model->TravelLength.x;
+	dbgFrame.travelLength.y = model->TravelLength.y;
+	dbgFrame.travelLength.z = model->TravelLength.z;
+	dbgFrame.bodyPos.x = model->BodyPos.x;
+	dbgFrame.bodyPos.y = model->BodyPos.y;
+	dbgFrame.bodyPos.z = model->BodyPos.z;
+	dbgFrame.bodyRot.x = model->BodyRot.x;
+	dbgFrame.bodyRot.y = model->BodyRot.y;
+	dbgFrame.bodyRot.z = model->BodyRot.z;
+	dbgFrame.turnedOn = model->PowerOn;
+	memcpy(dbgFrame.servos, sd->GetServos(), NUMBER_OF_SERVO * sizeof(uint32_t));
+	debugSP->write16(FRAME_HEADER_ID, &dbgFrame, sizeof(frame_data_t));
 }

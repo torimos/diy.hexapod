@@ -1,5 +1,5 @@
 #include "ServoDriver.h"
-#include "crc32.h"
+#include "crc.h"
 
 #include <stdio.h>
 #include <string.h>

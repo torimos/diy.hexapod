@@ -47,8 +47,8 @@ public class FrameReader
             while (frame_start_offset < (frame_buf_len - 4))
             {
                 frame_br.BaseStream.Seek(frame_start_offset, SeekOrigin.Begin);
-                UInt32 header = frame_br.ReadUInt32();
-                if (header == 0x5332412B)
+                var header = frame_br.ReadUInt16();
+                if (header == 0x412B)//0x5332412B
                 {
                     header_found = true;
                     break;
@@ -68,14 +68,14 @@ public class FrameReader
                 const int expectedDataSize = 177;
                 if (frame_buf_len >= expectedDataSize)
                 {
-                    frame_br.BaseStream.Seek(4, SeekOrigin.Begin);
+                    frame_br.BaseStream.Seek(2, SeekOrigin.Begin);
                     ushort data_size = frame_br.ReadUInt16();
                     if (data_size == expectedDataSize)
                     {
-                        uint actual_crc32 = frame_br.ReadUInt32();
                         var data = frame_br.ReadBytes(data_size);
-                        uint expected_crc32 = Crc.Get_CRC32(data);
-                        bool crc_valid = expected_crc32 == actual_crc32;
+                        var expected_crc = Crc.Get_CRC16(data);
+                        var actual_crc = frame_br.ReadUInt16();
+                        bool crc_valid = actual_crc == expected_crc;
                         if (crc_valid)
                         {
                             OnFrameReady(this, FrameReadyEventArgsBuilder.Create(data));

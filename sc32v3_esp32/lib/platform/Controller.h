@@ -6,6 +6,7 @@
 #include "Stopwatch.h"
 #include "ServoDriver.h"
 #include "InputDriver.h"
+#include "SerialProtocol.h"
 
 class Controller
 {
@@ -14,7 +15,7 @@ class Controller
 	HexModel* model;
 	IKSolver* ik;
 	Stopwatch *sw;
-	Stream* debugStream;
+	SerialProtocol* debugSP;
 public:
 	Controller(InputDriver* a, ServoDriver* b, Stream* debugStream);
 	~Controller();
