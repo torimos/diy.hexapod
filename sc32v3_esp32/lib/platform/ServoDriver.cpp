@@ -29,7 +29,7 @@ void write_thread( void * ptr )
 			params->sp->write(FRAME_TO_SC_HEADER_ID, &xTaskParams.frame_data, params->frame_data_size);
 			params->frame_data_size = 0;
 		}
-		vTaskDelay(5 / portTICK_PERIOD_MS);
+		vTaskDelay(1);
 	}
 }
 
