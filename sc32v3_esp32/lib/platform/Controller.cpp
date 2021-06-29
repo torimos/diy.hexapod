@@ -550,6 +550,7 @@ void Controller::UpdateServos(CoxaFemurTibia* results, ushort moveTime)
 }
 void Controller::CommitServos()
 {
+    StateLed.Set(CRGB(0,8,0));
 	sd->Commit();
 
 	frame_data_t dbgFrame;
@@ -565,4 +566,5 @@ void Controller::CommitServos()
 	dbgFrame.turnedOn = model->PowerOn;
 	memcpy(dbgFrame.servos, sd->GetServos(), NUMBER_OF_SERVO * sizeof(uint32_t));
 	debugSP->write(FRAME_DEBUG_HEADER_ID, &dbgFrame, sizeof(frame_data_t));
+    StateLed.Set(0);
 }
