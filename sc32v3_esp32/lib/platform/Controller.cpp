@@ -6,47 +6,20 @@
 #include <string.h>
 #include <errno.h>
 #include <stdint.h>
+#include "Settings.h"
 
 #define FRAME_DEBUG_HEADER_ID 0x412B
+#define SETTINGS_CRC_EEPROM_OFFSET 0
+#define SETTINGS_EEPROM_OFFSET 4
 
-// 5 LF ^ RF 0
-// 4 LM + RM 1
-// 3 LR . RR 2
-static int ServoMap[] = {
-	 8, 7, 6, 	//RR - tfc
-	 5, 4, 3, 	//RM
-	 2, 1, 0,  	//RF
-	11,12,13, 	//LR
-	14,15,16, 	//LM
-	17,18,19,	//LF 
-};
-static int ServoInv[] = { 
-	-1,-1,1,	//RR - tfc
-	-1,-1,1,	//RM
-	-1,-1,1,	//RF
-	-1,-1,1,	//LR
-	-1,-1,1,	//LM
-	-1,-1,1		//LF 
-};
-static int ServoOffset[] =
-{ 
-	0,0,0, //10,-170,-30,	//RR - tfc
-	0,0,0, //-20,-130,-40,	//RM
-	0,0,0, //0,-20,0,		//RF
-
-	0,0,0, //20,80,30,		//LR
-	0,0,0, //70,220,-40,	//LM
-	0,0,0, //-40,90,20		//LF 
-};
-
-Controller::Controller(InputDriver* a, ServoDriver* b, Stream* debugStream)
+Controller::Controller(InputDriver* a, ServoDriver* b, SerialProtocol* debugSP)
 {
 	sd = b;
 	inputDrv = a;
 	ik = new IKSolver();
 	sw = new Stopwatch();
 	model = new HexModel(HexConfig::LegsCount);
-	debugSP = new SerialProtocol(debugStream);
+	this->debugSP = debugSP;
 }
 
 Controller::~Controller()
@@ -58,6 +31,7 @@ Controller::~Controller()
 
 void Controller::Setup()
 {
+	LoadSettings();
 	model->GaitsCount = HexConfig::GaitsCount;
 	model->Gaits = new PhoenixGait[HexConfig::GaitsCount];
 	model->Gaits[GaitType::Ripple12] =
@@ -156,7 +130,7 @@ bool Controller::Loop()
 	unsigned long timeToWait = 0;
 	unsigned long t = micros();
 	sw->Restart();
-	
+	SyncSettings();
 	bool inputChanged = inputDrv->ProcessInput(model);
 	
 	if (inputChanged)
@@ -539,15 +513,15 @@ void Controller::UpdateServos(CoxaFemurTibia* results, ushort moveTime)
 {
 	for (byte i = 0; i < HexConfig::LegsCount; i++)
 	{
-		// tfc-cft => /"*-*"
-		ushort tibiaPos = (ushort)(1500 + ((results[i].Tibia * 10) + ServoOffset[i * 3]) * ServoInv[i * 3]);
-		ushort femurPos = (ushort)(1500 + ((results[i].Femur * 10) + ServoOffset[i * 3 + 1]) * ServoInv[i * 3 + 1]);
-		ushort coxaPos = (ushort)(1500 + ((results[i].Coxa * 10) + ServoOffset[i * 3 + 2]) * ServoInv[i * 3 + 2]);
-		sd->Move(ServoMap[i * 3], tibiaPos, moveTime);
-		sd->Move(ServoMap[i * 3 + 1], femurPos, moveTime);
-		sd->Move(ServoMap[i * 3 + 2], coxaPos, moveTime);
+		ushort tibiaPos = (ushort)(1500 + ((results[i].Tibia * 10) + settings.ServoOffset[i * 3]) * settings.ServoInv[i * 3]);
+		ushort femurPos = (ushort)(1500 + ((results[i].Femur * 10) + settings.ServoOffset[i * 3 + 1]) * settings.ServoInv[i * 3 + 1]);
+		ushort coxaPos = (ushort)(1500 + ((results[i].Coxa * 10) + settings.ServoOffset[i * 3 + 2]) * settings.ServoInv[i * 3 + 2]);
+		sd->Move(settings.ServoMap[i * 3], tibiaPos, moveTime);
+		sd->Move(settings.ServoMap[i * 3 + 1], femurPos, moveTime);
+		sd->Move(settings.ServoMap[i * 3 + 2], coxaPos, moveTime);
 	}
 }
+
 void Controller::CommitServos()
 {
     StateLed.Set(CRGB(0,8,0));
@@ -567,4 +541,55 @@ void Controller::CommitServos()
 	memcpy(dbgFrame.servos, sd->GetServos(), NUMBER_OF_SERVO * sizeof(uint32_t));
 	debugSP->write(FRAME_DEBUG_HEADER_ID, &dbgFrame, sizeof(frame_data_t));
     StateLed.Set(0);
+}
+
+void Controller::SyncSettings()
+{
+	frame_settings_data_t sync_data;
+	if (debugSP->read(FRAME_DEBUG_HEADER_ID, &sync_data, sizeof(frame_settings_data_t)))
+	{
+		memcpy(&settings, &sync_data.settings, sizeof(settings_t));
+		if (sync_data.save)
+		{
+			uint32_t saved_settings_crc = 0;
+			settings_read(SETTINGS_CRC_EEPROM_OFFSET, &saved_settings_crc, sizeof(uint32_t));
+			uint32_t actual_crc = get_CRC32(&settings, sizeof(settings_t));
+			if (saved_settings_crc != actual_crc)
+			{
+				settings_write(SETTINGS_EEPROM_OFFSET, &settings, sizeof(settings_t));
+				settings_write(SETTINGS_CRC_EEPROM_OFFSET, &actual_crc, sizeof(uint32_t));
+			}
+		}
+	}
+}
+
+void Controller::LoadSettings()
+{
+	uint32_t saved_settings_crc = 0;
+	settings_read(SETTINGS_CRC_EEPROM_OFFSET, &saved_settings_crc, sizeof(uint32_t));
+	settings_read(SETTINGS_EEPROM_OFFSET, &settings, sizeof(settings_t));
+	uint32_t actual_crc = get_CRC32(&settings, sizeof(settings_t));
+	
+	// reset settings to default
+	if (saved_settings_crc != actual_crc)
+	{
+		for (int i=0;i<6;i++)
+		{
+			int t_idx = 0+i*3;
+			int f_idx = 1+i*3;
+			int c_idx = 2+i*3;
+			//tibia
+			settings.ServoInv[t_idx] = 1;
+			settings.ServoOffset[t_idx] = 0;
+			settings.ServoMap[t_idx] = t_idx;
+ 			//femur
+			settings.ServoInv[f_idx] = 1;
+			settings.ServoOffset[f_idx] = 0;
+			settings.ServoMap[f_idx] = f_idx;
+ 			//coxia
+			settings.ServoInv[c_idx] = 1;
+			settings.ServoOffset[c_idx] = 0;
+			settings.ServoMap[c_idx] = c_idx;
+		}
+	}
 }

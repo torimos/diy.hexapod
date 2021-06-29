@@ -16,8 +16,9 @@ class Controller
 	IKSolver* ik;
 	Stopwatch *sw;
 	SerialProtocol* debugSP;
+	settings_t settings;
 public:
-	Controller(InputDriver* a, ServoDriver* b, Stream* debugStream);
+	Controller(InputDriver* a, ServoDriver* b, SerialProtocol* debugSP);
 	~Controller();
 	void Setup();
 	bool Loop();
@@ -32,5 +33,7 @@ private:
 	void SolveIKLegs();
 	void UpdateServos(CoxaFemurTibia* results, ushort moveTime);
 	void CommitServos();
+	void SyncSettings();
+	void LoadSettings();
 };
 

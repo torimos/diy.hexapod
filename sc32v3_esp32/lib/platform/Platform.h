@@ -37,6 +37,25 @@ typedef struct {
 	bool turnedOn;
 } frame_data_t;
 
+typedef struct {
+	// 6 Legs order
+	// 5 LF ^ RF 2
+	// 4 LM + RM 1
+	// 3 LR . RR 0
+	// Each LEG composed of 3 virtual servos (tibia,femur,coxia)
+	// Angle offset for each virtual servo
+	short ServoOffset[18];
+	// Angle inversion value for each virtual servo
+	short ServoInv[18];
+	// Map virtual to physical servos connected to controller
+	short ServoMap[18];
+} settings_t;
+
+typedef struct {
+	settings_t settings;
+	bool save;
+} frame_settings_data_t;
+
 #pragma pack(pop)
 
 void ResetSTM32();

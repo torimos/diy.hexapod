@@ -25,10 +25,10 @@ bool SerialProtocol::read(uint16_t header, void* data, uint16_t size) {
 
 bool SerialProtocol::parse_frame(uint16_t header, void* result_data, uint16_t expected_data_size)
 {
-    uint16_t rx_buf_max_len = (expected_data_size+6);
-    uint16_t frame_buf_max_len = rx_buf_max_len << 1;
     if (frame_buf_len > 0)
     {
+        uint16_t rx_buf_max_len = (expected_data_size+6);
+        uint16_t frame_buf_max_len = rx_buf_max_len << 1;
         int frame_start_offset = 0;
         bool header_found = false;
         while (frame_start_offset < (frame_buf_len - 4)) // offset should include at least 4 bytes of [header]+[data len]

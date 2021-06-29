@@ -4,25 +4,21 @@
 #include "IKSolver.h"
 #include "Stopwatch.h"
 #include "BLEInputDriver.h"
+#include "SerialProtocol.h"
 #include "ServoDriver.h"
 #include "Controller.h"
 #include <ble_dev.h>
 
 ServoDriver sd(&STM32uart);
 BLEInputDriver inputDrv;
-Controller controller(&inputDrv, &sd, &DEBUGuart);
+SerialProtocol* debugSP = new SerialProtocol(&DEBUGuart);
+Controller controller(&inputDrv, &sd, debugSP);
+
+// todo:
+// 1) calibration thrugh DEBUGuart
+// 2) figure out why 10 packets when debug is on, and why only 4 in idle when off
 
 void bleDataCallback(std::string source, uint8_t id, uint8_t* data, size_t length) {
-//   Log.print("[");
-//   Log.print(source.c_str());
-//   Log.print("|");
-//   Log.print(id);
-//   Log.print("] data[");
-//   Log.print(length);
-//   Log.print("]: ");
-//   for (int i=0;i<length;i++)
-//       Log.printf("%02x ", data[i]);
-//   Log.println();
   if (inputDrv.incomingDataProcessed)
 	{
 		if (id == 0x1 && sizeof(joy_data_t) == length)
@@ -46,30 +42,7 @@ void setup() {
   StateLed.Flash(CRGB(0,0,8), 2, 150);
 }
 
-int offsets[3] = {-450, 0, 450};
-int colors[3][3] = { {4, 0, 0}, {0, 4, 0}, {0, 0, 4} };
-uint mode = 3;
 void loop() {
-  uint idx = mode % 4;
-  if (idx < 3)
-  {
-    sd.MoveAll(1500 + offsets[idx]);
-    sd.Commit();
-    StateLed.Flash(CRGB(colors[idx][0],colors[idx][1],colors[idx][2]), 1, 150);
-    delay(200);
-  }
-
-  if(!digitalRead(USR_PIN))
-  {
-    if (idx < 4)
-    {
-      mode++;
-    }
-    delay(1000);
-  }
-  else
-  {
-    ble_run();
-    controller.Loop();
-  }
+  ble_run();
+  controller.Loop();
 }
