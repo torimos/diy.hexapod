@@ -543,7 +543,7 @@ void Controller::CommitServos()
 	debugSP->write(FRAME_DEBUG_HEADER_ID, &dbgFrame, sizeof(frame_data_t));
     StateLed.Set(0);
 
-	delay(10);
+	delay(1000 / 20);
 	
 }
 
