@@ -2,7 +2,7 @@ using UnityEngine;
 
 public partial class MyScript : MonoBehaviour
 {
-    private FrameReader frameReader = new FrameReader();
+    private SerialProtocol sp = new SerialProtocol();
     private Hexapod hexapod = new Hexapod();
 
     // Start is called before the first frame update
@@ -10,15 +10,15 @@ public partial class MyScript : MonoBehaviour
     {
         hexapod.Create(this);
 
-        frameReader.Create();
-        frameReader.OnFrameReady += OnFrameReady;
+        sp.Create();
+        sp.OnFrameReady += OnFrameReady;
     }
 
     // Update is called once per frame
     void Update()
     {
         hexapod.Update();
-        frameReader.Loop();
+        sp.Loop();
     }
 
     private void OnFrameReady(object sender, FrameReadyEventArgs args)
@@ -28,6 +28,6 @@ public partial class MyScript : MonoBehaviour
 
     void OnDestroy()
     {
-        frameReader.Destroy();
+        sp.Destroy();
     }
 }

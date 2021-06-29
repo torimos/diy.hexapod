@@ -3,10 +3,10 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
-public class FrameReader
+public class SerialProtocol
 {
     private SerialPortInput serialPort = new SerialPortInput(false);
-    private byte[] frame_buf = new byte[1024*8];
+    private byte[] frame_buf = new byte[1024*4];
     private int frame_buf_len = 0;
 
     public delegate void FrameReadyEventHandler(object sender, FrameReadyEventArgs e);
@@ -18,12 +18,11 @@ public class FrameReader
 
     public int FPS => fps;
 
-
     public void Create()
     {
         sw.Start();
         fpssw.Start();
-        serialPort.SetPort("COM3", 115200);
+        serialPort.SetPort("COM3", 115200, readerTaskTime: 25);
         serialPort.ConnectionStatusChanged += SerialPort_ConnectionStatusChanged;
         serialPort.MessageReceived += SerialPort_MessageReceived;
         serialPort.Connect();
@@ -52,7 +51,7 @@ public class FrameReader
 
     public void Loop() 
     {
-        if (sw.ElapsedMilliseconds < 50) return;
+        if (sw.ElapsedMilliseconds < 10) return;
         if (frame_buf_len > 0)
         {
             var frame_br = new BinaryReader(new MemoryStream(frame_buf));
@@ -115,7 +114,7 @@ public class FrameReader
         switch (header)
         {
             case FrameHeaderType.ESP32Debug:
-                return 26 * 4 + 8 * 3 * 3 + 1;
+                return 26 * 4 + 8 * 3 * 3 + 1 + 4;
             case FrameHeaderType.STM32Debug:
                 return 26 * 4;
         }
@@ -136,5 +135,19 @@ public class FrameReader
 
     private void SerialPort_ConnectionStatusChanged(object sender, ConnectionStatusChangedEventArgs args)
     {
+    }
+
+
+    public void SendFrame(FrameHeaderType header, byte[] data)
+    {
+        MemoryStream ms = new MemoryStream();
+        BinaryWriter bw = new BinaryWriter(ms);
+
+        bw.Write((ushort)header);
+        bw.Write((ushort)data.Length);
+        bw.Write(data);
+        bw.Write(Crc.Get_CRC16(data));
+
+        serialPort.SendMessage(ms.ToArray());
     }
 }
