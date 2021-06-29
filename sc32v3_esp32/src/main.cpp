@@ -14,9 +14,6 @@ BLEInputDriver inputDrv;
 SerialProtocol* debugSP = new SerialProtocol(&DEBUGuart);
 Controller controller(&inputDrv, &sd, debugSP);
 
-// todo:
-// 1) figure out why 10 packets when debug is on, and why only 4 in idle when off
-
 void bleDataCallback(std::string source, uint8_t id, uint8_t* data, size_t length) {
   if (inputDrv.incomingDataProcessed)
 	{
