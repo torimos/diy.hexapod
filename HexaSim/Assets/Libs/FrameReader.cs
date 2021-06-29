@@ -1,18 +1,28 @@
 ﻿using SerialPortLib2;
 using System;
+using System.Diagnostics;
 using System.IO;
 
 public class FrameReader
 {
     private SerialPortInput serialPort = new SerialPortInput(false);
-    private byte[] frame_buf = new byte[1024*2];
+    private byte[] frame_buf = new byte[1024*8];
     private int frame_buf_len = 0;
 
     public delegate void FrameReadyEventHandler(object sender, FrameReadyEventArgs e);
     public event FrameReadyEventHandler OnFrameReady;
 
+    Stopwatch sw = new Stopwatch();
+    Stopwatch fpssw = new Stopwatch();
+    int fpsc = 0, fps = 0;
+
+    public int FPS => fps;
+
+
     public void Create()
     {
+        sw.Start();
+        fpssw.Start();
         serialPort.SetPort("COM3", 115200);
         serialPort.ConnectionStatusChanged += SerialPort_ConnectionStatusChanged;
         serialPort.MessageReceived += SerialPort_MessageReceived;
@@ -38,7 +48,11 @@ public class FrameReader
 
             frame_buf_len += rx_len;
         }
+    }
 
+    public void Loop() 
+    {
+        if (sw.ElapsedMilliseconds < 50) return;
         if (frame_buf_len > 0)
         {
             var frame_br = new BinaryReader(new MemoryStream(frame_buf));
@@ -62,9 +76,8 @@ public class FrameReader
             if (header != FrameHeaderType.Unknown)
             {
                 // align frame start with 0 start index in buffer
-                MoveFrame(frame_start_offset);
-
-                int expectedDataSize = GetExpectedDataSize(header);
+                MoveFrame(frame_start_offset, (ushort)frame_buf.Length);
+                ushort expectedDataSize = GetExpectedDataSize(header);
                 if (frame_buf_len >= expectedDataSize)
                 {
                     frame_br.BaseStream.Seek(2, SeekOrigin.Begin);
@@ -84,15 +97,16 @@ public class FrameReader
                 }
             }
         }
+        sw.Restart();
     }
 
-    private void MoveFrame(int offset)
+    private void MoveFrame(int offset, ushort size)
     {
         if (offset <= 0) return;
         Buffer.BlockCopy(frame_buf, offset, frame_buf, 0, frame_buf_len - offset);
         frame_buf_len = frame_buf_len - offset;
-        if ((frame_buf.Length - frame_buf_len) >= 1)
-            for (int i = 0; i < frame_buf.Length - frame_buf_len; i++)
+        if ((size - frame_buf_len) >= 1)
+            for (int i = 0; i < (size - frame_buf_len); i++)
                 frame_buf[i + frame_buf_len] = 0x55;
     }
 
@@ -110,6 +124,13 @@ public class FrameReader
 
     private void SerialPort_MessageReceived(object sender, MessageReceivedEventArgs args)
     {
+        if (fpssw.ElapsedMilliseconds >= 1000)
+        {
+            fps = fpsc;
+            fpsc = 0;
+            fpssw.Restart();
+        }
+        fpsc++;
         Update(args.Data);
     }
 

@@ -18,6 +18,7 @@ public partial class MyScript : MonoBehaviour
     void Update()
     {
         hexapod.Update();
+        frameReader.Loop();
     }
 
     private void OnFrameReady(object sender, FrameReadyEventArgs args)
