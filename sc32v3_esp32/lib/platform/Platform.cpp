@@ -21,5 +21,6 @@ void Platform_Init()
   ResetSTM32();
   DEBUGuart.begin(115200);
   Log.begin(115200);	
-  //Log.printf("\033c");
+	Log.printf("\033c");
+	Log.printf("\033[%d;%dH", 0, 0);
 }

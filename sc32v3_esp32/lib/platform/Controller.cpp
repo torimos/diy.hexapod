@@ -18,12 +18,14 @@ Controller::Controller(InputDriver* a, ServoDriver* b, SerialProtocol* debugSP)
 	inputDrv = a;
 	ik = new IKSolver();
 	sw = new Stopwatch();
+	cps = new Counter();
 	model = new HexModel(HexConfig::LegsCount);
 	this->debugSP = debugSP;
 }
 
 Controller::~Controller()
 {
+	delete cps;
 	delete ik;
 	delete sw;
 	delete model;
@@ -115,12 +117,10 @@ void Controller::Setup()
 	model->PrevSelectedLeg = model->SelectedLeg = 0xFF; // No Leg selected
 	model->Speed = 50;
 	model->PowerOn = false;
-	model->DebugOutput = true;
+	model->DebugOutput = false;
 	
 	sd->Init();
 	sd->Reset();
-	Log.printf("\033c");
-	Log.printf("\033[%d;%dH", 0, 0);
 }
 
 long debugTimeout = 0;
@@ -216,7 +216,6 @@ bool Controller::Loop()
 	{
 		if (model->DebugOutput)
 		{
-		//	Log.printf("\033c");
 			Log.printf("\033[%d;%dH", 0, 0);
 			model->Debug(1);
 			inputDrv->Debug();
@@ -524,9 +523,10 @@ void Controller::UpdateServos(CoxaFemurTibia* results, ushort moveTime)
 
 void Controller::CommitServos()
 {
+	cps->Tick();
+
     StateLed.Set(CRGB(0,8,0));
 	sd->Commit();
-
 	frame_data_t dbgFrame;
 	dbgFrame.travelLength.x = model->TravelLength.x;
 	dbgFrame.travelLength.y = model->TravelLength.y;
@@ -538,9 +538,13 @@ void Controller::CommitServos()
 	dbgFrame.bodyRot.y = model->BodyRot.y;
 	dbgFrame.bodyRot.z = model->BodyRot.z;
 	dbgFrame.turnedOn = model->PowerOn;
+	dbgFrame.cps = cps->GetTicksPerSecond();
 	memcpy(dbgFrame.servos, sd->GetServos(), NUMBER_OF_SERVO * sizeof(uint32_t));
 	debugSP->write(FRAME_DEBUG_HEADER_ID, &dbgFrame, sizeof(frame_data_t));
     StateLed.Set(0);
+
+	delay(10);
+	
 }
 
 void Controller::SyncSettings()

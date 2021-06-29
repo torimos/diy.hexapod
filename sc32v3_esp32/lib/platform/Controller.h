@@ -4,6 +4,7 @@
 #include "HexModel.h"
 #include "IKSolver.h"
 #include "Stopwatch.h"
+#include "Counter.h"
 #include "ServoDriver.h"
 #include "InputDriver.h"
 #include "SerialProtocol.h"
@@ -15,6 +16,7 @@ class Controller
 	HexModel* model;
 	IKSolver* ik;
 	Stopwatch *sw;
+	Counter *cps;
 	SerialProtocol* debugSP;
 	settings_t settings;
 public:

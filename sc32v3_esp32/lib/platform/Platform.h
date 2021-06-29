@@ -35,6 +35,7 @@ typedef struct {
     XYZ bodyPos;
     XYZ bodyRot;
 	bool turnedOn;
+	int cps;
 } frame_data_t;
 
 typedef struct {
