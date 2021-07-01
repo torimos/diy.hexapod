@@ -61,7 +61,7 @@ namespace TestLine
             var fs = new FrameSettingsData
             {
                 settings = settings,
-                save = true
+                save = false
             };
             sp.SendFrame(FrameHeaderType.ESP32Debug, fs.ToArray());
 
