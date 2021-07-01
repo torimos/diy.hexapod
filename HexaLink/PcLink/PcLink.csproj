@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{E0AE95BA-5603-47FB-888E-33ACAB59C83B}</ProjectGuid>
+    <ProjectGuid>{56B3F0BC-5B10-43DD-9B2E-FF21012BC547}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>TestLine</RootNamespace>
-    <AssemblyName>TestLine</AssemblyName>
+    <RootNamespace>PcLink</RootNamespace>
+    <AssemblyName>PcLink</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -33,17 +33,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="SerialPortLib2, Version=1.0.10.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\SerialPortLib2.1.0.10\lib\SerialPortLib2.dll</HintPath>
+      <HintPath>..\packages\SerialPortLib2.1.0.10\lib\SerialPortLib2.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.IO.Ports, Version=5.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\sandbox\packages\System.IO.Ports.5.0.1\lib\net461\System.IO.Ports.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -52,17 +46,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Crc.cs" />
-    <Compile Include="SerialProtocol.cs" />
-    <Compile Include="FrameReadyEventArgs.cs" />
+    <Compile Include="Libs\Crc.cs" />
+    <Compile Include="Libs\FrameReadyEventArgs.cs" />
+    <Compile Include="Libs\FrameSettingsData.cs" />
+    <Compile Include="Libs\SerialProtocol.cs" />
+    <Compile Include="Libs\Settings.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="hexapod.settings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
