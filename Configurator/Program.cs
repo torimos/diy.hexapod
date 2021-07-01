@@ -65,24 +65,22 @@ namespace TestLine
             sp.Create();
             sp.OnFrameReady += OnFrameReady;
 
-            //var settings = Settings.Load("hexapod.settings.json");
-            ////new Settings().Save("hexapod.settings.json");
-            //var fs = new FrameSettingsData
-            //{
-            //    settings = settings,
-            //    save = false
-            //};
-            //sp.SendFrame(FrameHeaderType.ESP32Debug, fs.ToArray());
+            var settings = Settings.Load("hexapod.settings.json");
+            //new Settings().Save("hexapod.settings.json");
+            var fs = new FrameSettingsData
+            {
+                settings = settings,
+                save = false
+            };
+            sp.SendFrame(FrameHeaderType.ESP32Debug, fs.ToArray());
 
-            uint[] servos = new uint[26];
-            servos[0] = 0xDEADBEAF;
-
-
+            //uint[] servos = new uint[26];
+            //servos[0] = 0xDEADBEAF;
 
             while (!Console.KeyAvailable)
             {
-                sp.SendFrame(FrameHeaderType.STM32Debug, GetBinaryArray(servos));
-                servos[1]++;
+                //sp.SendFrame(FrameHeaderType.STM32Debug, GetBinaryArray(servos));
+                //servos[1]++;
                 sp.Loop();
             }
             sp.Destroy();
