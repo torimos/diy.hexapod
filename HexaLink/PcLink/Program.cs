@@ -18,7 +18,7 @@ namespace PcLink
             sp.Create();
             sp.OnFrameReady += OnFrameReady;
 
-            SendESP32ControllerSettings();
+            //SendESP32ControllerSettings();
 
             uint[] servos = new uint[26];
             servos[0] = 0xDEADBEAF;
@@ -33,7 +33,7 @@ namespace PcLink
         private static void SendESP32ControllerSettings()
         {
             var settings = Settings.Load("hexapod.settings.json");
-            //new Settings().Save("hexapod.settings.json");
+            //new Settings().Save("hexapod.settings2.json");
             var fs = new FrameSettingsData
             {
                 settings = settings,

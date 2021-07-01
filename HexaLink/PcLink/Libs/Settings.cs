@@ -1,11 +1,11 @@
 ﻿using System.IO;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 public class Settings
 {
-    public short[] ServoOffset;
-    public short[] ServoInv;
-    public short[] ServoMap;
+    public short[] ServoOffset { get; set; }
+    public short[] ServoInv { get; set; }
+    public short[] ServoMap { get; set; }
     public Settings()
     {
         // RR,RM,RF,LR,LM,LF: tfc
@@ -16,11 +16,11 @@ public class Settings
 
     public void Save(string file)
     {
-        File.WriteAllText(file, JsonConvert.SerializeObject(this));
+        File.WriteAllText(file, JsonSerializer.Serialize(this));
     }
 
     public static Settings Load(string file)
     {
-        return JsonConvert.DeserializeObject<Settings>(File.ReadAllText(file));
+        return JsonSerializer.Deserialize<Settings>(File.ReadAllText(file));
     }
 }
