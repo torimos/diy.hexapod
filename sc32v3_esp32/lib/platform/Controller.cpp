@@ -117,7 +117,7 @@ void Controller::Setup()
 	model->PrevSelectedLeg = model->SelectedLeg = 0xFF; // No Leg selected
 	model->Speed = 50;
 	model->PowerOn = false;
-	model->DebugOutput = false;
+	model->DebugOutput = true;
 	
 	sd->Init();
 	sd->Reset();

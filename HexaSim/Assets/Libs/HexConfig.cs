@@ -6,10 +6,10 @@
     public const float otherJointSize = coxaJointSize * 0.8f;
 
     public const float bodyHeight = 0.5f;
-    public const float bodyOffset = bodyHeight/2 + otherJointSize / 2;
+    public const float bodyOffset = 0f;
 
     public const float legsXOffset = 0.54f;
-    public const float legsOffsetY = bodyHeight/2  + bodyOffset;
+    public const float legsOffsetY = 0;
     public const float legsZOffset = 0.93f;
     public const float legsAngleOffset = 59.7f;
 

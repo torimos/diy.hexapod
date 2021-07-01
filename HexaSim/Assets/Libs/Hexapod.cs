@@ -110,19 +110,19 @@ public class Hexapod
         //minLegY /= 6;
         //hexapod.transform.position = new Vector3(0, -minLegY, 0);
 
-        if (hexaNewPosition != null)
-        {
-            hexapod.transform.position = hexaNewPosition.Value;
-            lastHexaPos = hexapod.transform.position;
-            hexaNewPosition = null;
-        }
+        //if (hexaNewPosition != null)
+        //{
+        //    hexapod.transform.position = hexaNewPosition.Value;
+        //    lastHexaPos = hexapod.transform.position;
+        //    hexaNewPosition = null;
+        //}
 
-        if (hexaNewRotY != null)
-        {
-            hexapod.transform.rotation = Quaternion.AngleAxis(hexaNewRotY.Value, new Vector3(0, 1, 0));
-            lastHexaRotY = hexaNewRotY.Value;
-            hexaNewRotY = null;
-        }
+        //if (hexaNewRotY != null)
+        //{
+        //    hexapod.transform.rotation = Quaternion.AngleAxis(hexaNewRotY.Value, new Vector3(0, 1, 0));
+        //    lastHexaRotY = hexaNewRotY.Value;
+        //    hexaNewRotY = null;
+        //}
     }
 
     public void ProcessFrameData(FrameReadyEventArgs args)
