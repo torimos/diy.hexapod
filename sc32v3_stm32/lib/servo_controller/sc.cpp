@@ -28,6 +28,7 @@ typedef struct {
 
 servo_typedef servos[NUMBER_OF_SERVO];
 uint32_t servo_data[NUMBER_OF_SERVO];
+uint32_t debug_servo_data[NUMBER_OF_SERVO];
 
 SerialProtocol* _sp;
 SerialProtocol* _debugSP;
@@ -43,7 +44,18 @@ void sc_init(HardwareSerial* inputSerial) {
 	#endif
 }
 
+bool debug_mode = false;
 void sc_loop() {
+	
+	#if DEBUG_SERVO_DATA
+	if (_debugSP->read(FRAME_DEBUG_HEADER_ID, debug_servo_data, sizeof(uint32_t)*NUMBER_OF_SERVO))
+	{
+		processServoData(debug_servo_data);
+		_debugSP->write(FRAME_DEBUG_HEADER_ID, debug_servo_data, sizeof(uint32_t)*NUMBER_OF_SERVO);
+		debug_mode = true;
+	}
+	if (!debug_mode)
+	#endif
 	if (_sp->read(FRAME_TO_SC_HEADER_ID, servo_data, sizeof(uint32_t)*NUMBER_OF_SERVO))
 	{
 		processServoData(servo_data);
