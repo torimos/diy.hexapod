@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using Newtonsoft.Json;
 namespace TestLine
 {
@@ -44,11 +45,19 @@ namespace TestLine
             return ms.ToArray();
         }
     }
-
     class Program
     {
         static SerialProtocol sp = new SerialProtocol();
         static Stopwatch sw = new Stopwatch();
+
+
+        static byte[] GetBinaryArray(uint[] servos)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+            foreach (var servo in servos) bw.Write(servo);
+            return ms.ToArray();
+        }
 
         static void Main(string[] args)
         {
@@ -56,17 +65,24 @@ namespace TestLine
             sp.Create();
             sp.OnFrameReady += OnFrameReady;
 
-            var settings = Settings.Load("hexapod.settings.json");
-            //new Settings().Save("hexapod.settings.json");
-            var fs = new FrameSettingsData
-            {
-                settings = settings,
-                save = false
-            };
-            sp.SendFrame(FrameHeaderType.ESP32Debug, fs.ToArray());
+            //var settings = Settings.Load("hexapod.settings.json");
+            ////new Settings().Save("hexapod.settings.json");
+            //var fs = new FrameSettingsData
+            //{
+            //    settings = settings,
+            //    save = false
+            //};
+            //sp.SendFrame(FrameHeaderType.ESP32Debug, fs.ToArray());
+
+            uint[] servos = new uint[26];
+            servos[0] = 0xDEADBEAF;
+
+
 
             while (!Console.KeyAvailable)
             {
+                sp.SendFrame(FrameHeaderType.STM32Debug, GetBinaryArray(servos));
+                servos[1]++;
                 sp.Loop();
             }
             sp.Destroy();
