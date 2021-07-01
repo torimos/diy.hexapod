@@ -203,8 +203,23 @@ bool Controller::Loop()
 		}
 		else
 		{
+			#if CALIBRATE_FLAG
+			for(int i=0;i<HexConfig::LegsCount;i++)
+			{
+				model->LegsAngle[i].Coxa = 0;
+				model->LegsAngle[i].Femur = 0;
+				if (i>=3)
+					model->LegsAngle[i].Tibia = 90;
+				else
+					model->LegsAngle[i].Tibia = -90;
+			}
+			UpdateServos(model->LegsAngle, 300);
+			CommitServos();
+			delay(600);
+			#else
 			sd->MoveAll(0);
 			CommitServos();
+			#endif
 		}
 	}
 

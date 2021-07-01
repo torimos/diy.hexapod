@@ -4,15 +4,6 @@ using System.IO;
 using Newtonsoft.Json;
 namespace TestLine
 {
- //  ServoOffset[] =
- //  {
-    //10,-170,-30,	//RR - tfc
-	//-20,-130,-40,	//RM
-	//0,-20,0,		//RF
-    //20,80,30,		//LR
-	//70,220,-40,	//LM
-	//-40,90,20		//LF 
- //   };
     public class Settings
     {
         public short[] ServoOffset;
@@ -20,6 +11,7 @@ namespace TestLine
         public short[] ServoMap;
         public Settings()
         {
+            // RR,RM,RF,LR,LM,LF: tfc
             ServoOffset = new short[18];
             ServoInv = new short[18];
             ServoMap = new short[18];
@@ -69,7 +61,7 @@ namespace TestLine
             var fs = new FrameSettingsData
             {
                 settings = settings,
-                save = false
+                save = true
             };
             sp.SendFrame(FrameHeaderType.ESP32Debug, fs.ToArray());
 
