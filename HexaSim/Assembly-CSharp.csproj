@@ -56,15 +56,16 @@
     <Analyzer Include="C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Libs\Crc.cs" />
-    <Compile Include="Assets\Libs\ServoState.cs" />
-    <Compile Include="Assets\MyScript.cs" />
-    <Compile Include="Assets\Libs\Leg.cs" />
-    <Compile Include="Assets\Libs\Hexapod.cs" />
-    <Compile Include="Assets\Libs\HexConfig.cs" />
-    <Compile Include="Assets\Libs\FrameReadyEventArgs.cs" />
-    <Compile Include="Assets\FlyCamera.cs" />
-    <Compile Include="Assets\Libs\SerialProtocol.cs" />
+    <Compile Include="Assets\Scripts\Crc.cs" />
+    <Compile Include="Assets\Scripts\MyScript.cs" />
+    <Compile Include="Assets\Scripts\HexConfig.cs" />
+    <Compile Include="Assets\Scripts\SerialProtocol.cs" />
+    <Compile Include="Assets\Scripts\Hexapod.cs" />
+    <Compile Include="Assets\Scripts\FrameReadyEventArgs.cs" />
+    <Compile Include="Assets\Scripts\Leg.cs" />
+    <Compile Include="Assets\Scripts\ServoState.cs" />
+    <Compile Include="Assets\Scripts\FlyCamera.cs" />
+    <Compile Include="Assets\Scripts\CameraController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Packages\System.Buffers.4.5.1\lib\netstandard2.0\System.Buffers.xml" />

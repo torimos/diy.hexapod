@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Diagnostics;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -8,17 +7,13 @@ public class Hexapod
 {
     private Leg[] legs = new Leg[HexConfig.LegsCount];
     private ServoState[] servos = new ServoState[26];
-    private GameObject hexapod;
+    public MonoBehaviour parent;
     private Stopwatch last_leg_updated;
     private IEnumerator servoUpdateCorutine;
 
-    Vector3? lastHexaPos = null;
-    Vector3? hexaNewPosition = null;
-    float? lastHexaRotY = null;
-    float? hexaNewRotY = null;
-
     public void Create(MonoBehaviour parent)
     {
+        this.parent = parent;
         last_leg_updated = new Stopwatch();
         last_leg_updated.Restart();
         for (int i = 0; i < servos.Length; i++)
@@ -64,7 +59,6 @@ public class Hexapod
 
             legs[i].Update(c, f, t);
         }
-        UpdateBody();
     }
 
     public void Reset()
@@ -96,33 +90,6 @@ public class Hexapod
         float t = ((int)(sdT & 0xFFFF) - 1500) / d;
 
         legs[legIdx].Update(c, f, t);
-
-        UpdateBody();
-    }
-
-    private void UpdateBody()
-    {
-        //float minLegY = 0;
-        //for (int i = 0; i < legs.Length; i++)
-        //{
-        //    minLegY += legs[i].tibiaEnd.transform.position.y;
-        //}
-        //minLegY /= 6;
-        //hexapod.transform.position = new Vector3(0, -minLegY, 0);
-
-        //if (hexaNewPosition != null)
-        //{
-        //    hexapod.transform.position = hexaNewPosition.Value;
-        //    lastHexaPos = hexapod.transform.position;
-        //    hexaNewPosition = null;
-        //}
-
-        //if (hexaNewRotY != null)
-        //{
-        //    hexapod.transform.rotation = Quaternion.AngleAxis(hexaNewRotY.Value, new Vector3(0, 1, 0));
-        //    lastHexaRotY = hexaNewRotY.Value;
-        //    hexaNewRotY = null;
-        //}
     }
 
     public void ProcessFrameData(FrameReadyEventArgs args)
@@ -132,37 +99,22 @@ public class Hexapod
             servos[i].ProcessData(args.Servos[i]);
         }
         var model = args.Model;
-
-        float newPosX = 0, newPosY, newPosZ = 0, newRotY = 0;
-        if (lastHexaPos != null)
-        {
-            newPosX = lastHexaPos.Value.x;
-            newPosZ = lastHexaPos.Value.z;
-        }
-        newPosY = (float)(model.pos.y / 100.0f) + HexConfig.otherJointSize / 2;
-        newPosX += (float)(model.tlen.x / 500.0f);
-        newPosZ += (float)(model.tlen.z / 500.0f);
-        if (lastHexaRotY != null)
-        {
-            newRotY = lastHexaRotY.Value;
-        }
-        newRotY -= (float)(model.tlen.y / 10.0f);
-
-        hexaNewRotY = newRotY;
-        hexaNewPosition = new Vector3(newPosX, newPosY, newPosZ);
         Debug.Log($"Model tlen={model.tlen} rot={model.rot} pos={model.pos} pwr={model.turnedOn}");
     }
 
     private void Create3DModel()
     {
-        hexapod = new GameObject("hexapod");
-        hexapod.transform.position = new Vector3(0, 0, 0);
+        var hexapod = parent.gameObject;
+        var hrb = hexapod.AddComponent<Rigidbody>();
+        hrb.mass = 2;
 
         var hexaBase = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         hexaBase.name = "hexaBase";
         hexaBase.transform.parent = hexapod.transform;
         hexaBase.transform.localScale = new Vector3(HexConfig.legsZOffset * 2, HexConfig.bodyHeight / 2, HexConfig.legsZOffset * 2);
-        hexaBase.transform.localPosition = new Vector3(0, HexConfig.bodyOffset, 0);
+        hexaBase.transform.localPosition = new Vector3(0, HexConfig.bodyOffset, 0); ;
+        var hbcc = hexaBase.GetComponent<CapsuleCollider>();
+        hbcc.enabled = false;
         hexaBase.GetComponent<Renderer>().material.color = Color.gray;
 
         var hexaHead = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
