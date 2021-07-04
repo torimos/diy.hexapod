@@ -23,7 +23,7 @@ public class FlyCamera : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButton(1))
         {
             lastMouse = Input.mousePosition - lastMouse;
             lastMouse = new Vector3(-lastMouse.y * camSens, lastMouse.x * camSens, 0);
@@ -86,13 +86,13 @@ public class FlyCamera : MonoBehaviour
         {
             p_Velocity += new Vector3(step, 0, 0);
         }
-        if (Input.GetKey(KeyCode.Z))
-        {
-            p_Velocity += new Vector3(0, step, 0);
-        }
-        if (Input.GetKey(KeyCode.X))
+        if (Input.GetKey(KeyCode.Q))
         {
             p_Velocity += new Vector3(0, -step, 0);
+        }
+        if (Input.GetKey(KeyCode.E))
+        {
+            p_Velocity += new Vector3(0, step, 0);
         }
         return p_Velocity;
     }
