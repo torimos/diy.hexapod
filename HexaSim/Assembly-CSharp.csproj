@@ -64,8 +64,8 @@
     <Compile Include="Assets\Scripts\FrameReadyEventArgs.cs" />
     <Compile Include="Assets\Scripts\Leg.cs" />
     <Compile Include="Assets\Scripts\ServoState.cs" />
-    <Compile Include="Assets\Scripts\FlyCamera.cs" />
     <Compile Include="Assets\Scripts\CameraController.cs" />
+    <Compile Include="Assets\Scripts\FlyCamera.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Packages\System.Buffers.4.5.1\lib\netstandard2.0\System.Buffers.xml" />
