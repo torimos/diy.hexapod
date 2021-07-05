@@ -15,7 +15,7 @@ public partial class MyScript : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         hexapod.Update();
         sp.Loop();
