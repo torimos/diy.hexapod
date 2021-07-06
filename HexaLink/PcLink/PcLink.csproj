@@ -80,6 +80,7 @@
     <Compile Include="Libs\SerialProtocol.cs" />
     <Compile Include="Libs\Settings.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Demo1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
