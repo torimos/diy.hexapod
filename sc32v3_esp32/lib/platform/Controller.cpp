@@ -523,6 +523,18 @@ void Controller::SolveIKLegs()
 	}
 }
 
+void Assert_UpdateServos(int leg, char t, ushort pos, double angle, short offset, short inv)
+{
+	if (pos == 0xFFFF || isnan(angle) == NAN || angle > 180  || angle < -180)
+	{
+		Log.printf("UpdateServos - EXCEPTION. leg:%d-%c p:%d a:%f o:%d i:%d\n\r", leg, t, pos, angle, offset, inv);
+		while(1){
+  			StateLed.Flash(CRGB(8,0,8), 2, 500);
+			delay(100);
+		}
+	}
+}
+
 void Controller::UpdateServos(CoxaFemurTibia* results, ushort moveTime)
 {
 	for (byte i = 0; i < HexConfig::LegsCount; i++)
@@ -530,6 +542,9 @@ void Controller::UpdateServos(CoxaFemurTibia* results, ushort moveTime)
 		ushort tibiaPos = (ushort)(1500 + ((results[i].Tibia * 10) + settings.ServoOffset[i * 3]) * settings.ServoInv[i * 3]);
 		ushort femurPos = (ushort)(1500 + ((results[i].Femur * 10) + settings.ServoOffset[i * 3 + 1]) * settings.ServoInv[i * 3 + 1]);
 		ushort coxaPos = (ushort)(1500 + ((results[i].Coxa * 10) + settings.ServoOffset[i * 3 + 2]) * settings.ServoInv[i * 3 + 2]);
+		Assert_UpdateServos(i, 't', tibiaPos, results[i].Tibia, settings.ServoOffset[i * 3], settings.ServoInv[i * 3]);
+		Assert_UpdateServos(i, 'f', femurPos, results[i].Femur, settings.ServoOffset[i * 3+1], settings.ServoInv[i * 3+1]);
+		Assert_UpdateServos(i, 'c', coxaPos, results[i].Coxa, settings.ServoOffset[i * 3+2], settings.ServoInv[i * 3+2]);
 		sd->Move(settings.ServoMap[i * 3], tibiaPos, moveTime);
 		sd->Move(settings.ServoMap[i * 3 + 1], femurPos, moveTime);
 		sd->Move(settings.ServoMap[i * 3 + 2], coxaPos, moveTime);

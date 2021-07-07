@@ -2,9 +2,10 @@
 {
     class Program
     {
+
         static void Main(string[] args)
         {
-            Demo2.Run(args);
+           Demo2.Run(args);
         }
     }
 }

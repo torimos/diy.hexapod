@@ -17,6 +17,14 @@ double CheckBoundsAndSign(double value, double min, double max, bool inverted)
 	return inverted ? -value : value;
 }
 
+double acos_truncated(double a)
+{
+	double v = a;
+	if (v < -1) v = -1;
+	else if (v > 1) v = 1;
+	return acos(v);
+}
+
 IKLegResult IKSolver::LegIK(uint8_t legNumber, double feetPosX, double feetPosZ, double feetPosY)
 {
 	IKLegResult result = IKLegResult();
@@ -27,10 +35,21 @@ IKLegResult IKSolver::LegIK(uint8_t legNumber, double feetPosX, double feetPosZ,
 	double IKFeetPosXZFinal = sqrt(feetPosX * feetPosX + feetPosZ * feetPosZ) - HexConfig::CoxaLength;
 	IKA1 = atan2(IKFeetPosXZFinal, feetPosY);
 	IKSW = sqrt(feetPosY * feetPosY + IKFeetPosXZFinal * IKFeetPosXZFinal);
-	IKA2 = acos(((HexConfig::FemurLength * HexConfig::FemurLength - HexConfig::TibiaLength * HexConfig::TibiaLength) + IKSW * IKSW) / (2 * HexConfig::FemurLength * IKSW));
+	IKA2 = acos_truncated(((HexConfig::FemurLength * HexConfig::FemurLength - HexConfig::TibiaLength * HexConfig::TibiaLength) + IKSW * IKSW) / (2 * HexConfig::FemurLength * IKSW));
 	result.Result.Femur = CheckBoundsAndSign(-(IKA1 + IKA2) * 180 / M_PI + 90, HexConfig::FemurMin, HexConfig::FemurMax, HexConfig::FemurAngleInv[legNumber]);
-	double AngleRad4 = acos(((HexConfig::FemurLength * HexConfig::FemurLength + HexConfig::TibiaLength * HexConfig::TibiaLength) - IKSW * IKSW) / (2 * HexConfig::FemurLength * HexConfig::TibiaLength));
+	double AngleRad4 = acos_truncated(((HexConfig::FemurLength * HexConfig::FemurLength + HexConfig::TibiaLength * HexConfig::TibiaLength) - IKSW * IKSW) / (2 * HexConfig::FemurLength * HexConfig::TibiaLength));
 	result.Result.Tibia = CheckBoundsAndSign(-(90 - AngleRad4 * 180 / M_PI), HexConfig::TibiaMin, HexConfig::TibiaMax, HexConfig::TibiaAngleInv[legNumber]);
+
+	if (isnan(result.Result.Tibia) || result.Result.Tibia > 180  || result.Result.Tibia < -180 ||
+		isnan(result.Result.Femur) || result.Result.Femur > 180  || result.Result.Femur < -180 ||
+		isnan(result.Result.Coxa) || result.Result.Coxa > 180  || result.Result.Coxa < -180)
+	{
+		Log.printf("LegIK - EXCEPTION. leg:%d t:%f f:%f c:%f fx:%f fy:%f fz:%f\n\r", legNumber, result.Result.Tibia, result.Result.Femur, result.Result.Coxa, feetPosX, feetPosY, feetPosZ);
+		while(1){
+  			StateLed.Flash(CRGB(8,8,0), 2, 500);
+			delay(100);
+		}
+	}
 
 	result.Solution = IKSolutionResultType::Error;
 	if (IKSW < ((HexConfig::FemurLength + HexConfig::TibiaLength) - 30))

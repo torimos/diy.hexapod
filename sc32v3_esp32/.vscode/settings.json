@@ -17,6 +17,7 @@
         "ostream": "cpp",
         "sstream": "cpp",
         "streambuf": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "cmath": "cpp"
     }
 }
