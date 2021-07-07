@@ -26,10 +26,16 @@ public:
 	static double DefaultLegsPosY[]; //RR RM RF LF LM LR
 	static double DefaultLegsPosZ[]; //RR RM RF LF LM LR
 
+	static int HexIntXZCount;
+	static double HexIntXZ[];
+
+	static double HexMaxBodyY[];
+
 	static bool CoxaAngleInv[]; //RR RM RF LF LM LR
 	static bool FemurAngleInv[]; //RR RM RF LF LM LR
 	static bool TibiaAngleInv[]; //RR RM RF LF LM LR LF LM LR
 
+	static double BodyInitY;
 	static double MaxBodyHeight;
 	static double BodyStandUpOffset;
 	static double LegLiftHeight;

@@ -347,20 +347,18 @@ void BLEInputDriver::adjustLegPositionsToBodyHeight(HexModel* model)
 {
 	const double MIN_XZ_LEG_ADJUST = HexConfig::CoxaLength;
 	const double MAX_XZ_LEG_ADJUST = HexConfig::CoxaLength + HexConfig::TibiaLength + HexConfig::FemurLength / 4;
-	double hexIntXZ[] = { 111, 88, 86 };
-	double hexMaxBodyY[] = { 20, 50, HexConfig::MaxBodyHeight };
-
+	
 	// Lets see which of our units we should use...
 	// Note: We will also limit our body height here...
 	model->BodyPos.y = fmin(model->BodyPos.y, HexConfig::MaxBodyHeight);
-	double XZLength = hexIntXZ[2];
+	double XZLength = HexConfig::HexIntXZ[HexConfig::HexIntXZCount - 1];
 	int i;
-	for (i = 0; i < 2; i++)
+	for (i = 0; i < HexConfig::HexIntXZCount - 1; i++)
 	{    
 		// Don't need to look at last entry as we already init to assume this one...
-		if (model->BodyPos.y <= hexMaxBodyY[i])
+		if (model->BodyPos.y <= HexConfig::HexMaxBodyY[i])
 		{
-			XZLength = hexIntXZ[i];
+			XZLength = HexConfig::HexIntXZ[i];
 			break;
 		}
 	}

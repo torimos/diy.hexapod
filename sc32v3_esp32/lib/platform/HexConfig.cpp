@@ -1,36 +1,37 @@
 #include "HexConfig.h"
 
 int HexConfig::LegsCount = 6;
-double HexConfig::CoxaMin = -65;//-95
-double HexConfig::CoxaMax = 65;//75
-double HexConfig::CoxaLength = 30;
+double HexConfig::MaxBodyHeight = 90;
+double HexConfig::BodyInitY  = 65;
 
+double HexConfig::CoxaMin = -65;
+double HexConfig::CoxaMax = 65;
+double HexConfig::CoxaLength = 29;
 double HexConfig::FemurMin = -105;
-double HexConfig::FemurMax = 45;
-double HexConfig::FemurLength = 55;
-
-double HexConfig::TibiaMin = -30;
-double HexConfig::TibiaMax = 80;
-double HexConfig::TibiaLength = 140;
-
-short HexConfig::OffsetX[] = { -54, -108, -54, 54, 108, 54 }; //RR RM RF LF LM LR
-
-short HexConfig::OffsetZ[] = { 93, 0, -93, 93, 0, -93 }; //RR RM RF LF LM LR
-
-double HexConfig::CoxaDefaultAngle[] = { -59.7, 0, 59.7, -59.7, 0, 59.7 }; //RR RM RF LF LM LR
+double HexConfig::FemurMax = 75;
+double HexConfig::FemurLength = 57;
+double HexConfig::TibiaMin = -53;
+double HexConfig::TibiaMax = 90;
+double HexConfig::TibiaLength = 141;
+short HexConfig::OffsetX[] = { -69, -138, -69, 69, 138, 69 }; //RR RM RF LF LM LR
+short HexConfig::OffsetZ[] = { 119, 0, -119, 119, 0, -119 }; //RR RM RF LF LM LR
+double HexConfig::CoxaDefaultAngle[] = { -60, 0, 60, -60, 0, 60 }; //RR RM RF LF LM LR
 
 double HexConfig::DefaultLegsPosX[] = { 56, 111, 56, 56, 111, 56 }; //RR RM RF LF LM LR
-double HexConfig::DefaultLegsPosY[] = { 60, 60, 60, 60, 60, 60 }; //RR RM RF LF LM LR
+double HexConfig::DefaultLegsPosY[] = { HexConfig::BodyInitY, HexConfig::BodyInitY, HexConfig::BodyInitY, HexConfig::BodyInitY, HexConfig::BodyInitY, HexConfig::BodyInitY }; //RR RM RF LF LM LR
 double HexConfig::DefaultLegsPosZ[] = { 96, 0, -96, 96, 0, -96 }; //RR RM RF LF LM LR
+
+int HexConfig::HexIntXZCount = 3;
+double HexConfig::HexIntXZ[] = { 111, 99, 86 };
+double HexConfig::HexMaxBodyY[] = { 20, 50, HexConfig::MaxBodyHeight };
 
 bool HexConfig::CoxaAngleInv[] = { true, true, true, false, false, false }; //RR RM RF LF LM LR
 bool HexConfig::FemurAngleInv[] = { true, true, true, false, false, false }; //RR RM RF LF LM LR
 bool HexConfig::TibiaAngleInv[] = { true, true, true, false, false, false }; //RR RM RF LF LM LR LF LM LR
 
-double HexConfig::MaxBodyHeight = 110;
-double HexConfig::BodyStandUpOffset = 65;
+double HexConfig::BodyStandUpOffset = HexConfig::BodyInitY;
 double HexConfig::LegLiftHeight = 40;
-double HexConfig::LegLiftDoubleHeight = 65;
+double HexConfig::LegLiftDoubleHeight = HexConfig::BodyInitY;
 double HexConfig::GPlimit = 2;
 double HexConfig::TravelDeadZone = 4;
 
