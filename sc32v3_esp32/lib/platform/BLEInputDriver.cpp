@@ -53,26 +53,26 @@ void BLEInputDriver::Debug(bool clear)
 	Log.printf("Right: %05d %05d\n\r", state.axis_data[2], state.axis_data[3]);
 }
 
-bool BLEInputDriver::isButtonPressed(input_state_t state, uint16_t flag, int delayMilliseconds)
+bool BLEInputDriver::isButtonPressed(input_state_t state, uint32_t flag, int delayMilliseconds)
 {
 	bool f = (state.buttons & flag) == flag;
 	if (f && delayMilliseconds > 0) delay(delayMilliseconds);
 	return f;
 }
 
-bool BLEInputDriver::isButtonPressedOnly(input_state_t state, uint16_t flag, int delayMilliseconds)
+bool BLEInputDriver::isButtonPressedOnly(input_state_t state, uint32_t flag, int delayMilliseconds)
 {
 	bool f = state.buttons == flag;
 	if (f && delayMilliseconds > 0) delay(delayMilliseconds);
 	return f;
 }
 
-bool BLEInputDriver::hasPressed(uint16_t button)
+bool BLEInputDriver::hasPressed(uint32_t button)
 {
 	return ((state.buttons & button) == button) && ((prev_state.buttons & button) == 0);
 }
 
-bool BLEInputDriver::hasPressedOnly(uint16_t button)
+bool BLEInputDriver::hasPressedOnly(uint32_t button)
 {
 	return ((state.buttons & button) == button) && ((prev_state.buttons & button) != button);
 }
@@ -309,10 +309,10 @@ bool BLEInputDriver::ProcessInput(HexModel* model)
 				}
 			}
 
-			model->SingleLegHold = isButtonPressed(state, BUTTON_RIGHT_TUP) == true;
+			model->SingleLegHold = isButtonPressed(state, BUTTON_RIGHT_TDOWN) == true;
 			model->SingleLegPos.x = thumbLeft.x; //Left Stick Right/Left
 			model->SingleLegPos.y = -thumbRight.y; //Right Stick Up/Down
-			model->SingleLegPos.z = thumbLeft.y; //Left Stick Up/Down
+			model->SingleLegPos.z = -thumbLeft.y; //Left Stick Up/Down
 		}
 		model->InputTimeDelay = 128 - (int)fmax(fmax(fabs(thumbLeft.x), fabs(thumbLeft.y)), fmax(fabs(thumbRight.x), fabs(thumbRight.y)));
 		if (model->InputTimeDelay <= 0) model->InputTimeDelay = 1;

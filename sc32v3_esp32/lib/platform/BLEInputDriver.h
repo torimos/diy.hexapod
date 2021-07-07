@@ -43,10 +43,10 @@ public:
 	bool incomingDataProcessed;
 	joy_data_t incomingData;
 private:
-	bool isButtonPressed(input_state_t state, uint16_t flag, int delayMilliseconds = 0);
-	bool isButtonPressedOnly(input_state_t state, uint16_t flag, int delayMilliseconds = 0);
-	bool hasPressed(uint16_t button);
-	bool hasPressedOnly(uint16_t button);
+	bool isButtonPressed(input_state_t state, uint32_t flag, int delayMilliseconds = 0);
+	bool isButtonPressedOnly(input_state_t state, uint32_t flag, int delayMilliseconds = 0);
+	bool hasPressed(uint32_t button);
+	bool hasPressedOnly(uint32_t button);
 	void turnOff(HexModel* model);
 	void adjustLegPositionsToBodyHeight(HexModel* model);
 };
