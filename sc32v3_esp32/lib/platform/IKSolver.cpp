@@ -52,7 +52,7 @@ IKLegResult IKSolver::LegIK(uint8_t legNumber, double feetPosX, double feetPosZ,
 	}
 
 	result.Solution = IKSolutionResultType::Error;
-	if (IKSW < ((HexConfig::FemurLength + HexConfig::TibiaLength) - 30))
+	if (IKSW < ((HexConfig::FemurLength + HexConfig::TibiaLength) - HexConfig::CoxaLength))
 		result.Solution = IKSolutionResultType::Solution;
 	else if (IKSW < (HexConfig::FemurLength + HexConfig::TibiaLength))
 		result.Solution = IKSolutionResultType::Warning;
