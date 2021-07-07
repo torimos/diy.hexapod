@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Diagnostics;
+using System.IO;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -92,14 +94,14 @@ public class Hexapod
         legs[legIdx].Update(c, f, t);
     }
 
-    public void ProcessFrameData(FrameReadyEventArgs args)
+    public void ProcessFrameData(byte[] data)
     {
-        for (int i = 0; i < servos.Length; i++)
+        uint[] servosData = new uint[data.Length >> 2];
+        Buffer.BlockCopy(data, 0, servosData, 0, data.Length);
+        for (int i = 0; i < servosData.Length; i++)
         {
-            servos[i].ProcessData(args.Servos[i]);
+            servos[i].ProcessData(servosData[i]);
         }
-        var model = args.Model;
-        Debug.Log($"Model tlen={model.tlen} rot={model.rot} pos={model.pos} pwr={model.turnedOn}");
     }
 
     private void Create3DModel()

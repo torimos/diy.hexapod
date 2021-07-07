@@ -2,8 +2,10 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
-public class SerialProtocol
+public class SerialProtocol: IDisposable
 {
     private SerialPortInput serialPort = new SerialPortInput(false);
     private byte[] frame_buf = new byte[1024*4];
@@ -18,7 +20,11 @@ public class SerialProtocol
 
     public int FPS => fps;
 
-    public void Create()
+    CancellationTokenSource tokenSource;
+    CancellationToken token;
+    Task task;
+
+    public void Start()
     {
         sw.Start();
         fpssw.Start();
@@ -26,11 +32,47 @@ public class SerialProtocol
         serialPort.ConnectionStatusChanged += SerialPort_ConnectionStatusChanged;
         serialPort.MessageReceived += SerialPort_MessageReceived;
         serialPort.Connect();
+        
+        tokenSource = new CancellationTokenSource();
+        token = tokenSource.Token;
+        task = Task.Run(() =>
+        {
+            while (true)
+            {
+                Loop();
+                if (token.IsCancellationRequested)
+                {
+                    break;
+                }
+            }
+        });
     }
 
-    internal void Destroy()
+    public void Stop()
     {
         serialPort.Disconnect();
+
+        tokenSource.Cancel();
+        task.Wait();
+        task.Dispose();
+    }
+
+    public void SendFrame(FrameHeaderType header, byte[] data)
+    {
+        MemoryStream ms = new MemoryStream();
+        BinaryWriter bw = new BinaryWriter(ms);
+
+        bw.Write((ushort)header);
+        bw.Write((ushort)data.Length);
+        bw.Write(data);
+        bw.Write(Crc.Get_CRC16(data));
+
+        serialPort.SendMessage(ms.ToArray());
+    }
+
+    public void Dispose()
+    {
+        Stop();
     }
 
     private void Update(byte[] rx_buf)
@@ -49,7 +91,7 @@ public class SerialProtocol
         }
     }
 
-    public void Loop() 
+    private void Loop()
     {
         if (sw.ElapsedMilliseconds < 10) return;
         if (frame_buf_len > 0)
@@ -135,19 +177,5 @@ public class SerialProtocol
 
     private void SerialPort_ConnectionStatusChanged(object sender, ConnectionStatusChangedEventArgs args)
     {
-    }
-
-
-    public void SendFrame(FrameHeaderType header, byte[] data)
-    {
-        MemoryStream ms = new MemoryStream();
-        BinaryWriter bw = new BinaryWriter(ms);
-
-        bw.Write((ushort)header);
-        bw.Write((ushort)data.Length);
-        bw.Write(data);
-        bw.Write(Crc.Get_CRC16(data));
-
-        serialPort.SendMessage(ms.ToArray());
     }
 }

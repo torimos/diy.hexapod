@@ -1,33 +1,35 @@
+using CommandLine;
 using UnityEngine;
 
 public partial class MyScript : MonoBehaviour
 {
-    private SerialProtocol sp = new SerialProtocol();
-    private Hexapod hexapod = new Hexapod();
+    public class Options
+    {
+        [Option('p', "port", Required = false, Default = 5555, HelpText = "Port of Server")]
+        public int Port { get; set; }
+    }
 
-    // Start is called before the first frame update
+    private Hexapod hexapod = new Hexapod();
+    private ServosService servosService = new ServosService();
+
     void Start()
     {
         hexapod.Create(this);
-
-        sp.Create();
-        sp.OnFrameReady += OnFrameReady;
+        servosService.Create(this, hexapod, 5555);
     }
 
-    // Update is called once per frame
+    void Run(int port)
+    {
+        
+    }
+
     void FixedUpdate()
     {
         hexapod.Update();
-        sp.Loop();
-    }
-
-    private void OnFrameReady(object sender, FrameReadyEventArgs args)
-    {
-        hexapod.ProcessFrameData(args);
     }
 
     void OnDestroy()
     {
-        sp.Destroy();
+        servosService.Destroy();
     }
 }

@@ -1,32 +1,20 @@
 ﻿using System;
-using System.IO;
 
 namespace PcLink
 {
     class Demo1
     {
         static SerialProtocol sp = new SerialProtocol();
-        static byte[] GetBinaryArray(uint[] servos)
-        {
-            MemoryStream ms = new MemoryStream();
-            BinaryWriter bw = new BinaryWriter(ms);
-            foreach (var servo in servos) bw.Write(servo);
-            return ms.ToArray();
-        }
+       
         public static void Run(string[] args)
         {
-            sp.Create();
+            sp.Start();
             sp.OnFrameReady += OnFrameReady;
 
             //SendESP32ControllerSettings();
 
-            uint[] servos = new uint[26];
-            servos[0] = 0xDEADBEAF;
             while (!Console.KeyAvailable)
             {
-                sp.Loop();
-                sp.SendFrame(FrameHeaderType.STM32Debug, GetBinaryArray(servos));
-                servos[1]++;
             }
         }
 
