@@ -70,8 +70,8 @@ IKLegResult IKSolver::LegIK(uint8_t legNumber, double feetPosX, double feetPosZ,
 	double IKA3;
 	double IKFeetPosXZFinal = sqrt(feetPosX * feetPosX + feetPosZ * feetPosZ) - HexConfig::CoxaLength;
 	
-	IKA1 = atan2(IKFeetPosXZFinal, feetPosY);
 	IKSW = sqrt(feetPosY * feetPosY + IKFeetPosXZFinal * IKFeetPosXZFinal);
+	IKA1 = atan2(IKFeetPosXZFinal, feetPosY);
 	IKA2 = acos_truncated(((HexConfig::FemurLength * HexConfig::FemurLength - HexConfig::TibiaLength * HexConfig::TibiaLength) + IKSW * IKSW) / (2 * HexConfig::FemurLength * IKSW));
 	IKA3 = acos_truncated(((HexConfig::FemurLength * HexConfig::FemurLength + HexConfig::TibiaLength * HexConfig::TibiaLength) - IKSW * IKSW) / (2 * HexConfig::FemurLength * HexConfig::TibiaLength));
 	
