@@ -64,9 +64,9 @@ IKLegResult result = IKLegResult();
 IKLegResult IKSolver::LegIK(uint8_t legNumber, double feetPosX, double feetPosZ, double feetPosY)
 {
 	IKLegResult result = IKLegResult();
-	double IKSW;            //Length between Shoulder and Wrist
-	double IKA1;            //Angle of the line S>W with respect to the ground in radians
-	double IKA2;            //Angle of the line S>W with respect to the femur in radians
+	double IKSW;            //Length between Femur axis and Tibia
+	double IKA1;            //Angle between Femur and Tibia line and the ground in radians
+	double IKA2;            //Angle of the line Femur and Tibia with respect to the Femur in radians
 	double IKA3;
 	double IKFeetPosXZFinal = sqrt(feetPosX * feetPosX + feetPosZ * feetPosZ) - HexConfig::CoxaLength;
 	
