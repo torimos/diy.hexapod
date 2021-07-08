@@ -24,25 +24,62 @@ double acos_truncated(double a)
 	else if (v > 1) v = 1;
 	return acos(v);
 }
+/*
 
+IKLegResult result = IKLegResult();
+	double IKSW;            
+	double IKA1;            
+	double IKA2;            
+	double IKA3;
+	// Distance between the Coxa and Ground Contact 
+	double IKFeetPosXZFinal = sqrt(pow(feetPosX,2) + pow(feetPosZ,2));
+	// Length between Femur axis and Tibia
+	IKSW = sqrt(pow(feetPosY,feetPosY) + pow(IKFeetPosXZFinal - HexConfig::CoxaLength,2));
+	// Angle between Femur and Tibia line and the ground in radians 
+	IKA1 = atan2(IKFeetPosXZFinal - HexConfig::CoxaLength, feetPosY);
+	// Angle of the line Femur and Tibia with respect to the Femur in radians 
+	IKA2 = acos_truncated(((pow(HexConfig::FemurLength,2) - pow(HexConfig::TibiaLength,2)) + IKSW * IKSW) / (2 * HexConfig::FemurLength * IKSW));
+	IKA3 = acos_truncated(((pow(HexConfig::FemurLength,2) + pow(HexConfig::TibiaLength,2)) - IKSW * IKSW) / (2 * HexConfig::FemurLength * HexConfig::TibiaLength));
+	
+	result.Result.Coxa = CheckBoundsAndSign(atan2(feetPosZ, feetPosX) * 180 / M_PI + HexConfig::CoxaDefaultAngle[legNumber], HexConfig::CoxaMin, HexConfig::CoxaMax, HexConfig::CoxaAngleInv[legNumber]);
+	result.Result.Femur = CheckBoundsAndSign(-(IKA1 + IKA2) * 180 / M_PI + HexConfig::FemurDefaultAngle, HexConfig::FemurMin, HexConfig::FemurMax, HexConfig::FemurAngleInv[legNumber]);
+	result.Result.Tibia = CheckBoundsAndSign(IKA3 * 180 / M_PI + HexConfig::TibiaDefaultAngle, HexConfig::TibiaMin, HexConfig::TibiaMax, HexConfig::TibiaAngleInv[legNumber]);
+
+	if (isnan(result.Result.Tibia) || isnan(result.Result.Femur) || isnan(result.Result.Coxa))
+	{
+		Log.printf("LegIK - EXCEPTION. leg:%d t:%f f:%f c:%f fx:%f fy:%f fz:%f\n\r", legNumber, result.Result.Tibia, result.Result.Femur, result.Result.Coxa, feetPosX, feetPosY, feetPosZ);
+		while(1){
+  			StateLed.Flash(CRGB(8,8,0), 2, 500);
+			delay(100);
+		}
+	}
+
+	result.Solution = IKSolutionResultType::Error;
+	if (IKSW < ((HexConfig::FemurLength + HexConfig::TibiaLength) - HexConfig::CoxaLength))
+		result.Solution = IKSolutionResultType::Solution;
+	else if (IKSW < (HexConfig::FemurLength + HexConfig::TibiaLength))
+		result.Solution = IKSolutionResultType::Warning;
+	return result;
+*/
 IKLegResult IKSolver::LegIK(uint8_t legNumber, double feetPosX, double feetPosZ, double feetPosY)
 {
 	IKLegResult result = IKLegResult();
 	double IKSW;            //Length between Shoulder and Wrist
 	double IKA1;            //Angle of the line S>W with respect to the ground in radians
 	double IKA2;            //Angle of the line S>W with respect to the femur in radians
-	result.Result.Coxa = CheckBoundsAndSign(((atan2(feetPosZ, feetPosX) * 180) / M_PI) + HexConfig::CoxaDefaultAngle[legNumber], HexConfig::CoxaMin, HexConfig::CoxaMax, HexConfig::CoxaAngleInv[legNumber]);
+	double IKA3;
 	double IKFeetPosXZFinal = sqrt(feetPosX * feetPosX + feetPosZ * feetPosZ) - HexConfig::CoxaLength;
+	
 	IKA1 = atan2(IKFeetPosXZFinal, feetPosY);
 	IKSW = sqrt(feetPosY * feetPosY + IKFeetPosXZFinal * IKFeetPosXZFinal);
 	IKA2 = acos_truncated(((HexConfig::FemurLength * HexConfig::FemurLength - HexConfig::TibiaLength * HexConfig::TibiaLength) + IKSW * IKSW) / (2 * HexConfig::FemurLength * IKSW));
+	IKA3 = acos_truncated(((HexConfig::FemurLength * HexConfig::FemurLength + HexConfig::TibiaLength * HexConfig::TibiaLength) - IKSW * IKSW) / (2 * HexConfig::FemurLength * HexConfig::TibiaLength));
+	
+	result.Result.Coxa = CheckBoundsAndSign(((atan2(feetPosZ, feetPosX) * 180) / M_PI) + HexConfig::CoxaDefaultAngle[legNumber], HexConfig::CoxaMin, HexConfig::CoxaMax, HexConfig::CoxaAngleInv[legNumber]);
 	result.Result.Femur = CheckBoundsAndSign(-(IKA1 + IKA2) * 180 / M_PI + 90, HexConfig::FemurMin, HexConfig::FemurMax, HexConfig::FemurAngleInv[legNumber]);
-	double AngleRad4 = acos_truncated(((HexConfig::FemurLength * HexConfig::FemurLength + HexConfig::TibiaLength * HexConfig::TibiaLength) - IKSW * IKSW) / (2 * HexConfig::FemurLength * HexConfig::TibiaLength));
-	result.Result.Tibia = CheckBoundsAndSign(-(90 - AngleRad4 * 180 / M_PI), HexConfig::TibiaMin, HexConfig::TibiaMax, HexConfig::TibiaAngleInv[legNumber]);
+	result.Result.Tibia = CheckBoundsAndSign(IKA3 * 180 / M_PI - 90, HexConfig::TibiaMin, HexConfig::TibiaMax, HexConfig::TibiaAngleInv[legNumber]);
 
-	if (isnan(result.Result.Tibia) || result.Result.Tibia > 180  || result.Result.Tibia < -180 ||
-		isnan(result.Result.Femur) || result.Result.Femur > 180  || result.Result.Femur < -180 ||
-		isnan(result.Result.Coxa) || result.Result.Coxa > 180  || result.Result.Coxa < -180)
+	if (isnan(result.Result.Tibia) || isnan(result.Result.Femur) || isnan(result.Result.Coxa))
 	{
 		Log.printf("LegIK - EXCEPTION. leg:%d t:%f f:%f c:%f fx:%f fy:%f fz:%f\n\r", legNumber, result.Result.Tibia, result.Result.Femur, result.Result.Coxa, feetPosX, feetPosY, feetPosZ);
 		while(1){
